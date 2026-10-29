@@ -34,10 +34,10 @@ export function duration(ms: number | null | undefined): string {
   return mss(ms);
 }
 
-/** "6 568" with a thin space, as in the mockups. */
+/** "7,720": thousands separated by commas. */
 export function tokens(n: number | null | undefined): string {
   if (n === null || n === undefined) return "—";
-  return Math.round(n).toLocaleString("en-US").replace(/,/g, " ");
+  return Math.round(n).toLocaleString("en-US");
 }
 
 /** Numbers in prose: at most two decimals, trailing zeros dropped. */

@@ -176,11 +176,11 @@ export function buildTimeline(study: Study, trace: TraceEntry[], now: number = D
   });
 }
 
-/** "9.4 s · 3 180 tok" */
+/** "9.4 s · 3,180 tok" */
 export function formatCost(ms: number | null, tokens: number): string {
   const parts: string[] = [];
   if (ms !== null) parts.push(ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${ms} ms`);
-  if (tokens) parts.push(`${tokens.toLocaleString("en-US").replace(/,/g, " ")} tok`);
+  if (tokens) parts.push(`${tokens.toLocaleString("en-US")} tok`);
   return parts.join(" · ");
 }
 

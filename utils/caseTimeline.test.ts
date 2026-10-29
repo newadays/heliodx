@@ -104,7 +104,7 @@ describe("buildTimeline", () => {
 
 describe("helpers", () => {
   it("formats cost, case id and SLA", () => {
-    expect(formatCost(9400, 3180)).toBe("9.4 s · 3 180 tok");
+    expect(formatCost(9400, 3180)).toBe("9.4 s · 3,180 tok");
     expect(formatCost(900, 0)).toBe("900 ms");
     expect(formatCost(null, 0)).toBe("");
     expect(caseId("abc123xyz")).toBe("CABC12");

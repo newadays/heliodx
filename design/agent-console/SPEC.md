@@ -135,3 +135,4 @@ Other runs for the selects: `run-20261028T205812Z-u-hpcq · Upload 1 · 28 Oct �
 - **Checks failed:** a failed check the step recovered from is not counted; the Tool calls tab shows it as "failed · retried" (the note check passing on its retry) or "failed · overridden" (the clinician chose "Analyze anyway"). Trace order is by time, since `seq` restarts in every run.
 - **Live:** Firestore listeners rather than SSE. The chip reads "Connected" until the first server answer, then "Live"; offline or after an error, "Reconnecting…" (with backoff), never clearing what is shown.
 - **Arrival to now:** shown only while a run is open; a failed run shows "—".
+- **Number format (29 Oct review):** token counts use comma thousands ("7,720", not the thin space in §3.4), and arrival times carry a unit ("24:21 mins", "1:02:06 hrs").

@@ -162,9 +162,9 @@ export function agentStatus(agent: ConsoleAgent, steps: ConsoleStep[]): "ran" | 
   return step.trace.length || step.ms ? "ran" : "idle";
 }
 
-/** "6 568": thousands separated by a thin space (SPEC §3.4). */
+/** "7,720": thousands separated by commas. */
 export function thin(n: number): string {
-  return Math.round(n).toLocaleString("en-US").replace(/,/g, " ");
+  return Math.round(n).toLocaleString("en-US");
 }
 
 /** "31.9 s", "831 ms". */
@@ -172,13 +172,13 @@ export function seconds(ms: number): string {
   return ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`;
 }
 
-/** "9:06" (m:ss), "1:02:06" past an hour. */
+/** "24:21 mins" (m:ss), "1:02:06 hrs" past an hour. */
 export function clock(ms: number): string {
   const s = Math.round(ms / 1000);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const ss = String(s % 60).padStart(2, "0");
-  return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+  return h ? `${h}:${String(m).padStart(2, "0")}:${ss} hrs` : `${m}:${ss} mins`;
 }
 
 export { CONSOLE_AGENTS, CONSOLE_TOOLS };

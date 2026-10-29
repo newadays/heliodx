@@ -174,9 +174,10 @@ describe("run helpers", () => {
   });
 
   it("formats numbers the way the spec shows them", () => {
-    expect(thin(6568)).toBe("6\u2009568");
+    expect(thin(7720)).toBe("7,720");
     expect(seconds(31_900)).toBe("31.9 s");
     expect(seconds(831)).toBe("831 ms");
-    expect(clock(546_000)).toBe("9:06");
+    expect(clock(1_461_000)).toBe("24:21 mins");
+    expect(clock(3_726_000)).toBe("1:02:06 hrs");
   });
 });
