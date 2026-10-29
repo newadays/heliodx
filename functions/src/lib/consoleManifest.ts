@@ -11,7 +11,7 @@
  * tokens and the agent time.
  */
 export interface ConsoleAgent {
-  id: "intake" | "triage" | "prep" | "summary";
+  id: "coordinator" | "intake" | "triage" | "prep" | "summary";
   name: string;
   models: string[];
   /** One sentence. */
@@ -32,6 +32,14 @@ export interface ConsoleTool {
 }
 
 export const CONSOLE_AGENTS: ConsoleAgent[] = [
+  {
+    id: "coordinator",
+    name: "Coordinator",
+    models: ["Muse Wonder"],
+    role: "Plans each study's reading lane, requeues a failed run once and escalates overdue or stuck cases to the clinician. Sees only de-identified queue state.",
+    order: 0,
+    stages: ["coordination"],
+  },
   {
     id: "intake",
     name: "Intake",
@@ -85,11 +93,25 @@ export const CONSOLE_TOOLS: ConsoleTool[] = [
   { name: "share_gate", params: ["channel"], description: "The server's share gate: written from the signed report, checks still passing, channel allowed.", kind: "check", owner: "clinician" },
   { name: "render_pdf", params: ["note"], description: "Renders the patient-note PDF: the note, the attribution and the disclaimer only.", kind: "tool", owner: "clinician" },
   { name: "reset_sample", params: [], description: "Returns a sample study to its fresh draft.", kind: "check", owner: "clinician" },
+  { name: "plan_study", params: ["studyId", "lane", "radiologistRead"], description: "Sets the reading lane (never below the study's priority) and recommends a radiologist read.", kind: "check", owner: "coordinator" },
+  { name: "requeue_study", params: ["studyId"], description: "Puts a study whose model call failed back in the queue, once.", kind: "check", owner: "coordinator" },
+  { name: "escalate_to_human", params: ["studyId", "reason"], description: "Flags the case for the clinician: overdue SLA, stalled run, retake needed or a failure that can't be retried.", kind: "check", owner: "coordinator" },
 ];
 
-/** "Glimmer · SAM 3.1": every model the manifest's agents use, in order. */
+/** "Muse Wonder · Glimmer · SAM 3.1": every model the manifest's agents use, in order. */
 export function manifestModels(agents: ConsoleAgent[] = CONSOLE_AGENTS): string[] {
   return [...new Set(agents.flatMap((a) => a.models))];
+}
+
+/** "Coordination on Muse Wonder; model steps on Glimmer; segmentation on SAM 3.1." from the agents' models. */
+export function manifestModelsNote(agents: ConsoleAgent[] = CONSOLE_AGENTS): string {
+  const coord = agents.find((a) => a.id === "coordinator")?.models[0];
+  const workers = [...new Set(agents.filter((a) => a.id !== "coordinator").flatMap((a) => a.models))];
+  const [main, ...seg] = workers;
+  return [coord ? `Coordination on ${coord}` : null, main ? `model steps on ${main}` : null, seg.length ? `segmentation on ${seg.join(", ")}` : null]
+    .filter(Boolean)
+    .join("; ")
+    .replace(/^./, (c) => c.toUpperCase()) + ".";
 }
 
 export const isModelCall = (name: string): boolean => name.endsWith(".chat");

@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import type { Study } from "@/types/study";
-import { manifestModels } from "@/utils/consoleRun";
+import { manifestModelsNote } from "@/utils/consoleRun";
 import { useLiveTrace, useNow } from "~/data/hooks";
 import { analysisElapsedMs, arrivedAt, caseIdOf, currentStage, patientOf, viewStatus } from "~/data/model";
 import { runExport, runStats, stageRows } from "~/data/timeline";
@@ -26,12 +26,6 @@ const STATUS_WORDS: Record<string, string> = {
   signed: "signed",
   shared: "signed and shared",
 };
-
-/** "Glimmer and SAM 3.1" → "Model steps run on Glimmer; segmentation on SAM 3.1." from the manifest. */
-function modelsNote(): string {
-  const [first, ...rest] = manifestModels();
-  return rest.length ? `Model steps run on ${first}; segmentation on ${rest.join(", ")}.` : `Model steps run on ${first}.`;
-}
 
 export function ConsolePanel({
   studies,
@@ -123,7 +117,7 @@ export function ConsolePanel({
       </div>
 
       <div className="cpanel__foot">
-        <span className="muted">{modelsNote()}</span>
+        <span className="muted">{manifestModelsNote()}</span>
         <button
           type="button"
           className="btn btn-ghost btn-sm"

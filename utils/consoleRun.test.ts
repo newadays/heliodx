@@ -71,6 +71,7 @@ describe("consoleSteps", () => {
       ["intake", "model"],
       ["triage", "model"],
       ["prep", "model"],
+      ["coordinator", "model"],
       ["signed", "clinician"],
       ["summary", "model"],
       ["shared", "clinician"],
@@ -79,14 +80,14 @@ describe("consoleSteps", () => {
     expect(intake.calls.map((c) => c.name)).toEqual(["segment_region", "segment_region", "measure_quality"]);
     expect([intake.checksPassed, intake.checksFailed]).toEqual([1, 0]);
     expect(intake.summary).toMatch(/· 3 tool calls$/);
-    expect(steps[5].title).toBe("Patient note");
+    expect(steps[6].title).toBe("Patient note");
   });
 
   it("counts a failed check, and a model call is never a tool call", () => {
     const failing = [...trace, ev(9, "patient_summary", { kind: "check", name: "check_patient_summary", ok: false })];
     const steps = consoleSteps(study(), failing, T0 + 400_000);
-    expect(steps[5].checksFailed).toBe(1);
-    expect(steps[5].recovered).toEqual({});
+    expect(steps[6].checksFailed).toBe(1);
+    expect(steps[6].recovered).toEqual({});
     expect(steps.flatMap((s) => s.calls).some((c) => c.name.endsWith(".chat"))).toBe(false);
   });
 });
@@ -97,7 +98,7 @@ describe("recovered checks", () => {
       ev(20, "patient_summary", { kind: "check", name: "check_patient_summary", ok: false, result: "retry · grade 9.6" }),
       ev(21, "patient_summary", { kind: "check", name: "map_next_steps", ok: true }),
     ];
-    const step = consoleSteps(study(), retried, T0 + 400_000)[5];
+    const step = consoleSteps(study(), retried, T0 + 400_000).find((s) => s.key === "summary")!;
     expect([step.checksPassed, step.checksFailed]).toEqual([1, 0]);
     expect(step.recovered).toEqual({ t20: "retried" });
   });
@@ -168,9 +169,9 @@ describe("run helpers", () => {
     expect(runStatusOf(study({ status: "failed" } as never))).toBe("failed");
     const steps = consoleSteps(study(), trace, T0 + 400_000);
     expect(callsByTool(steps)).toMatchObject({ segment_region: 2, measure_quality: 1, render_overlay: 1, map_next_steps: 1 });
-    expect(agentStatus(CONSOLE_AGENTS[0], steps)).toBe("ran");
+    expect(agentStatus(CONSOLE_AGENTS.find((a) => a.id === "intake")!, steps)).toBe("ran");
     const early = study({ status: "classifying", shares: [], signed: null } as never);
-    expect(agentStatus(CONSOLE_AGENTS[3], consoleSteps(early, trace, T0 + 25_000))).toBe("idle");
+    expect(agentStatus(CONSOLE_AGENTS.find((a) => a.id === "summary")!, consoleSteps(early, trace, T0 + 25_000))).toBe("idle");
   });
 
   it("formats numbers the way the spec shows them", () => {
