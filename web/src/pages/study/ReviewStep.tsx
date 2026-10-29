@@ -11,7 +11,7 @@ import type { Finding, FindingStatus, Study } from "@/types/study";
 import { Icon } from "~/components/Icon";
 import { useToast } from "~/components/Toast";
 import { saveFindings } from "~/data/actions";
-import { bandBars, bandLabel, verdict, type FindingView } from "~/data/model";
+import { bandBars, bandLabel, qualityWarnings, verdict, type FindingView } from "~/data/model";
 import { isTyping } from "~/lib/keys";
 import { MonoNumbers } from "~/lib/text";
 
@@ -309,6 +309,15 @@ export function ReviewPanel({
             </div>
           </div>
         </div>
+
+        {qualityWarnings(study).length ? (
+          <div className="rv-quality" role="note">
+            <Icon name="info" size={14} />
+            <span>
+              <strong>Image quality notes</strong> (analysis continued; check the film yourself): {qualityWarnings(study).join(" · ")}
+            </span>
+          </div>
+        ) : null}
 
         <div className="rv-toolbar">
           <button type="button" className="btn btn-secondary" disabled={!canDecide || !pendingNormal.length} onClick={acceptAllNormal}>

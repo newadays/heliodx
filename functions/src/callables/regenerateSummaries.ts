@@ -3,6 +3,7 @@ import { logger } from "firebase-functions/v2";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 import { MODEL_MOCK } from "../config";
+import { gpuHealth } from "../models/gpu";
 import { generateJson } from "../models/client";
 import type { DraftFinding, DraftSummaries, Modality } from "../models/fixtures";
 import { clinicianSummaryPrompt } from "../models/prompts";
@@ -34,6 +35,8 @@ export interface RegenerateRequest {
 export interface RegenerateResponse {
   reviewHash: string;
   clinicianSummary: DraftSummaries["clinicianSummary"] | null;
+  /** The private GPU was cold: the background draft (B23) waits for it and writes the report. */
+  queued?: "gpu_starting";
 }
 
 export interface StudyDoc {
@@ -124,6 +127,17 @@ export const regenerateSummaries = onCall<RegenerateRequest, Promise<RegenerateR
 
     let hash = reviewHash(study.findings ?? []);
     let clinicianSummary = study.clinicianSummary ?? null;
+
+    // A cold GPU would only time out here (90 s) while it takes ~5 min to
+    // start. Hand the redraft to the background drafter, which waits for it.
+    const gpu = which !== "patient" && !MODEL_MOCK ? (await gpuHealth(5_000)).glimmer : "ok";
+    if (gpu !== "ok" && gpu !== "not_configured") {
+      // Already being drafted for these decisions: don't start a second one.
+      const inFlight = (study as { reportDraft?: { forHash?: string | null } }).reportDraft?.forHash === hash;
+      if (!inFlight) await ref.update({ reportDraft: { forHash: null, requestedAt: new Date() } });
+      logger.info("regenerateSummaries: queued until the GPU is up", { studyId });
+      return { reviewHash: hash, clinicianSummary, queued: "gpu_starting" as const };
+    }
 
     try {
       if (which !== "patient") ({ hash, clinicianSummary } = await traceScope(ref, "summarizing", () => draftClinicianSummary(study)));

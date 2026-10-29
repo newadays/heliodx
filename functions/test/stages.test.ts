@@ -48,13 +48,30 @@ describe("runIntake", () => {
     expect(out.metrics.width).toBe(1000);
   });
 
-  it("asks for a retake when the model says so, or the image is not medical", async () => {
+  it("a model 'retake' on a medical image is a warning, not a stop (29 Oct: a clean film called a photo)", async () => {
     const img = await film();
-    const retake = await runIntake({ ...base, image: img }, { generate: vi.fn(async () => intakeDraft({ decision: "retake" })) as never });
-    expect(retake.retake).toBe(true);
-    const notMedical = await runIntake({ ...base, image: img }, { generate: vi.fn(async () => intakeDraft({ looksMedical: false })) as never });
-    expect(notMedical.retake).toBe(true);
-    expect(notMedical.quality.issues).toContain("This does not look like a medical image.");
+    const out = await runIntake(
+      { ...base, image: img },
+      { generate: vi.fn(async () => intakeDraft({ decision: "retake", quality: { ok: false, issues: ["Image is a photograph of a chest radiograph with glare"] } })) as never },
+    );
+    expect(out.retake).toBe(false);
+    expect(out.quality.ok).toBe(true);
+    expect(out.quality.issues).toEqual([]);
+    expect(out.quality.warnings).toContain("Image is a photograph of a chest radiograph with glare");
+  });
+
+  it("stops for a blurred film, whatever the model says", async () => {
+    const blurred = await sharp(await film()).blur(12).jpeg().toBuffer();
+    const out = await runIntake({ ...base, image: blurred }, { generate: vi.fn(async () => intakeDraft()) as never });
+    expect(out.retake).toBe(true);
+    expect(out.quality.issues).toContain("Image looks blurred.");
+  });
+
+  it("stops for an image that is not medical, with the model's reasons", async () => {
+    const out = await runIntake({ ...base, image: await film() }, { generate: vi.fn(async () => intakeDraft({ looksMedical: false, quality: { ok: false, issues: ["A photo of a cat."] } })) as never });
+    expect(out.retake).toBe(true);
+    expect(out.quality.issues[0]).toBe("This does not look like a medical image.");
+    expect(out.quality.issues).toContain("A photo of a cat.");
   });
 
   it("asks for a retake when the resolution is objectively too low, whatever the model says", async () => {

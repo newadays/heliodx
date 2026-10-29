@@ -72,7 +72,11 @@ export function SignPanel({
   // The background draft gave up (model didn't answer, e.g. the GPU was
   // starting): say so and offer a retry instead of "Updating…" forever.
   const draftFailed = stale && !!study.reportDraft?.failedAt && !study.reportDraft?.forHash;
-  const stuck = draftFailed || (stale && staleSince.current !== null && now - staleSince.current > 20_000);
+  // The private GPU scaled to zero during the review and is starting (~5 min);
+  // the background drafter waits for it and writes the report by itself.
+  const [gpuQueued, setGpuQueued] = useState(false);
+  const gpuStarting = stale && !draftFailed && (!!study.reportDraft?.warming || gpuQueued);
+  const stuck = draftFailed || gpuStarting || (stale && staleSince.current !== null && now - staleSince.current > 20_000);
   const name = study.signed?.name ?? clinicianName(profile, study.clinicianName);
   const noteState = !signed ? "after" : study.patientSummary ? "ready" : "drafting";
 
@@ -94,13 +98,27 @@ export function SignPanel({
     });
   }, [stale, undecided, study.id]);
 
+  useEffect(() => {
+    if (!stale) setGpuQueued(false);
+  }, [stale]);
+
+  // Editing opens at the top of the report; take the clinician there.
+  useEffect(() => {
+    if (editing) document.getElementById("sg-impression")?.focus();
+  }, [editing]);
+
   const updatingRef = useRef(false);
   const update = useCallback(async () => {
     if (updatingRef.current) return;
     updatingRef.current = true;
     setUpdating(true);
     try {
-      await regenerateReport(study.id);
+      const out = await regenerateReport(study.id);
+      if (out.queued) {
+        setGpuQueued(true);
+        toast({ message: "The private GPU is starting (about 5 min). The report will update by itself, or write the impression yourself to sign now." });
+        return;
+      }
       setNeeds((n) => n.filter((x) => x !== "refresh_summary"));
       toast({ message: "Report updated from your decisions" });
     } catch (error) {
@@ -250,15 +268,25 @@ export function SignPanel({
                   <Icon name="info" size={14} />
                   Couldn't redraft the report from your latest decisions.
                 </>
+              ) : gpuStarting ? (
+                <>
+                  <span className="pulse" aria-hidden="true" />
+                  Starting the private GPU (about 5 min). The report updates by itself.
+                </>
               ) : (
                 <>
                   <span className="pulse" aria-hidden="true" />
                   Updating report…
                 </>
               )}
-              {stuck ? (
+              {stuck && !gpuStarting ? (
                 <button type="button" className="btn btn-ghost btn-sm" disabled={updating} onClick={() => void update()}>
                   {updating ? "Updating…" : "Update now"}
+                </button>
+              ) : null}
+              {stuck && !editing ? (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={startEdit}>
+                  Write it yourself
                 </button>
               ) : null}
             </div>
@@ -332,9 +360,15 @@ export function SignPanel({
               {needs.map((n) => (
                 <li key={n}>
                   {NEED_TEXT[n] ?? n}
-                  {n === "refresh_summary" ? (
+                  {n === "refresh_summary" && !gpuStarting ? (
                     <button type="button" className="btn btn-ghost btn-sm" disabled={updating} onClick={() => void update()}>
                       {updating ? "Updating…" : "Update now"}
+                    </button>
+                  ) : null}
+                  {n === "refresh_summary" && gpuStarting ? <span className="muted"> The private GPU is starting (about 5 min).</span> : null}
+                  {n === "refresh_summary" && !editing ? (
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={startEdit}>
+                      Write the impression yourself and sign now
                     </button>
                   ) : null}
                   {n === "decide_every_finding" ? (

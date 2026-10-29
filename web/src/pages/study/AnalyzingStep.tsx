@@ -1,11 +1,12 @@
 /** Card W4 · Analyzing (SPEC §4.3): progress, steps, findings as they stream in, and start reviewing early. */
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import type { Study } from "@/types/study";
 import { Icon } from "~/components/Icon";
 import { useToast } from "~/components/Toast";
-import { retryAnalysis } from "~/data/actions";
-import { analysisElapsedMs, analysisProgress, expectedMs, gpuState, gpuWaitStart, indicationOf, studyLabel, type FindingView } from "~/data/model";
+import { deleteUpload, retryAnalysis } from "~/data/actions";
+import { analysisElapsedMs, analysisProgress, expectedMs, gpuState, gpuWaitStart, indicationOf, isQualityRejected, studyLabel, type FindingView } from "~/data/model";
 import { mss } from "~/lib/format";
 import { consolePath } from "~/lib/paths";
 import { MonoNumbers } from "~/lib/text";
@@ -74,6 +75,30 @@ export function AnalyzingPanel({ study, findings, now, onStart }: { study: Study
     { label: "Drafting clinician report", detail: r >= 5 ? "draft ready" : "starts automatically", state: r >= 5 ? "done" : r === 4 ? "running" : failed && r === 4 ? "failed" : "todo" },
   ];
 
+  const navigate = useNavigate();
+  const rejected = isQualityRejected(study);
+  const issues = study.pipeline?.quality?.issues?.length ? study.pipeline.quality.issues : [study.pipeline?.error?.message ?? "The image didn't pass the quality check."];
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const analyzeAnyway = async () => {
+    try {
+      await retryAnalysis(study.id, { analyzeAnyway: true });
+      toast({ message: "Analyzing anyway. Your decision is recorded in the audit trail." });
+    } catch {
+      toast({ message: "Couldn't start the analysis.", action: { label: "Retry", onClick: () => void analyzeAnyway() } });
+    }
+  };
+
+  const remove = async () => {
+    try {
+      await deleteUpload(study.id);
+      navigate("/worklist");
+      toast({ message: "Upload deleted" });
+    } catch {
+      toast({ message: "Couldn't delete the upload." });
+    }
+  };
+
   const retry = async () => {
     try {
       const started = await retryAnalysis(study.id);
@@ -88,7 +113,7 @@ export function AnalyzingPanel({ study, findings, now, onStart }: { study: Study
       <div className="panel__body">
         <div className="an-head">
           <div className="an-title">
-            <h1>{failed ? "Analysis didn't complete" : r >= 5 ? "Findings drafted" : waiting ? "Waiting for the private GPU" : "Drafting findings"}</h1>
+            <h1>{rejected ? "Image rejected" : failed ? "Analysis didn't complete" : r >= 5 ? "Findings drafted" : waiting ? "Waiting for the private GPU" : "Drafting findings"}</h1>
             <div className="an-clock">
               <span className="mono">{mss(elapsed)}</span>
               <span className="muted">{r >= 5 ? "total" : waiting ? "elapsed · the first case after idle waits for the GPU" : `elapsed · usually under ${mss(expected)}`}</span>
@@ -109,7 +134,45 @@ export function AnalyzingPanel({ study, findings, now, onStart }: { study: Study
           ))}
         </ol>
 
-        {failed ? (
+        {rejected ? (
+          <div className="card an-failed" role="alert">
+            <p>
+              <strong>The image didn&apos;t pass the quality check.</strong> Retrying would give the same answer.
+            </p>
+            <ul className="an-issues">
+              {issues.map((i) => (
+                <li key={i}>{i}</li>
+              ))}
+            </ul>
+            {confirmDelete ? (
+              <div className="actions">
+                <span>Delete this upload? This can&apos;t be undone.</span>
+                <button type="button" className="btn btn-danger" onClick={() => void remove()}>
+                  Delete
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setConfirmDelete(false)}>
+                  Keep
+                </button>
+              </div>
+            ) : (
+              <div className="actions">
+                <button type="button" className="btn btn-secondary" onClick={() => void analyzeAnyway()}>
+                  Analyze anyway
+                </button>
+                {study.source === "upload" ? (
+                  <>
+                    <Link className="btn btn-ghost" to="/worklist?upload=1">
+                      Upload a better image
+                    </Link>
+                    <button type="button" className="btn btn-ghost" onClick={() => setConfirmDelete(true)}>
+                      Delete
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            )}
+          </div>
+        ) : failed ? (
           <div className="card an-failed" role="alert">
             <p>
               <strong>Analysis didn&apos;t complete.</strong> {study.pipeline?.error?.message ?? ""}

@@ -31,9 +31,11 @@ export function intakePrompt(
 ): string {
   return [
     `The clinician believes this is ${MODALITY_WORDS[modalityHint]}.`,
-    "Decide whether the image can be read reliably as it is (decision 'accept') or should be retaken ('retake').",
-    "Judge focus, exposure, glare, cropping and orientation; confirm the modality; name the study type and, for",
-    "radiographs, the projection (PA, AP or lateral).",
+    "The image is a digital file exported from imaging software (DICOM, PNG or JPEG), not a photograph of a film or a screen:",
+    "do not judge it as a photo. Radiographs are often bright and high-contrast; that alone is not a reason to retake.",
+    "Decide whether it can be read reliably as it is (decision 'accept') or should be retaken ('retake').",
+    "Judge focus, exposure, cropping and orientation; confirm the modality; name the study type and, for",
+    "radiographs, the projection (PA, AP or lateral). Keep each issue to one short sentence.",
     `Measured in code: sharpness ${metrics.sharpness} (blurred below 20), mean brightness ${metrics.mean}/255,`,
     `range ${metrics.p1}-${metrics.p99}, ${Math.round(metrics.clipped * 100)}% clipped, ${metrics.width}x${metrics.height} px.`,
     codeIssues.length ? `Automatic checks raised: ${codeIssues.join(" ")}` : "Automatic checks raised no issues.",

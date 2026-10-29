@@ -249,6 +249,16 @@ export function lastShare(study: Pick<Study, "shares">) {
   return shares.length ? shares[shares.length - 1] : null;
 }
 
+/** Stopped by the image quality check (resolution, blur, not a medical image): retrying can't help. */
+export function isQualityRejected(study: Study): boolean {
+  return study.status === "failed" && study.pipeline?.error?.code === "quality_rejected";
+}
+
+/** Quality notes that didn't stop the analysis (glare, exposure, a model "retake"), for Review. */
+export function qualityWarnings(study: Study): string[] {
+  return study.pipeline?.quality?.warnings ?? [];
+}
+
 /** Worklist status line under the chip. */
 export function statusDetail(study: Study, now: number): string {
   const vs = viewStatus(study);
@@ -256,7 +266,11 @@ export function statusDetail(study: Study, now: number): string {
     const stage = gpuState(study) === "waiting" ? "Starting the GPU" : currentStage(study) || "Queued";
     return `${stage} · ${Math.round(analysisElapsedMs(study, now) / 1000)} s`;
   }
-  if (vs === "failed") return "Analysis didn't complete";
+  if (vs === "failed") {
+    // A quality rejection is a decision about the image, not a fault: say why.
+    if (isQualityRejected(study)) return `Image rejected · ${study.pipeline?.quality?.issues?.[0] ?? study.pipeline?.error?.message ?? "quality check"}`;
+    return "Analysis didn't complete";
+  }
   if (vs === "draft_ready" || vs === "in_review") {
     const v = verdict(findingsOf(study));
     return v.text;

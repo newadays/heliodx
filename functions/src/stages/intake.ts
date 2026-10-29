@@ -3,9 +3,12 @@
  * are the lungs where a chest X-ray puts them. Same inputs and outputs an
  * agent tool would have (B5 can wrap it later).
  *
- * Retake when the model says so, the image is not medical, or the
- * resolution is objectively too low. Other code quality issues inform the
- * model rather than overrule it: the limits come from one calibration film.
+ * A study stops only for what can be measured or is unambiguous: the
+ * resolution is too low, the film is blurred, or the model says it is not a
+ * medical image at all. Everything else the model or the code notices (glare,
+ * exposure, contrast, a model "retake") is a warning the clinician sees in
+ * Review: on 29 Oct Glimmer called a clean digital AP film "a photograph with
+ * glare" and the study stopped. The exposure limits come from one film.
  */
 import { logger } from "firebase-functions/v2";
 
@@ -35,7 +38,8 @@ export interface IntakeDeps {
 
 export interface IntakeOutput {
   retake: boolean;
-  quality: { ok: boolean; score: number; issues: string[] };
+  /** `issues` stop the study; `warnings` are shown to the clinician and analysis continues. */
+  quality: { ok: boolean; score: number; issues: string[]; warnings: string[] };
   metrics: QualityMetrics;
   modality: Modality;
   studyType: string;
@@ -48,6 +52,8 @@ export interface IntakeOutput {
 }
 
 const LOW_RES = "Image resolution is too low.";
+const BLURRED = "Image looks blurred.";
+const NOT_MEDICAL = "This does not look like a medical image.";
 
 export async function runIntake(input: IntakeInput, deps: IntakeDeps = {}): Promise<IntakeOutput> {
   const generate = deps.generate ?? generateJson;
@@ -64,14 +70,16 @@ export async function runIntake(input: IntakeInput, deps: IntakeDeps = {}): Prom
   });
 
   // A non-medical image is the reason that matters most, so it always leads.
-  const lead = draft.looksMedical ? [] : ["This does not look like a medical image."];
-  const issues = [...new Set([...lead, ...codeIssues, ...draft.quality.issues])].slice(0, 6);
-  const retake = draft.decision === "retake" || !draft.looksMedical || codeIssues.includes(LOW_RES);
+  const blocking = [...(draft.looksMedical ? [] : [NOT_MEDICAL]), ...codeIssues.filter((i) => i === LOW_RES || i === BLURRED)];
+  const issues = draft.looksMedical ? blocking : [...new Set([...blocking, ...draft.quality.issues])].slice(0, 6);
+  const warnings = [...new Set([...codeIssues.filter((i) => !blocking.includes(i)), ...(draft.looksMedical ? draft.quality.issues : [])])].slice(0, 6);
+  const retake = blocking.length > 0;
+  if (draft.decision === "retake" && !retake) logger.info("intake: model suggested a retake; shown as a warning", { step: input.step, warnings: warnings.length });
 
   let masks: MaskRecord[] = [];
   let chest = false;
   let samError: string | null = null;
-  if (!retake && draft.modality === "xray") {
+  if (draft.looksMedical && draft.modality === "xray") {
     try {
       const seg = await segmentRegions(
         { bucket: input.bucket, studyPrefix: input.studyPrefix, image: input.image, step: input.step },
@@ -91,7 +99,7 @@ export async function runIntake(input: IntakeInput, deps: IntakeDeps = {}): Prom
   const studyType = chest ? (view === "PA" || view === "AP" ? `Chest X-ray (${view})` : "Chest X-ray") : draft.studyType;
   return {
     retake,
-    quality: { ok: !retake, score: qualityScore(metrics), issues },
+    quality: { ok: !retake, score: qualityScore(metrics), issues, warnings },
     metrics,
     modality: draft.modality,
     studyType,

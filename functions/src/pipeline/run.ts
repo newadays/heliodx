@@ -31,6 +31,7 @@ import { describeUpload, type UploadMeta } from "../lib/uploads";
 import { expectedAnalysisMs, recordAnalysisRun } from "../lib/analysisStats";
 import { ctrOverlays, findingFields } from "../lib/findingFields";
 import { studyDirOf } from "../lib/storagePaths";
+import { acceptAllHash } from "../lib/reviewHash";
 
 export { PipelineError } from "./errors";
 
@@ -41,7 +42,8 @@ export interface StudyForPipeline {
   clinicianName?: string;
   clinicalContext?: string;
   image?: { storagePath?: string };
-  pipeline?: { runId?: string | null };
+  /** `qualityOverride`: the clinician chose "Analyze anyway" after a quality rejection. */
+  pipeline?: { runId?: string | null; qualityOverride?: { by?: string } | null };
   createdAt?: { toMillis(): number } | null;
   orgId?: string;
   caseId?: string;
@@ -187,6 +189,8 @@ async function runPipelineTraced(
       }
       fixture = mockDraft(study.modality, reviewedBy);
       stage1 = { quality: fixture.quality, studyType: fixture.studyType, modality: study.modality };
+      // Test seam: a quality rejection, for the "Analyze anyway" path.
+      if (forced === "quality_rejected") stage1.quality = { ...fixture.quality, ok: false, issues: ["Image looks blurred."] };
       traceEvent({ kind: "model", name: "mock.chat", model: "mock", route: "clinical", ms: delay, ok: true, args: { step: "quality_check" }, result: "fixture quality and study type (MODEL_MOCK)", detail: { prompt: "(MODEL_MOCK) Check image quality and confirm the study type.", raw: JSON.stringify({ quality: fixture.quality, studyType: fixture.studyType }) } });
     } else {
       if (!opts.bucket || !study.image?.storagePath) {
@@ -242,7 +246,9 @@ async function runPipelineTraced(
       { allowedIn: ["quality_check"] },
     );
 
-    if (!stage1.quality.ok) {
+    if (!stage1.quality.ok && study.pipeline?.qualityOverride) {
+      traceEvent({ kind: "check", name: "quality_override", ok: true, args: {}, result: `clinician chose to analyze anyway · ${stage1.quality.issues.join("; ").slice(0, 160)}` });
+    } else if (!stage1.quality.ok) {
       throw new PipelineError(
         "quality_rejected",
         stage1.quality.issues.join("; ") || "Image quality too low to read.",
@@ -395,7 +401,8 @@ async function runPipelineTraced(
     await setStatus("summarizing");
 
     await setStatus("ready", {
-      clinicianSummary,
+      // Current for an accept-all review, so the common path signs without a GPU call.
+      clinicianSummary: clinicianSummary ? { ...clinicianSummary, generatedFromReviewHash: acceptAllHash(findings) } : clinicianSummary,
       patientSummary: null,
       "pipeline.model": mock ? "mock" : MODELS.clinical,
     });
