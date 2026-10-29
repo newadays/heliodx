@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Worklist with agent console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-secondary.on{background:#15181C;color:#FFFFFF;border-color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}.chip-ink{background:#15181C;color:#FFFFFF}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;font-size:11.5px;font-weight:600;background:#EDF0F3;color:#3D444D;white-space:nowrap}
+.tag.model{background:#15181C;color:#FFFFFF}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border-bottom:2px solid transparent;font-weight:500;color:#5F6873;text-decoration:none;font-size:14px}
+.tab.cur{color:#15181C;border-color:#15181C;font-weight:600}
+.count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#EDF0F3;color:#3D444D;font-size:12px;font-weight:600}
+.tab.cur .count{background:#15181C;color:#FFFFFF}
+.row{display:grid;grid-template-columns:56px 1.3fr 1.1fr 1.5fr 1.5fr 150px;gap:14px;align-items:center;padding:12px 16px;border-top:1px solid #E1E5EA}
+.row:hover{background:#FAFBFC}
+.row.sel{background:#F4F6F8}
+.thumb{width:56px;height:56px;border-radius:6px;object-fit:cover;background:#0C1014;display:block}
+.bar{height:4px;border-radius:2px;background:#E1E5EA;overflow:hidden;width:120px}
+.bar > span{display:block;height:100%;background:#15181C;border-radius:2px}
+.pulse{width:8px;height:8px;border-radius:50%;background:#16A34A;animation:pulse 1.2s ease-in-out infinite;display:inline-block}
+@keyframes pulse{0%,100%{transform:scale(.8);opacity:.5}50%{transform:scale(1.15);opacity:1}}
+.ev{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;align-items:start}
+.ev .d{display:flex;flex-direction:column;align-items:center;align-self:stretch}
+.ev .d > span{width:10px;height:10px;border-radius:50%;background:#FFFFFF;border:2px solid #137A3A;flex:0 0 auto;margin-top:6px}
+.ev .d > i{display:block;width:2px;flex:1 1 auto;background:#E1E5EA;min-height:16px}
+.ev.last .d > i{display:none}
+.ev.human .d > span{border-color:#15181C;background:#15181C}
+.ev .b{display:flex;flex-direction:column;gap:5px;padding-bottom:16px;min-width:0}
+.ev.last .b{padding-bottom:0}
+.ib{width:36px;height:36px;padding:0;border-radius:8px;border:1px solid transparent;background:transparent;color:#3D444D;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ib:hover{background:#F4F6F8;color:#15181C}
+select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FFFFFF;font:inherit;padding:0 10px;color:#15181C;width:100%}
+.stat{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:#F4F6F8;border-radius:8px;min-width:0}
+.stat .v{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:15px;font-weight:600}
+.stat .k{font-size:11.5px;color:#5F6873}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><span style="color:#15181C;font-weight:600">Worklist</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<div style="flex:1 1 auto;display:flex;flex-wrap:wrap;align-items:stretch;min-height:0">
+
+<main style="flex:1 1 560px;min-width:0;padding:28px 24px 40px;display:flex;flex-direction:column;gap:20px">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:640px">
+<h1 style="font-size:26px;font-weight:700;letter-spacing:-0.015em;line-height:1.2">Worklist</h1>
+<p class="muted" style="font-size:15px;text-wrap:pretty">HelioDX drafts findings the moment a study arrives, so a draft is usually waiting when you open one. Nothing reaches a patient until you sign.</p>
+</div>
+<a class="btn btn-secondary on" href="worklist.html" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"></rect><path d="M9.5 3v10"></path></svg>Agent console</a>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid #E1E5EA">
+<nav aria-label="Filter" style="display:flex;gap:22px;flex-wrap:wrap">
+<a class="tab cur" href="#all">All <span class="count">4</span></a>
+<a class="tab" href="#ready">Ready to review <span class="count">2</span></a>
+<a class="tab" href="#analyzing">Analyzing <span class="count">1</span></a>
+<a class="tab" href="#signed">Signed <span class="count">1</span></a>
+</nav>
+</div>
+
+<div style="overflow-x:auto">
+<div class="card" style="min-width:820px;overflow:hidden">
+<div class="row label" style="border-top:0;background:#FAFBFC;padding-top:10px;padding-bottom:10px"><span></span><span>Patient</span><span>Study</span><span>Indication</span><span>Status</span><span></span></div>
+
+<div class="row sel">
+<img class="thumb" src="../assets/cxr-sample-1.jpg" alt="">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Sample Patient 1</span><span class="muted" style="font-size:13px">34 M · <span class="mono">AI2Y7</span></span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · 14:27</span></div>
+<div style="font-size:13.5px">Cough for two weeks.</div>
+<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip chip-ink">Signed</span><span class="muted" style="font-size:12.5px">Note saved as PDF · 14:36</span></div>
+<a class="btn btn-secondary" href="done.html">View</a>
+</div>
+
+<div class="row">
+<img class="thumb" src="../assets/cxr-sample-2.jpg" alt="">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Sample Patient 2</span><span class="muted" style="font-size:13px">47 F</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · 14:19</span></div>
+<div style="font-size:13.5px">Shortness of breath on exertion.</div>
+<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip chip-ok">Draft ready</span><span class="muted" style="font-size:12.5px">6 findings</span></div>
+<a class="btn btn-primary" href="#open-2">Review draft</a>
+</div>
+
+<div class="row">
+<img class="thumb" src="../assets/cxr-sample-3-thumb.jpg" alt="">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Sample Patient 3</span><span class="muted" style="font-size:13px">[AGE / SEX]</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · 14:31</span></div>
+<div style="font-size:13.5px">[INDICATION]</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="chip chip-neutral"><span class="pulse" aria-hidden="true"></span>Analyzing</span><div class="bar" aria-hidden="true"><span style="width:55%"></span></div><span class="muted" style="font-size:12.5px">Prep · 12 s</span></div>
+<a class="btn btn-secondary" href="analyzing.html">Watch</a>
+</div>
+
+<div class="row">
+<img class="thumb" src="../assets/cxr-sample-4-thumb.jpg" alt="">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Sample Patient 4</span><span class="muted" style="font-size:13px">[AGE / SEX]</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · 13:52</span></div>
+<div style="font-size:13.5px">[INDICATION]</div>
+<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip chip-ink">Signed</span><span class="muted" style="font-size:12.5px">Note shared · PDF</span></div>
+<a class="btn btn-secondary" href="done.html">View</a>
+</div>
+</div>
+</div>
+
+<p class="muted" style="font-size:13px;text-wrap:pretty">Select a row to see its agent trace in the console. The console follows whichever case you have open.</p>
+</main>
+
+<aside aria-label="Agent console" style="flex:0 1 480px;max-width:100%;min-width:0;background:#FFFFFF;border-left:1px solid #E1E5EA;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:10px;padding:12px 16px 12px 20px;border-bottom:1px solid #E1E5EA">
+<h2 style="font-size:15px;font-weight:700">Agent console</h2>
+<span class="chip chip-ok"><span class="pulse" aria-hidden="true"></span>Live</span>
+<div style="flex:1 1 auto"></div>
+<a class="btn btn-secondary" href="console.html" style="min-height:36px;padding:0 12px;font-size:13px"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M13 3L7 9M11 9v4H3V5h4"></path></svg>Open full console</a>
+<a class="ib" href="worklist.html" aria-label="Close console"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg></a>
+</div>
+
+<div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px;flex:1 1 auto">
+
+<a href="analyzing.html" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #BFE3CB;background:#F0FAF3;border-radius:8px;text-decoration:none;color:#15181C;font-size:13px"><span class="pulse" aria-hidden="true"></span><span><strong>Running now:</strong> Sample Patient 3 · Prep · 12 s</span><span style="flex:1 1 auto"></span><span style="color:#15181C;font-weight:600">Follow</span></a>
+
+<label style="display:flex;flex-direction:column;gap:6px"><span class="label">Case</span><select><option>Sample Patient 1 · AI2Y7 · signed and shared</option><option>Sample Patient 2 · draft ready</option><option>Sample Patient 3 · analyzing</option><option>Sample Patient 4 · signed and shared</option></select></label>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(96px,100%),1fr));gap:8px">
+<div class="stat"><span class="v">31.9 s</span><span class="k">Agent time</span></div>
+<div class="stat"><span class="v">6 568</span><span class="k">Tokens</span></div>
+<div class="stat"><span class="v">4</span><span class="k">Model steps</span></div>
+<div class="stat"><span class="v">2</span><span class="k">Clinician steps</span></div>
+</div>
+
+<ol style="list-style:none;padding:0;display:flex;flex-direction:column">
+
+<li class="ev"><span class="d"><span></span><i></i></span><div class="b">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Received</strong><span class="mono muted" style="font-size:12px">14:27:04</span><span class="tag">Upload</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">831 ms</span></div>
+<p style="font-size:13px;color:#3D444D">Chest X-ray · PA · 34 M · indication: cough for two weeks · from sample</p>
+</div></li>
+
+<li class="ev"><span class="d"><span></span><i></i></span><div class="b">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Intake</strong><span class="mono muted" style="font-size:12px">14:27:05</span><span class="tag">Intake</span><span class="tag model">Glimmer</span><span class="tag model">SAM 3.1</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">2.7 s · 1 726 tok</span></div>
+<p style="font-size:13px;color:#3D444D">Quality pass · sharpness 97 · brightness 102 · clipped 9% · 1024×1024 · 2/2 regions segmented</p>
+<a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
+</div></li>
+
+<li class="ev"><span class="d"><span></span><i></i></span><div class="b">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Triage</strong><span class="mono muted" style="font-size:12px">14:27:08</span><span class="tag">Triage</span><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">2.6 s · 386 tok</span></div>
+<p style="font-size:13px;color:#3D444D">Priority routine. CTR 0.45, lung-area asymmetry 0.02, L/R density ratio 1.09, costophrenic blunting 0 / 0 — all within limits</p>
+<a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
+</div></li>
+
+<li class="ev"><span class="d"><span></span><i></i></span><div class="b">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Prep</strong><span class="mono muted" style="font-size:12px">14:27:10</span><span class="tag">Prep</span><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">21.2 s · 2 807 tok</span></div>
+<p style="font-size:13px;color:#3D444D">Draft ready: 6 proposed observations, 5 measurements, 2 overlays</p>
+<a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
+</div></li>
+
+<li class="ev human"><span class="d"><span></span><i></i></span><div class="b">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Signed</strong><span class="mono muted" style="font-size:12px">14:33:26</span><span class="tag">Clinician</span></div>
+<p style="font-size:13px;color:#3D444D">6 accepted · 1 edited · 0 rejected. Signed by Dr. Demo Clinician.</p>
+</div></li>
+
+<li class="ev"><span class="d"><span></span><i></i></span><div class="b">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Patient note</strong><span class="mono muted" style="font-size:12px">14:34:02</span><span class="tag">Summary</span><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">4.6 s · 1 649 tok</span></div>
+<p style="font-size:13px;color:#3D444D">1 next step mapped to a signed sentence · 0 claims outside the signed text · reading level grade 7</p>
+<a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
+</div></li>
+
+<li class="ev human last"><span class="d"><span></span><i></i></span><div class="b">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Shared</strong><span class="mono muted" style="font-size:12px">14:36:10</span><span class="tag">Clinician</span></div>
+<p style="font-size:13px;color:#3D444D">1 share · PDF · consent recorded</p>
+</div></li>
+
+</ol>
+</div>
+
+<div style="padding:12px 20px;border-top:1px solid #E1E5EA;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<span class="muted" style="font-size:12.5px">Model steps run on Glimmer; segmentation on SAM 3.1.</span>
+<button type="button" class="btn btn-ghost" style="min-height:36px;font-size:13px"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.5 7l3.5 3.5L11.5 7M3 13.5h10"></path></svg>Export trace</button>
+</div>
+</aside>
+
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Agent console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}.chip-ink{background:#15181C;color:#FFFFFF}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;font-size:11.5px;font-weight:600;background:#EDF0F3;color:#3D444D;white-space:nowrap}
+.tag.model{background:#15181C;color:#FFFFFF}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.pulse{width:8px;height:8px;border-radius:50%;background:#16A34A;animation:pulse 1.2s ease-in-out infinite;display:inline-block}
+@keyframes pulse{0%,100%{transform:scale(.8);opacity:.5}50%{transform:scale(1.15);opacity:1}}
+.fchip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:999px;border:1px solid #C9CFD6;background:#FFFFFF;font-size:13px;font-weight:500;color:#3D444D;text-decoration:none}
+.fchip.on{background:#15181C;border-color:#15181C;color:#FFFFFF}
+.case{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:10px;text-decoration:none;color:#15181C;border:1px solid transparent}
+.case:hover{background:#F4F6F8}
+.case.sel{background:#F4F6F8;border-color:#C9CFD6}
+.stat{display:flex;flex-direction:column;gap:2px;padding:12px 14px;background:#FFFFFF;border:1px solid #E1E5EA;border-radius:10px;min-width:0}
+.stat .v{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:18px;font-weight:600}
+.stat .k{font-size:12px;color:#5F6873}
+.tr{display:grid;grid-template-columns:150px 84px minmax(160px,1fr) 80px 90px minmax(260px,2fr) 44px;gap:14px;align-items:center;padding:10px 16px;border-top:1px solid #E1E5EA;font-size:13.5px}
+.tr.open{background:#F4F6F8}
+.ib{width:44px;height:44px;padding:0;border-radius:8px;border:1px solid transparent;background:transparent;color:#3D444D;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ib:hover{background:#EDF0F3;color:#15181C}
+.ptab{display:inline-flex;align-items:center;min-height:36px;padding:0 2px;border-bottom:2px solid transparent;font-weight:500;color:#5F6873;text-decoration:none;font-size:13px}
+.ptab.cur{color:#15181C;border-color:#15181C;font-weight:600}
+input[type=search]{font:inherit;font-size:14px;color:#15181C;border:1px solid #C9CFD6;border-radius:8px;padding:0 12px;background:#FFFFFF;width:100%;min-height:40px}
+input[type=search]:focus{outline:2px solid #15181C;outline-offset:1px;border-color:#15181C}
+.dot{width:8px;height:8px;border-radius:50%;background:#137A3A;display:inline-block;flex:0 0 auto}
+.dot.human{background:#15181C}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><a href="worklist.html" style="text-decoration:none">Worklist</a><span aria-hidden="true">›</span><span style="color:#15181C;font-weight:600">Agent console</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<div style="flex:1 1 auto;display:flex;flex-wrap:wrap;align-items:stretch;min-height:0">
+
+<aside aria-label="Cases" style="flex:0 1 320px;max-width:100%;min-width:0;background:#FFFFFF;border-right:1px solid #E1E5EA;display:flex;flex-direction:column;gap:14px;padding:18px 16px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2 style="font-size:15px;font-weight:700">Cases</h2><span class="chip chip-ok"><span class="pulse" aria-hidden="true"></span>1 running</span></div>
+<label style="display:flex;flex-direction:column;gap:6px"><span class="label">Search</span><input type="search" placeholder="Patient, case ID or step"></label>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><a class="fchip on" href="#all">All 4</a><a class="fchip" href="#running">Running</a><a class="fchip" href="#ready">Ready</a><a class="fchip" href="#signed">Signed</a></div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<a class="case" href="analyzing.html"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><strong>Sample Patient 3</strong><span class="mono muted" style="font-size:12px">14:31</span></span><span style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#3D444D"><span class="pulse" aria-hidden="true"></span>Running · Prep · 12 s</span></a>
+<a class="case sel" href="#AI2Y7" aria-current="true"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><strong>Sample Patient 1</strong><span class="mono muted" style="font-size:12px">AI2Y7</span></span><span style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#3D444D"><span class="dot human" aria-hidden="true"></span>Shared · PDF · 14:36</span></a>
+<a class="case" href="#case-2"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><strong>Sample Patient 2</strong><span class="mono muted" style="font-size:12px">14:19</span></span><span style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#3D444D"><span class="dot" aria-hidden="true"></span>Draft ready · 6 findings</span></a>
+<a class="case" href="#case-4"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><strong>Sample Patient 4</strong><span class="mono muted" style="font-size:12px">13:52</span></span><span style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#3D444D"><span class="dot human" aria-hidden="true"></span>Shared · PDF</span></a>
+</div>
+<div style="flex:1 1 auto"></div>
+<p class="muted" style="font-size:12px;text-wrap:pretty">Every step records its agent, model, duration and tokens. Clinician actions are logged beside them so a case reads as one timeline.</p>
+</aside>
+
+<main style="flex:1 1 560px;min-width:0;padding:24px 28px 40px;display:flex;flex-direction:column;gap:18px">
+
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><h1 style="font-size:24px;font-weight:700;letter-spacing:-0.015em">Sample Patient 1</h1><span class="mono muted" style="font-size:15px">AI2Y7</span><span class="chip chip-ink">Shared</span></div>
+<p class="muted">Chest X-ray · PA · 34 M · cough for two weeks · arrived <span class="mono">14:27:04</span> · clinician Dr. Demo Clinician (simulated)</p>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-secondary"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.5 7l3.5 3.5L11.5 7M3 13.5h10"></path></svg>Export JSON</button><a class="btn btn-primary" href="done.html">Open in app<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M13 3L7 9M11 9v4H3V5h4"></path></svg></a></div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:10px">
+<div class="stat"><span class="v">31.9 s</span><span class="k">Agent time</span></div>
+<div class="stat"><span class="v">6 568</span><span class="k">Tokens</span></div>
+<div class="stat"><span class="v">4</span><span class="k">Model steps</span></div>
+<div class="stat"><span class="v">2</span><span class="k">Clinician steps</span></div>
+<div class="stat"><span class="v">9:06</span><span class="k">Arrival to shared</span></div>
+</div>
+
+<div style="overflow-x:auto">
+<div class="card" style="min-width:980px;overflow:hidden">
+<div class="tr label" style="border-top:0;background:#FAFBFC"><span>Step</span><span>Started</span><span>Agent</span><span>Duration</span><span>Tokens</span><span>Summary</span><span></span></div>
+
+<div class="tr">
+<span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Received</strong></span>
+<span class="mono muted">14:27:04</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Upload</span></span>
+<span class="mono">831 ms</span>
+<span class="mono muted">—</span>
+<span style="color:#3D444D">Chest X-ray · PA · 34 M · from sample</span>
+<button type="button" class="ib" aria-label="Expand Received"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"></path></svg></button>
+</div>
+
+<div class="tr">
+<span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Intake</strong></span>
+<span class="mono muted">14:27:05</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Intake</span><span class="tag model">Glimmer</span><span class="tag model">SAM 3.1</span></span>
+<span class="mono">2.7 s</span>
+<span class="mono">1 726</span>
+<span style="color:#3D444D">Quality pass · sharpness 97 · brightness 102 · clipped 9% · 2/2 regions segmented</span>
+<button type="button" class="ib" aria-label="Expand Intake"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"></path></svg></button>
+</div>
+
+<div class="tr">
+<span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Triage</strong></span>
+<span class="mono muted">14:27:08</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Triage</span><span class="tag model">Glimmer</span></span>
+<span class="mono">2.6 s</span>
+<span class="mono">386</span>
+<span style="color:#3D444D">Priority routine · CTR 0.45 · asymmetry 0.02 · density ratio 1.09 · blunting 0 / 0 — all within limits</span>
+<button type="button" class="ib" aria-label="Expand Triage"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"></path></svg></button>
+</div>
+
+<div class="tr open">
+<span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Prep</strong></span>
+<span class="mono muted">14:27:10</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Prep</span><span class="tag model">Glimmer</span></span>
+<span class="mono">21.2 s</span>
+<span class="mono">2 807</span>
+<span style="color:#3D444D">Draft ready · 6 proposed observations · 5 measurements · 2 overlays</span>
+<button type="button" class="ib" aria-label="Collapse Prep" aria-expanded="true"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"></path></svg></button>
+</div>
+
+<div style="background:#F4F6F8;border-top:1px solid #C9CFD6;border-bottom:1px solid #C9CFD6;padding:14px 16px 18px 46px;display:flex;flex-direction:column;gap:14px">
+<nav aria-label="Trace views" style="display:flex;gap:18px;border-bottom:1px solid #C9CFD6"><a class="ptab cur" href="#summary">Summary</a><a class="ptab" href="#prompt">Prompt</a><a class="ptab" href="#output">Raw output</a><a class="ptab" href="#timing">Timing</a></nav>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:20px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<span class="label">Inputs</span>
+<ul style="padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:13.5px;color:#3D444D"><li>Image 1024 × 1024, quality pass from Intake</li><li>2 segmented lung regions (SAM 3.1)</li><li>5 triage measurements</li><li>Clinical context: cough for two weeks</li></ul>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span class="label">Output · 6 observations</span>
+<ol style="padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:13.5px;color:#3D444D"><li>Cardiac silhouette within expected limits</li><li>Lung areas are symmetric</li><li>Lung densities are symmetric</li><li>Costophrenic angles are sharp</li><li>No focal consolidation in the left lung</li><li>No focal consolidation in the right lung</li></ol>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span class="label">Measurements and overlays</span>
+<ul style="padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:13.5px;color:#3D444D"><li>CTR <span class="mono">0.45</span> · lung-area difference <span class="mono">2.1%</span> · L/R density <span class="mono">1.09</span> · blunting <span class="mono">0 / 0</span></li><li>Overlays: lung masks, CTR lines</li><li>Confidence: 4 high · 2 moderate</li></ul>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button type="button" class="btn btn-secondary" style="min-height:36px;font-size:13px">Copy trace link</button><button type="button" class="btn btn-ghost" style="min-height:36px;font-size:13px">Replay this step</button><span class="muted" style="font-size:12.5px">Replay runs the same inputs again without touching the signed case.</span></div>
+</div>
+
+<div class="tr">
+<span style="display:flex;align-items:center;gap:10px"><span class="dot human" aria-hidden="true"></span><strong>Signed</strong></span>
+<span class="mono muted">14:33:26</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Clinician</span></span>
+<span class="mono muted">—</span>
+<span class="mono muted">—</span>
+<span style="color:#3D444D">6 accepted · 1 edited · 0 rejected · signed by Dr. Demo Clinician</span>
+<button type="button" class="ib" aria-label="Expand Signed"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"></path></svg></button>
+</div>
+
+<div class="tr">
+<span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Patient note</strong></span>
+<span class="mono muted">14:34:02</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Summary</span><span class="tag model">Glimmer</span></span>
+<span class="mono">4.6 s</span>
+<span class="mono">1 649</span>
+<span style="color:#3D444D">1 next step mapped to a signed sentence · 0 claims outside the signed text · grade 7</span>
+<button type="button" class="ib" aria-label="Expand Patient note"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"></path></svg></button>
+</div>
+
+<div class="tr">
+<span style="display:flex;align-items:center;gap:10px"><span class="dot human" aria-hidden="true"></span><strong>Shared</strong></span>
+<span class="mono muted">14:36:10</span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Clinician</span></span>
+<span class="mono muted">—</span>
+<span class="mono muted">—</span>
+<span style="color:#3D444D">1 share · PDF · consent recorded</span>
+<button type="button" class="ib" aria-label="Expand Shared"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"></path></svg></button>
+</div>
+
+</div>
+</div>
+
+</main>
+</div>
+</div>
+</body>
+</html>

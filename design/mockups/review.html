@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Review findings</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.btn-dark{background:transparent;color:#C8D0D8;border-color:#2A323B;min-height:36px;padding:0 12px;font-size:13px}.btn-dark:hover{background:#1A2027;color:#FFFFFF}
+.btn-dark.on{background:#1A2027;color:#FFFFFF;border-color:#FFFFFF}
+.ib{width:44px;height:44px;padding:0;border-radius:8px;border:1px solid #C9CFD6;background:#FFFFFF;color:#3D444D;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ib:hover{background:#F4F6F8;color:#15181C}
+.ib.on{background:#137A3A;border-color:#137A3A;color:#FFFFFF}
+.ib.danger:hover{color:#B42318;border-color:#B42318}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.kbd{display:inline-block;min-width:20px;padding:1px 5px;border:1px solid #C9CFD6;border-bottom-width:2px;border-radius:4px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#3D444D;background:#FFFFFF;text-align:center;line-height:1.4}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#5F6873;white-space:nowrap}
+.step.cur{color:#15181C;font-weight:600}.step.done{color:#137A3A}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;border:1.5px solid #C9CFD6;color:#5F6873;background:#FFFFFF;flex:0 0 auto}
+.step.cur .dot{background:#15181C;border-color:#15181C;color:#FFFFFF}.step.done .dot{background:#137A3A;border-color:#137A3A;color:#FFFFFF}
+.rule{width:22px;height:1px;background:#C9CFD6;flex:0 0 auto}
+.num{width:24px;height:24px;border-radius:50%;background:#15181C;color:#FFFFFF;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.viewer{background:#0C1014;color:#C8D0D8}
+.src{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap}
+.src-sample{background:transparent;color:#C8D0D8;border:1px dashed #8B96A3}
+.marker{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:#137A3A;color:#FFFFFF;border:2px solid #FFFFFF;box-shadow:0 1px 5px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;padding:0;cursor:pointer;font-family:inherit}
+.marker.focus{width:34px;height:34px;margin:-17px 0 0 -17px;background:#FFFFFF;color:#137A3A;border-color:#3DDC84;box-shadow:0 0 0 4px rgba(61,220,132,.35),0 1px 6px rgba(0,0,0,.6);font-size:14px}
+.line{position:absolute;height:0;border-top:1.5px solid #3DDC84;box-shadow:0 0 6px rgba(61,220,132,.8)}
+.line::before,.line::after{content:"";position:absolute;top:-5px;width:0;height:10px;border-left:1.5px solid #3DDC84}
+.line::before{left:0}.line::after{right:0}
+.ltag{position:absolute;transform:translate(-50%,-100%);background:rgba(12,16,20,.85);color:#DFF7E8;font-size:11px;padding:2px 6px;border-radius:4px;white-space:nowrap;font-family:'IBM Plex Mono',ui-monospace,monospace;border:1px solid rgba(61,220,132,.5)}
+.row{display:grid;grid-template-columns:24px minmax(0,1fr) 112px auto;gap:14px;align-items:center;padding:12px 14px;background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.row.focus{border-color:#15181C;box-shadow:0 0 0 3px rgba(21,24,28,.14)}
+.meter{display:flex;gap:3px}
+.meter > span{width:14px;height:6px;border-radius:2px;background:#E1E5EA}
+.meter > span.f{background:#15181C}
+.bar{height:6px;border-radius:3px;background:#E1E5EA;overflow:hidden;width:140px}
+.bar > span{display:block;height:100%;background:#15181C;border-radius:3px}
+input[type=text],textarea{font:inherit;font-size:14px;color:#15181C;border:1px solid #C9CFD6;border-radius:8px;padding:10px 12px;background:#FFFFFF;width:100%}
+input[type=text]:focus,textarea:focus{outline:2px solid #15181C;outline-offset:1px;border-color:#15181C}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><a href="worklist.html" style="text-decoration:none">Worklist</a><span aria-hidden="true">›</span><span style="color:#15181C;font-weight:600">Sample Patient 1</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<div style="flex:1 1 auto;display:flex;flex-wrap:wrap;min-height:0">
+
+<section class="viewer" aria-label="Image viewer" style="flex:0 1 620px;min-width:0;display:flex;flex-direction:column">
+<div style="min-height:48px;display:flex;align-items:center;gap:12px;padding:6px 16px;border-bottom:1px solid #1C2229;flex-wrap:wrap">
+<strong style="color:#FFFFFF">Sample Patient 1</strong><span class="src src-sample">Sample · NIH</span><span style="color:#8B96A3">34 M · Chest X-ray · PA · <span class="mono">S-AI2Y7</span></span>
+<div style="flex:1 1 auto"></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-dark on">Markers</button><button type="button" class="btn btn-dark on">Measurements</button><button type="button" class="btn btn-dark">Fit</button><button type="button" class="btn btn-dark">1:1</button><button type="button" class="btn btn-dark">Invert</button></div>
+</div>
+<div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="position:relative;width:100%;max-width:580px;aspect-ratio:1346/1140;overflow:hidden;border-radius:4px">
+<img src="../assets/cxr-sample-1.jpg" alt="Chest X-ray, PA view, Sample Patient 1, with six numbered finding markers" style="width:100%;height:100%;object-fit:contain;display:block">
+<div aria-hidden="true" style="position:absolute;left:57%;top:16%;width:31%;height:52%;border:1.5px dashed #3DDC84;border-radius:50%;box-shadow:0 0 0 2000px rgba(12,16,20,.35)"></div>
+<div class="line" aria-hidden="true" style="left:40%;top:62%;width:18%"></div>
+<div class="ltag" aria-hidden="true" style="left:49%;top:60%">heart 0.45</div>
+<div class="line" aria-hidden="true" style="left:14%;top:67%;width:72%"></div>
+<div class="ltag" aria-hidden="true" style="left:50%;top:74%;transform:translate(-50%,0)">thorax · CTR 0.45</div>
+<button type="button" class="marker" aria-label="Finding 1, cardiac silhouette" style="left:50%;top:55%">1</button>
+<button type="button" class="marker" aria-label="Finding 2, lung areas" style="left:28%;top:36%">2</button>
+<button type="button" class="marker focus" aria-label="Finding 3, lung densities, selected" style="left:72%;top:36%">3</button>
+<button type="button" class="marker" aria-label="Finding 4, right costophrenic angle" style="left:17%;top:79%">4</button>
+<button type="button" class="marker" aria-label="Finding 4, left costophrenic angle" style="left:84%;top:79%">4</button>
+<button type="button" class="marker" aria-label="Finding 5, left lung" style="left:69%;top:54%">5</button>
+<button type="button" class="marker" aria-label="Finding 6, right lung" style="left:30%;top:56%">6</button>
+</div>
+</div>
+<div style="min-height:40px;display:flex;align-items:center;gap:16px;padding:6px 16px;border-top:1px solid #1C2229;font-size:12.5px;color:#8B96A3;flex-wrap:wrap">
+<span>Spotlight: <span style="color:#FFFFFF">3 · lung densities</span></span><span>Hover a finding in the list to spotlight its region</span>
+</div>
+</section>
+
+<section aria-label="Findings" style="flex:1 1 560px;min-width:0;display:flex;flex-direction:column;background:#F4F6F8">
+<div style="padding:12px 28px;border-bottom:1px solid #E1E5EA;background:#FFFFFF;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<nav aria-label="Progress" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<div class="step done"><span class="dot"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Analyze</div><span class="rule"></span>
+<div class="step cur"><span class="dot">2</span>Review</div><span class="rule"></span>
+<div class="step"><span class="dot">3</span>Sign</div><span class="rule"></span>
+<div class="step"><span class="dot">4</span>Patient note</div><span class="rule"></span>
+<div class="step"><span class="dot">5</span>Share</div>
+</nav>
+<div style="flex:1 1 auto"></div>
+<span class="muted" style="font-size:12.5px">Analyzed in 27 s</span>
+</div>
+
+<div style="padding:20px 28px;display:flex;flex-direction:column;gap:16px;flex:1 1 auto">
+
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:6px">
+<h1 style="font-size:22px;font-weight:700;letter-spacing:-0.01em">Review findings</h1>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="chip chip-ok">6 findings · all within normal limits</span><span class="muted" style="font-size:13px">AI-drafted. Supports your judgment; not a diagnosis.</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+<span style="font-size:13px"><strong>2 of 6</strong> <span class="muted">reviewed</span></span>
+<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="2" aria-label="Findings reviewed"><span style="width:33%"></span></div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<button type="button" class="btn btn-secondary"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5l3 3 6-7M8.5 11.5l5.5-7"></path></svg>Accept all 6 normal findings</button>
+<div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#5F6873;flex-wrap:wrap"><span><span class="kbd">A</span> accept</span><span><span class="kbd">E</span> edit</span><span><span class="kbd">R</span> reject</span><span><span class="kbd">J</span><span class="kbd">K</span> next / previous</span></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+
+<div class="row">
+<span class="num">1</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:600">Cardiac silhouette within expected limits</span><span class="muted" style="font-size:13px">Cardiothoracic ratio <span class="mono">0.45</span> · limit <span class="mono">0.55</span></span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#3D444D">High · <span class="mono">90%</span></span><div class="meter" aria-hidden="true"><span class="f"></span><span class="f"></span><span class="f"></span></div></div>
+<div style="display:flex;gap:6px"><button type="button" class="ib on" aria-label="Accepted"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"></path></svg></button><button type="button" class="ib" aria-label="Edit finding 1"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"></path></svg></button><button type="button" class="ib danger" aria-label="Reject finding 1"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div>
+</div>
+
+<div class="row">
+<span class="num">2</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:600">Lung areas are symmetric</span><span class="muted" style="font-size:13px">Area difference <span class="mono">2.1%</span> · limit <span class="mono">15%</span></span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#3D444D">High · <span class="mono">90%</span></span><div class="meter" aria-hidden="true"><span class="f"></span><span class="f"></span><span class="f"></span></div></div>
+<div style="display:flex;gap:6px"><button type="button" class="ib on" aria-label="Accepted"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"></path></svg></button><button type="button" class="ib" aria-label="Edit finding 2"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"></path></svg></button><button type="button" class="ib danger" aria-label="Reject finding 2"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div>
+</div>
+
+<div class="row focus">
+<span class="num">3</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:600">Lung densities are symmetric</span><span class="muted" style="font-size:13px">Left/right mean brightness ratio <span class="mono">1.09</span> · limit <span class="mono">1.25</span></span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#3D444D">High · <span class="mono">90%</span></span><div class="meter" aria-hidden="true"><span class="f"></span><span class="f"></span><span class="f"></span></div></div>
+<div style="display:flex;gap:6px"><button type="button" class="ib" aria-label="Accept finding 3"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"></path></svg></button><button type="button" class="ib" aria-label="Edit finding 3"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"></path></svg></button><button type="button" class="ib danger" aria-label="Reject finding 3"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div>
+</div>
+
+<div class="row" style="grid-template-columns:24px minmax(0,1fr);align-items:start">
+<span class="num">4</span>
+<div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-weight:600">Costophrenic angles are sharp</span><span class="chip chip-neutral">Editing</span></div>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:#5F6873">Wording in the report<input type="text" value="Both costophrenic angles are sharp; no blunting on either side."></label>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-primary" style="min-height:40px">Save and accept</button><button type="button" class="btn btn-ghost" style="min-height:40px">Cancel</button><span class="muted" style="font-size:12.5px">Measured blunting <span class="mono">0 / 0</span> · limit <span class="mono">0.6</span> · your edit is recorded as yours</span></div>
+</div>
+</div>
+
+<div class="row">
+<span class="num">5</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:600">No focal consolidation in the left lung</span><span class="muted" style="font-size:13px">No focal area of increased opacity within the lung outline</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#3D444D">Moderate · <span class="mono">70%</span></span><div class="meter" aria-hidden="true"><span class="f"></span><span class="f"></span><span></span></div></div>
+<div style="display:flex;gap:6px"><button type="button" class="ib" aria-label="Accept finding 5"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"></path></svg></button><button type="button" class="ib" aria-label="Edit finding 5"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"></path></svg></button><button type="button" class="ib danger" aria-label="Reject finding 5"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div>
+</div>
+
+<div class="row">
+<span class="num">6</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:600">No focal consolidation in the right lung</span><span class="muted" style="font-size:13px">No focal area of increased opacity within the lung outline</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#3D444D">Moderate · <span class="mono">70%</span></span><div class="meter" aria-hidden="true"><span class="f"></span><span class="f"></span><span></span></div></div>
+<div style="display:flex;gap:6px"><button type="button" class="ib" aria-label="Accept finding 6"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"></path></svg></button><button type="button" class="ib" aria-label="Edit finding 6"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"></path></svg></button><button type="button" class="ib danger" aria-label="Reject finding 6"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></div>
+</div>
+
+</div>
+</div>
+
+<footer style="padding:14px 28px;border-top:1px solid #E1E5EA;background:#FFFFFF;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+<span class="muted" style="font-size:13px;text-wrap:pretty">The report drafts itself from your decisions as you go — no waiting at the next step.</span>
+<div style="display:flex;gap:10px"><a class="btn btn-ghost" href="worklist.html">Save and return later</a><a class="btn btn-primary" href="sign.html">Continue to report<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"></path></svg></a></div>
+</footer>
+</section>
+
+</div>
+</div>
+</body>
+</html>

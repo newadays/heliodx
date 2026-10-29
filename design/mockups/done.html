@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Shared</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.ev{display:grid;grid-template-columns:56px 28px minmax(0,1fr);gap:12px;align-items:start}
+.ev .t{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;color:#5F6873;padding-top:3px}
+.ev .d{display:flex;flex-direction:column;align-items:center;align-self:stretch;gap:0}
+.ev .d > span{width:12px;height:12px;border-radius:50%;background:#FFFFFF;border:2px solid #137A3A;flex:0 0 auto;margin-top:5px}
+.ev .d > i{display:block;width:2px;flex:1 1 auto;background:#E1E5EA;min-height:22px}
+.ev .b{display:flex;flex-direction:column;gap:2px;padding-bottom:18px}
+.ev .b strong{font-weight:600}
+.ev.last .d > i{display:none}
+.ev.last .b{padding-bottom:0}
+.ev.cur .d > span{background:#137A3A}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><a href="worklist.html" style="text-decoration:none">Worklist</a><span aria-hidden="true">›</span><span style="color:#15181C;font-weight:600">Sample Patient 1</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<main style="flex:1 1 auto;width:100%;max-width:1100px;margin:0 auto;padding:40px 24px 48px;display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+
+<section style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:22px">
+<div style="width:56px;height:56px;border-radius:50%;background:#E6F4EA;color:#137A3A;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"></path></svg></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<h1 style="font-size:28px;font-weight:700;letter-spacing:-0.015em;line-height:1.2">Patient note saved as a PDF</h1>
+<p class="muted" style="font-size:15px;text-wrap:pretty">Today at 14:36 · consent recorded. Print it or hand it to Sample; the image and your clinical findings stay in the record.</p>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a class="btn btn-primary" href="worklist.html">Back to worklist</a>
+<a class="btn btn-secondary" href="#next">Open next: Sample Patient 2<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"></path></svg></a>
+<button type="button" class="btn btn-ghost"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.5 7l3.5 3.5L11.5 7M3 13.5h10"></path></svg>Download the PDF again</button>
+</div>
+<div class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+<span class="label">What the PDF contains</span>
+<p style="text-wrap:pretty">One page: the plain-language note, who approved it and the case ID <span class="mono">S-AI2Y7</span> in the footer. No image and no measurements, so nothing clinical can be misread without you.</p>
+</div>
+</section>
+
+<section class="card" aria-label="Audit trail" style="flex:1 1 420px;min-width:0;padding:22px 24px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2 style="font-size:16px;font-weight:700">Audit trail</h2><a href="console.html" style="font-size:13px;font-weight:600">Open in agent console</a></div>
+<ol style="list-style:none;padding:0;display:flex;flex-direction:column">
+<li class="ev"><span class="t">14:27</span><span class="d"><span></span><i></i></span><div class="b"><strong>Study arrived</strong><span class="muted" style="font-size:13px">Chest X-ray · PA · 1 image · quality OK</span></div></li>
+<li class="ev"><span class="t">14:28</span><span class="d"><span></span><i></i></span><div class="b"><strong>Analyzed in 27 s</strong><span class="muted" style="font-size:13px">6 findings drafted · all within normal limits</span></div></li>
+<li class="ev"><span class="t">14:31</span><span class="d"><span></span><i></i></span><div class="b"><strong>Reviewed by Dr. Demo Clinician</strong><span class="muted" style="font-size:13px">6 accepted · 1 wording edited (finding 4)</span></div></li>
+<li class="ev"><span class="t">14:33</span><span class="d"><span></span><i></i></span><div class="b"><strong>Report signed</strong><span class="muted" style="font-size:13px"><span class="mono">sha256 a6bd4ea5…</span> · locked</span></div></li>
+<li class="ev"><span class="t">14:34</span><span class="d"><span></span><i></i></span><div class="b"><strong>Patient note written from the signed report</strong><span class="muted" style="font-size:13px">plain language · checked against the signed text</span></div></li>
+<li class="ev last cur"><span class="t">14:36</span><span class="d"><span></span><i></i></span><div class="b"><strong>Patient note saved as PDF</strong><span class="muted" style="font-size:13px"><span class="mono">HelioDX-S-AI2Y7-patient-note.pdf</span> · consent recorded at today's visit</span></div></li>
+</ol>
+</section>
+
+</main>
+</div>
+</body>
+</html>

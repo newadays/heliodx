@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Analyzing study</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.btn-dark{background:transparent;color:#C8D0D8;border-color:#2A323B;min-height:36px;padding:0 12px;font-size:13px}.btn-dark:hover{background:#1A2027;color:#FFFFFF}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#5F6873;white-space:nowrap}
+.step.cur{color:#15181C;font-weight:600}.step.done{color:#137A3A}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;border:1.5px solid #C9CFD6;color:#5F6873;background:#FFFFFF;flex:0 0 auto}
+.step.cur .dot{background:#15181C;border-color:#15181C;color:#FFFFFF}.step.done .dot{background:#137A3A;border-color:#137A3A;color:#FFFFFF}
+.rule{width:22px;height:1px;background:#C9CFD6;flex:0 0 auto}
+.num{width:24px;height:24px;border-radius:50%;background:#15181C;color:#FFFFFF;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.viewer{background:#0C1014;color:#C8D0D8}
+.tick{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.tick.done{background:#E6F4EA;color:#137A3A}.tick.todo{border:1.5px solid #C9CFD6;background:#FFFFFF}
+.pulse{width:10px;height:10px;border-radius:50%;background:#16A34A;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(.8);opacity:.5}50%{transform:scale(1.15);opacity:1}}
+.skel{background:linear-gradient(90deg,#E8EBEF 25%,#F4F6F8 50%,#E8EBEF 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite;border-radius:4px;height:12px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.scan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,rgba(61,220,132,0),#3DDC84 25%,#3DDC84 75%,rgba(61,220,132,0));box-shadow:0 0 14px rgba(61,220,132,.9);animation:scan 3.4s ease-in-out infinite alternate}
+@keyframes scan{0%{top:2%}100%{top:97%}}
+.bar{height:6px;border-radius:3px;background:#E1E5EA;overflow:hidden}
+.bar > span{display:block;height:100%;background:#15181C;border-radius:3px}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><a href="worklist.html" style="text-decoration:none">Worklist</a><span aria-hidden="true">›</span><span style="color:#15181C;font-weight:600">Sample Patient 1</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<div style="flex:1 1 auto;display:flex;flex-wrap:wrap;min-height:0">
+
+<section class="viewer" aria-label="Image viewer" style="flex:0 1 620px;min-width:0;display:flex;flex-direction:column">
+<div style="min-height:48px;display:flex;align-items:center;gap:12px;padding:6px 16px;border-bottom:1px solid #1C2229;flex-wrap:wrap">
+<strong style="color:#FFFFFF">Sample Patient 1</strong><span style="color:#8B96A3">34 M · Chest X-ray · PA</span>
+<div style="flex:1 1 auto"></div>
+<div style="display:flex;gap:6px"><button type="button" class="btn btn-dark">Fit</button><button type="button" class="btn btn-dark">1:1</button><button type="button" class="btn btn-dark">Invert</button></div>
+</div>
+<div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="position:relative;width:100%;max-width:580px;aspect-ratio:1346/1140;overflow:hidden;border-radius:4px">
+<img src="../assets/cxr-sample-1.jpg" alt="Chest X-ray, PA view, Sample Patient 1" style="width:100%;height:100%;object-fit:contain;display:block">
+<div class="scan" aria-hidden="true"></div>
+</div>
+</div>
+<div style="min-height:40px;display:flex;align-items:center;gap:16px;padding:6px 16px;border-top:1px solid #1C2229;font-size:12.5px;color:#8B96A3;flex-wrap:wrap">
+<span>Image quality OK</span><span class="mono">1024 × 1024</span><span>No prior studies on file</span>
+</div>
+</section>
+
+<section aria-label="Analysis" style="flex:1 1 560px;min-width:0;display:flex;flex-direction:column;background:#F4F6F8">
+<div style="padding:12px 28px;border-bottom:1px solid #E1E5EA;background:#FFFFFF;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<nav aria-label="Progress" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<div class="step cur"><span class="dot">1</span>Analyze</div><span class="rule"></span>
+<div class="step"><span class="dot">2</span>Review</div><span class="rule"></span>
+<div class="step"><span class="dot">3</span>Sign</div><span class="rule"></span>
+<div class="step"><span class="dot">4</span>Patient note</div><span class="rule"></span>
+<div class="step"><span class="dot">5</span>Share</div>
+</nav>
+</div>
+
+<div style="padding:24px 28px;display:flex;flex-direction:column;gap:22px;flex:1 1 auto">
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<h1 style="font-size:22px;font-weight:700;letter-spacing:-0.01em">Drafting findings</h1>
+<div style="display:flex;align-items:baseline;gap:8px"><span class="mono" style="font-size:20px;font-weight:600">0:18</span><span class="muted" style="font-size:13px">elapsed · usually under 0:30</span></div>
+</div>
+<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60" aria-label="Analysis progress"><span style="width:60%"></span></div>
+</div>
+
+<ol style="list-style:none;display:flex;flex-direction:column;gap:10px;padding:0">
+<li style="display:flex;align-items:center;gap:12px"><span class="tick done"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span>Image quality checked</span><span class="muted" style="font-size:13px">exposure and rotation within range</span></li>
+<li style="display:flex;align-items:center;gap:12px"><span class="tick done"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span>Study type confirmed</span><span class="muted" style="font-size:13px">Chest X-ray · PA</span></li>
+<li style="display:flex;align-items:center;gap:12px"><span class="tick" style="background:#EDF0F3"><span class="pulse" aria-hidden="true"></span></span><span style="font-weight:600">Detecting findings</span><span class="muted" style="font-size:13px">3 found so far</span></li>
+<li style="display:flex;align-items:center;gap:12px"><span class="tick todo"></span><span class="muted">Drafting clinician report</span><span class="muted" style="font-size:13px">starts automatically</span></li>
+</ol>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;justify-content:space-between"><span class="label">Findings so far</span><span class="muted" style="font-size:12.5px">New findings join the list as they are detected</span></div>
+
+<div class="card" style="display:flex;gap:12px;padding:12px 14px;align-items:flex-start">
+<span class="num">1</span>
+<div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Cardiac silhouette within expected limits</span><span class="muted" style="font-size:13px">Cardiothoracic ratio <span class="mono">0.45</span> · limit <span class="mono">0.55</span></span></div>
+<span class="chip chip-ok">Normal</span>
+</div>
+<div class="card" style="display:flex;gap:12px;padding:12px 14px;align-items:flex-start">
+<span class="num">2</span>
+<div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Lung areas are symmetric</span><span class="muted" style="font-size:13px">Area difference <span class="mono">2.1%</span> · limit <span class="mono">15%</span></span></div>
+<span class="chip chip-ok">Normal</span>
+</div>
+<div class="card" style="display:flex;gap:12px;padding:12px 14px;align-items:flex-start">
+<span class="num">3</span>
+<div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Lung densities are symmetric</span><span class="muted" style="font-size:13px">Left/right brightness ratio <span class="mono">1.09</span> · limit <span class="mono">1.25</span></span></div>
+<span class="chip chip-ok">Normal</span>
+</div>
+<div class="card" aria-hidden="true" style="display:flex;gap:12px;padding:14px 14px;align-items:center;border-style:dashed">
+<span class="num" style="background:#E8EBEF"></span>
+<div style="flex:1 1 auto;display:flex;flex-direction:column;gap:8px"><span class="skel" style="width:46%"></span><span class="skel" style="width:30%;height:10px"></span></div>
+</div>
+<div class="card" aria-hidden="true" style="display:flex;gap:12px;padding:14px 14px;align-items:center;border-style:dashed">
+<span class="num" style="background:#E8EBEF"></span>
+<div style="flex:1 1 auto;display:flex;flex-direction:column;gap:8px"><span class="skel" style="width:52%"></span><span class="skel" style="width:28%;height:10px"></span></div>
+</div>
+</div>
+
+<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:6px;background:#FFFFFF">
+<span class="label">Clinical context</span>
+<p>Cough for two weeks.</p>
+</div>
+
+</div>
+
+<footer style="padding:14px 28px;border-top:1px solid #E1E5EA;background:#FFFFFF;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+<span class="muted" style="font-size:13px;text-wrap:pretty">You can start reviewing now. Findings still being detected will join the list as they arrive.</span>
+<div style="display:flex;gap:10px"><a class="btn btn-ghost" href="worklist-console.html">Agent console</a><a class="btn btn-primary" href="review.html">Start reviewing</a></div>
+</footer>
+</section>
+
+</div>
+</div>
+</body>
+</html>

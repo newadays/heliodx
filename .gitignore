@@ -1,0 +1,58 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+functions/lib/
+
+# macOS
+.DS_Store
+
+# keys and certificates
+*.pem
+*.key
+*.p12
+
+# local env files (EXPO_PUBLIC_* values for the web build; never server secrets)
+.env
+.env*.local
+.env.dev
+.env.development
+.env.production
+# Functions emulator secret overrides (e.g. META_API_KEY)
+.secret.local
+functions/.env*
+
+# logs
+npm-debug.*
+firebase-debug.log
+*-debug.log
+.firebase/
+
+# local-only notes
+TODO.md
+
+# Personal Claude Code permissions
+.claude/settings.local.json
+
+# Service account keys (never commit). Narrow on purpose: *.json would hide
+# new config and fixture files.
+*service-account*.json
+*-sa-key*.json
+
+# Python
+__pycache__/
+*.pyc
+
+# GPU service settings (project, region, bucket); template: gpu/env.example.sh
+gpu/env.sh
+
+# One-off live test scripts
+functions/.e2e-*.ts
+
+#misc
+.vscode/
+
+# Demo sample images and manifest (data/fetch_demo_samples.py)
+data/out/

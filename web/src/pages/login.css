@@ -1,0 +1,7 @@
+.login{align-items:center;justify-content:center;padding:32px 16px}
+.login__card{width:100%;max-width:420px;padding:32px 28px;display:flex;flex-direction:column;gap:12px}
+.login__logo{height:40px;width:auto;align-self:flex-start;border-radius:8px}
+.login h1{font-size:var(--hx-text-2xl);font-weight:700;letter-spacing:var(--hx-tracking-tight);margin-top:8px}
+.login__form{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+.login__form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--hx-ink-2)}
+.login__env{align-self:flex-start;margin-top:8px;white-space:normal;height:auto;padding:6px 10px;line-height:1.3}

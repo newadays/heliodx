@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Worklist</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.btn-sm{min-height:36px;padding:0 12px;font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}.chip-ink{background:#15181C;color:#FFFFFF}
+.src{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap}
+.src-up{background:#15181C;color:#FFFFFF}
+.src-sample{background:#FFFFFF;color:#5F6873;border:1px dashed #9AA0A6}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border-bottom:2px solid transparent;font-weight:500;color:#5F6873;text-decoration:none;font-size:14px}
+.tab.cur{color:#15181C;border-color:#15181C;font-weight:600}
+.count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#EDF0F3;color:#3D444D;font-size:12px;font-weight:600}
+.tab.cur .count{background:#15181C;color:#FFFFFF}
+.seg{display:inline-flex;border:1px solid #C9CFD6;border-radius:8px;overflow:hidden;background:#FFFFFF}
+.seg a{min-height:36px;padding:0 12px;display:inline-flex;align-items:center;font-size:13px;font-weight:500;color:#5F6873;text-decoration:none;border-right:1px solid #C9CFD6}
+.seg a:last-child{border-right:0}
+.seg a.cur{background:#15181C;color:#FFFFFF;font-weight:600}
+.row{display:grid;grid-template-columns:64px 1.5fr 1.1fr 1.4fr 1.3fr 90px 150px;gap:16px;align-items:center;padding:12px 16px;border-top:1px solid #E1E5EA}
+.row:hover{background:#FAFBFC}
+.thumb{width:64px;height:64px;border-radius:6px;object-fit:cover;background:#0C1014;display:block}
+.thumb-sample{width:64px;height:64px;border-radius:6px;padding:3px;border:1.5px dashed #9AA0A6;background:#FFFFFF}
+.thumb-sample img{width:100%;height:100%;border-radius:3px;object-fit:cover;display:block;background:#0C1014;opacity:.85}
+.bar{height:4px;border-radius:2px;background:#E1E5EA;overflow:hidden;width:120px}
+.bar > span{display:block;height:100%;background:#15181C;border-radius:2px}
+.pulse{width:8px;height:8px;border-radius:50%;background:#16A34A;animation:pulse 1.2s ease-in-out infinite;display:inline-block}
+@keyframes pulse{0%,100%{transform:scale(.8);opacity:.5}50%{transform:scale(1.15);opacity:1}}
+.demo-step{display:flex;align-items:center;gap:10px;font-size:13.5px;color:#3D444D}
+.demo-step .n{width:24px;height:24px;border-radius:50%;background:#FFFFFF;border:1.5px solid #C9CFD6;color:#3D444D;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sech{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:0 4px}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><span style="color:#15181C;font-weight:600">Worklist</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<main style="flex:1 1 auto;width:100%;max-width:1240px;margin:0 auto;padding:32px 24px 48px;display:flex;flex-direction:column;gap:22px">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:720px">
+<h1 style="font-size:26px;font-weight:700;letter-spacing:-0.015em;line-height:1.2">Worklist</h1>
+<p class="muted" style="font-size:15px;text-wrap:pretty">HelioDX drafts findings the moment a study arrives, so a draft is usually waiting when you open one. Nothing reaches a patient until you sign.</p>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a class="btn btn-primary" href="upload.html"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5v-8M4.5 6L8 2.5 11.5 6M3 13.5h10"></path></svg>Upload study</a>
+<a class="btn btn-secondary" href="#sample">Add a sample</a>
+<a class="btn btn-secondary" href="worklist-console.html"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h4v4M13 3L7 9M11 9v4H3V5h4"></path></svg>Agent console</a>
+</div>
+</div>
+
+<section class="card" aria-label="Guided demo" style="display:flex;align-items:center;gap:24px;padding:14px 18px;flex-wrap:wrap;background:#FFFFFF">
+<div style="display:flex;flex-direction:column;gap:2px;min-width:170px">
+<span class="label">Guided demo</span>
+<span style="font-weight:600">About 2 minutes · uses a sample</span>
+</div>
+<div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;flex:1 1 auto">
+<div class="demo-step"><span class="n">1</span>Open a study</div>
+<div class="demo-step"><span class="n">2</span>Review the drafted findings</div>
+<div class="demo-step"><span class="n">3</span>Sign the report</div>
+<div class="demo-step"><span class="n">4</span>Share the plain-language note</div>
+</div>
+<button type="button" class="btn btn-ghost" aria-label="Dismiss guided demo" style="min-width:44px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button>
+</section>
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid #E1E5EA;padding-bottom:0">
+<nav aria-label="Filter by status" style="display:flex;gap:22px;flex-wrap:wrap">
+<a class="tab cur" href="#all">All <span class="count">5</span></a>
+<a class="tab" href="#ready">Ready to review <span class="count">3</span></a>
+<a class="tab" href="#analyzing">Analyzing <span class="count">1</span></a>
+<a class="tab" href="#signed">Signed <span class="count">1</span></a>
+</nav>
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:6px">
+<nav class="seg" aria-label="Filter by source"><a class="cur" href="#src-all">All sources</a><a href="#src-uploads">Your uploads</a><a href="#src-samples">Samples</a></nav>
+<label style="display:flex;align-items:center;gap:8px;color:#5F6873;font-size:13px"><span>Sort</span><select style="min-height:36px;border:1px solid #C9CFD6;border-radius:8px;background:#FFFFFF;font:inherit;padding:0 10px;color:#15181C"><option>Newest first</option><option>Ready first</option></select></label>
+</div>
+</div>
+
+<section aria-label="Your uploads" style="display:flex;flex-direction:column;gap:10px">
+<div class="sech">
+<h2 style="font-size:15px;font-weight:700">Your uploads</h2><span class="count">1</span>
+<span class="muted" style="font-size:13px">De-identified in your browser · visible to you only · you can delete them</span>
+<div style="flex:1 1 auto"></div>
+<a class="btn btn-ghost btn-sm" href="upload.html">Upload another</a>
+</div>
+<div style="overflow-x:auto">
+<div class="card" style="min-width:1000px;overflow:hidden">
+<div class="row label" style="border-top:0;background:#FAFBFC;padding-top:10px;padding-bottom:10px"><span></span><span>Patient</span><span>Study</span><span>Indication</span><span>Status</span><span>Arrived</span><span></span></div>
+<div class="row">
+<img class="thumb" src="../assets/cxr-sample-2.jpg" alt="">
+<div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:600">Upload 1 · 28 Oct</span><span class="src src-up"><svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5v-8M4.5 6L8 2.5 11.5 6M3 13.5h10"></path></svg>Uploaded</span></div><span class="muted" style="font-size:13px">47 F · by DC at 14:52 · <span class="mono">U-7K2P</span></span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · JPEG · 14 tags removed</span></div>
+<div style="font-size:13.5px">Shortness of breath on exertion.</div>
+<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip chip-ok">Draft ready</span><span class="muted" style="font-size:12.5px">6 findings · all within normal limits</span></div>
+<div class="mono" style="font-size:13px">14:52</div>
+<a class="btn btn-primary" href="review.html">Review draft</a>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-label="Sample studies" style="display:flex;flex-direction:column;gap:10px">
+<div class="sech">
+<h2 style="font-size:15px;font-weight:700">Sample studies</h2><span class="count">4</span>
+<span class="muted" style="font-size:13px">NIH ChestX-ray14 films with synthetic patients · for the guided demo · reset any time</span>
+<div style="flex:1 1 auto"></div>
+<a class="btn btn-ghost btn-sm" href="#sample">Add a sample</a>
+</div>
+<div style="overflow-x:auto">
+<div class="card" style="min-width:1000px;overflow:hidden">
+<div class="row label" style="border-top:0;background:#FAFBFC;padding-top:10px;padding-bottom:10px"><span></span><span>Patient</span><span>Study</span><span>Indication</span><span>Status</span><span>Arrived</span><span></span></div>
+
+<div class="row">
+<div class="thumb-sample"><img src="../assets/cxr-sample-1.jpg" alt=""></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:600">Sample Patient 1</span><span class="src src-sample">Sample</span></div><span class="muted" style="font-size:13px">34 M · synthetic · <span class="mono">S-AI2Y7</span></span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · NIH ChestX-ray14</span></div>
+<div style="font-size:13.5px">Cough for two weeks.</div>
+<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip chip-ok">Draft ready</span><span class="muted" style="font-size:12.5px">6 findings · all within normal limits</span></div>
+<div class="mono" style="font-size:13px">14:27</div>
+<a class="btn btn-secondary" href="review.html">Review draft</a>
+</div>
+
+<div class="row">
+<div class="thumb-sample"><img src="../assets/cxr-sample-2.jpg" alt=""></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:600">Sample Patient 2</span><span class="src src-sample">Sample</span></div><span class="muted" style="font-size:13px">47 F · synthetic</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · NIH ChestX-ray14</span></div>
+<div style="font-size:13.5px">Shortness of breath on exertion.</div>
+<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip chip-ok">Draft ready</span><span class="muted" style="font-size:12.5px">6 findings</span></div>
+<div class="mono" style="font-size:13px">14:19</div>
+<a class="btn btn-secondary" href="#open-2">Review draft</a>
+</div>
+
+<div class="row">
+<div class="thumb-sample"><img src="../assets/cxr-sample-3-thumb.jpg" alt=""></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:600">Sample Patient 3</span><span class="src src-sample">Sample</span></div><span class="muted" style="font-size:13px">[AGE / SEX] · synthetic</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · NIH ChestX-ray14</span></div>
+<div style="font-size:13.5px">[INDICATION]</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="chip chip-neutral"><span class="pulse" aria-hidden="true"></span>Analyzing</span><div class="bar" aria-hidden="true"><span style="width:55%"></span></div><span class="muted" style="font-size:12.5px">Prep · 12 s</span></div>
+<div class="mono" style="font-size:13px">14:31</div>
+<a class="btn btn-secondary" href="analyzing.html">Watch</a>
+</div>
+
+<div class="row">
+<div class="thumb-sample"><img src="../assets/cxr-sample-4-thumb.jpg" alt=""></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:600">Sample Patient 4</span><span class="src src-sample">Sample</span></div><span class="muted" style="font-size:13px">[AGE / SEX] · synthetic</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span>Chest X-ray</span><span class="muted" style="font-size:13px">PA · NIH ChestX-ray14</span></div>
+<div style="font-size:13.5px">[INDICATION]</div>
+<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="chip chip-ink">Signed</span><span class="muted" style="font-size:12.5px">Patient note shared · PDF</span></div>
+<div class="mono" style="font-size:13px">13:52</div>
+<a class="btn btn-secondary" href="done.html">View</a>
+</div>
+</div>
+</div>
+</section>
+
+<p class="muted" style="font-size:13px;text-wrap:pretty">Analysis runs on arrival and usually finishes in under 30 seconds. Open a study at any time — findings appear as they are detected and you can start reviewing before the run completes.</p>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Welcome</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#0A0C10;color:#E6EBE7;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#7FEE64}a:hover{color:#A6F58F}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:999px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap}
+.pill-light{background:#F2F5F3;color:#0A0C10}.pill-light:hover{background:#FFFFFF;color:#0A0C10}
+.pill-dark{background:#14181F;color:#E6EBE7;border-color:#2A313B}.pill-dark:hover{background:#1B2129;color:#FFFFFF}
+.navlink{color:#C2CAC5;text-decoration:none;font-weight:500;min-height:44px;display:inline-flex;align-items:center;padding:0 6px}
+.navlink:hover{color:#FFFFFF}
+.muted{color:#8A939A}
+.body{color:#B5BDB7}
+.label{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#7FEE64}
+.card{background:#10141A;border:1px solid #1E242C;border-radius:14px}
+.mk{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#7FEE64;color:#0A0C10;border:2px solid #0A0C10;box-shadow:0 0 0 2px rgba(127,238,100,.45),0 2px 8px rgba(0,0,0,.6);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:inherit}
+.ln{position:absolute;height:0;border-top:1.5px solid #7FEE64;box-shadow:0 0 8px rgba(127,238,100,.7)}
+.ln::before,.ln::after{content:"";position:absolute;top:-5px;width:0;height:10px;border-left:1.5px solid #7FEE64}
+.ln::before{left:0}.ln::after{right:0}
+.fchip{position:absolute;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(10,12,16,.88);border:1px solid rgba(127,238,100,.4);color:#E6EBE7;font-size:12.5px;font-weight:500;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.fchip .ok{width:8px;height:8px;border-radius:50%;background:#7FEE64;flex:0 0 auto}
+.step{display:flex;flex-direction:column;gap:10px;padding:22px 22px 24px}
+.step .n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;font-weight:600;color:#7FEE64}
+.step h3{font-size:17px;font-weight:600;color:#FFFFFF}
+.step p{font-size:14px;color:#B5BDB7;text-wrap:pretty}
+.step .t{font-size:12.5px;color:#8A939A}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#0A0C10">
+
+<header style="min-height:64px;display:flex;align-items:center;gap:18px;padding:12px 32px;flex-wrap:wrap;border-bottom:1px solid #161B22">
+<a href="welcome.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:36px;width:auto;display:block"></a>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Primary" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<a class="navlink" href="#expect">What to expect</a>
+<a class="navlink" href="worklist.html">Log in</a>
+<a class="pill pill-dark" href="#contact" style="min-height:44px">Contact us</a>
+</nav>
+</header>
+
+<section aria-label="Introduction" style="position:relative;overflow:hidden;min-height:680px;display:flex;align-items:center;padding:56px 32px 48px">
+<div role="img" aria-label="A chest X-ray with HelioDX finding markers: cardiac silhouette within limits, costophrenic angles sharp, six findings drafted in 27 seconds" style="position:absolute;right:0;top:0;bottom:0;width:min(100%,760px)">
+<img src="../assets/cxr-hero.jpg" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;display:block;opacity:.85">
+<div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(90deg,#0A0C10 0%,rgba(10,12,16,.92) 10%,rgba(10,12,16,.45) 30%,rgba(10,12,16,0) 52%)"></div>
+<div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,12,16,.6) 0%,rgba(10,12,16,0) 24%,rgba(10,12,16,0) 70%,#0A0C10 100%)"></div>
+<div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(270deg,#0A0C10 0%,rgba(10,12,16,0) 14%)"></div>
+<div aria-hidden="true" style="position:absolute;inset:0;background:radial-gradient(ellipse at 55% 60%,rgba(127,238,100,.12),rgba(127,238,100,0) 58%)"></div>
+<div class="ln" aria-hidden="true" style="left:40%;top:65.6%;width:30%"></div>
+<div class="ln" aria-hidden="true" style="left:14%;top:70%;width:70%"></div>
+<span class="mk" aria-hidden="true" style="left:55%;top:64.5%">1</span>
+<span class="mk" aria-hidden="true" style="left:27%;top:42.4%">2</span>
+<span class="mk" aria-hidden="true" style="left:70%;top:40.2%">3</span>
+<span class="mk" aria-hidden="true" style="left:14%;top:76.2%">4</span>
+<span class="mk" aria-hidden="true" style="left:83%;top:80.5%">4</span>
+<span class="mk" aria-hidden="true" style="left:75%;top:61.4%">5</span>
+<span class="mk" aria-hidden="true" style="left:28%;top:61.4%">6</span>
+<div class="fchip" aria-hidden="true" style="left:59%;top:51%"><span class="ok"></span>Cardiac silhouette · within limits · <span class="mono">CTR 0.43</span></div>
+<div class="fchip" aria-hidden="true" style="left:51%;top:80.5%"><span class="ok"></span>Costophrenic angles · sharp</div>
+<div class="fchip" aria-hidden="true" style="right:6%;top:9%"><span class="ok"></span>6 findings drafted in <span class="mono">27 s</span></div>
+</div>
+<div style="position:relative;max-width:1180px;margin:0 auto;width:100%">
+
+<div style="max-width:560px;display:flex;flex-direction:column;gap:26px">
+<span class="label">Clinician-reviewed imaging findings</span>
+<h1 style="font-size:clamp(38px,4.6vw,62px);font-weight:600;line-height:1.06;letter-spacing:-0.025em;color:#FFFFFF;text-wrap:balance">The platform for <span style="color:#7FEE64;display:block">Clinical AI Workflow</span></h1>
+<p class="body" style="font-size:17px;max-width:520px;text-wrap:pretty">HelioDX: Meta Muse Wonder coordinating a team of Muse Glimmer agents that run the radiology workflow privately, on the clinic's own GPU.</p>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+<a class="pill pill-light" href="worklist.html">Log in</a>
+<a class="pill pill-dark" href="#contact">Contact us</a>
+</div>
+<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:13px;color:#8A939A">
+<span>A study, start to finish, in about two minutes</span><span aria-hidden="true">·</span><span>Nothing reaches a patient until you sign</span>
+</div>
+</div>
+
+</div>
+</section>
+
+<section id="expect" aria-label="What to expect" style="padding:40px 32px 24px">
+<div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:8px">
+<span class="label">What to expect</span>
+<h2 style="font-size:30px;font-weight:600;letter-spacing:-0.02em;color:#FFFFFF">Five steps. You decide at every one.</h2>
+</div>
+<p class="muted" style="max-width:420px;text-wrap:pretty">Studies are analyzed on arrival, so a draft is usually waiting when you open one. Every agent step is logged beside your own actions.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:12px">
+<div class="card step"><span class="n">01</span><h3>Analyze</h3><p>Findings draft the moment a study arrives and appear as they are detected.</p><span class="t">Usually under 30 seconds</span></div>
+<div class="card step"><span class="n">02</span><h3>Review</h3><p>Accept, edit or reject each finding on the image, with measurements drawn on the film.</p><span class="t">Keyboard-fast · accept all when it's all normal</span></div>
+<div class="card step"><span class="n">03</span><h3>Sign</h3><p>A structured report drafted from your decisions. Your impression, your signature.</p><span class="t">Locks with a timestamp and hash</span></div>
+<div class="card step"><span class="n">04</span><h3>Patient note</h3><p>Plain language, written from the signed report only and checked against it.</p><span class="t">Edit any wording before it goes out</span></div>
+<div class="card step"><span class="n">05</span><h3>Share</h3><p>A one-page PDF to print or hand over, with the patient's consent recorded.</p><span class="t">The image and findings stay in the record</span></div>
+</div>
+</div>
+</section>
+
+<section aria-label="Principles" style="padding:24px 32px 48px">
+<div style="max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:12px">
+<div class="card" style="padding:22px;display:flex;flex-direction:column;gap:8px"><h3 style="font-size:16px;font-weight:600;color:#FFFFFF">You stay in charge</h3><p class="body" style="font-size:14px;text-wrap:pretty">Every finding is accepted, edited or rejected by you. The report is yours and it locks when you sign.</p></div>
+<div class="card" style="padding:22px;display:flex;flex-direction:column;gap:8px"><h3 style="font-size:16px;font-weight:600;color:#FFFFFF">Private and compliant</h3><p class="body" style="font-size:14px;text-wrap:pretty">Clinical workflows run in a private, compliant manner at scale. Patients receive the plain-language note only.</p></div>
+<div class="card" style="padding:22px;display:flex;flex-direction:column;gap:8px"><h3 style="font-size:16px;font-weight:600;color:#FFFFFF">Fully traceable</h3><p class="body" style="font-size:14px;text-wrap:pretty">Each agent step is logged with its model, duration and tokens in the console, beside the clinician's actions.</p></div>
+</div>
+</section>
+
+<footer id="contact" style="margin-top:auto;border-top:1px solid #161B22;padding:32px 32px 36px">
+<div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center">
+<span style="display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF;border-radius:12px;padding:12px 22px"><img src="../assets/meta-logo.png" alt="Meta" style="height:40px;width:auto;display:block"></span>
+<p style="font-size:28px;font-weight:600;letter-spacing:-0.02em;color:#FFFFFF">Powered by Meta AI</p>
+<p class="muted" style="font-size:13.5px">Muse Wonder · Muse Glimmer · SAM 3.1 · Muse Voice Transcribe</p>
+<div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:13.5px">
+<a href="worklist.html" style="text-decoration:none;font-weight:600">Log in</a>
+<a href="#contact" style="text-decoration:none;font-weight:600">Contact us</a>
+<a href="console.html" style="text-decoration:none;font-weight:600">Agent console</a>
+</div>
+<p class="muted" style="font-size:12.5px">Research Beta · Not ready for clinical use</p>
+</div>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+rules_version = '2';
+
+// HelioDX Storage rules.
+//
+// Layout: every study's files sit under the clinician who owns it.
+//   organizations/{orgId}/…                         logos; read-only for members
+//   studies/{orgId}/{uid}/{studyId}/original.<ext>  the de-identified image (backend copy)
+//   studies/{orgId}/{uid}/{studyId}/thumb.jpg       written by the pipeline only
+//   studies/{orgId}/{uid}/{studyId}/overlays/*.png  mask overlays (backend only)
+//   studies/{orgId}/{uid}/{studyId}/shares/*.pdf    patient-summary PDFs (backend only)
+//   studies/{orgId}/{uid}/staging/{uploadId}.png    de-identified uploads before "Start analysis"
+//   studies/{orgId}/samples/{studyId}/…             sample studies, shared by the workspace
+// Clients write only their own staging uploads; everything else is written
+// by the backend with the Admin SDK.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Guard every property lookup: a missing claim or metadata key must read
+    // as "deny", not as an evaluation error in the logs.
+    function inOrg(orgId) {
+      return signedIn()
+        && 'orgId' in request.auth.token
+        && request.auth.token.orgId == orgId;
+    }
+
+    function owner(orgId, uid) {
+      return inOrg(orgId) && request.auth.uid == uid;
+    }
+
+    match /organizations/{orgId}/{path=**} {
+      allow read: if inOrg(orgId);
+      allow write: if false;
+    }
+
+    // §4.11: sample studies belong to the workspace; members read them, the
+    // backend writes them.
+    match /studies/{orgId}/samples/{path=**} {
+      allow read: if inOrg(orgId);
+    }
+
+    // A study's folder: read by its owner; written by the backend only
+    // (startUpload copies the staged PNG in as the original).
+    match /studies/{orgId}/{uid}/{studyId}/{path=**} {
+      allow read: if owner(orgId, uid);
+    }
+
+    // Uploads (§4.10): the browser stages a de-identified PNG here (pixels
+    // only; identifiers were removed before upload). Only its owner may write,
+    // read or delete it; startUpload turns it into a study and removes it.
+    match /studies/{orgId}/{uid}/staging/{file} {
+      allow read, delete: if owner(orgId, uid);
+      allow create: if owner(orgId, uid)
+        && file.matches('[A-Za-z0-9_-]{8,64}\\.png')
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType == 'image/png';
+      allow update: if false;
+    }
+
+    // Demo sample images (F11): read by demo accounts for the picker; the
+    // backend copies them into new demo studies. Uploaded by the setup script.
+    match /samples/{file} {
+      allow read: if signedIn() && request.auth.token.orgId == 'demo';
+      allow write: if false;
+    }
+
+    match /studies/{orgId}/{studyId}/shares/{file} {
+      allow read: if inOrg(orgId);
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

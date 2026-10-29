@@ -1,0 +1,143 @@
+/* HelioDX design tokens — v1.1 (28 Oct 2026)
+   Palette: black and white, with GREEN only for success and RED only for failure/attention.
+   App theme is the default (:root). The landing page sets data-theme="landing" on <html>.
+   Every colour, radius, font and size in the UI comes from here. */
+
+:root {
+  /* Ground and surfaces */
+  --hx-ground: #F4F6F8;
+  --hx-surface: #FFFFFF;
+  --hx-surface-2: #FAFBFC;
+  --hx-surface-tint: #F4F6F8;      /* selected row / expanded trace row */
+  --hx-preview-ground: #E9EDF1;    /* patient-note preview pane */
+
+  /* Text */
+  --hx-ink: #15181C;
+  --hx-ink-2: #3D444D;
+  --hx-muted: #5F6873;             /* 5.3:1 on white — the floor for small text */
+
+  /* Lines */
+  --hx-line: #E1E5EA;
+  --hx-line-strong: #C9CFD6;
+
+  /* Primary (actions, current step, selection, progress): black */
+  --hx-primary: #15181C;
+  --hx-primary-hover: #000000;
+  --hx-primary-disabled: #9AA0A6;
+  --hx-focus-ring: rgba(21, 24, 28, 0.14);
+
+  /* Success: green — accepted, done, ready, signed strip, live */
+  --hx-green: #137A3A;             /* ink on white 5.6:1; fill under white text */
+  --hx-green-tint: #E6F4EA;
+  --hx-green-line: #BFE3CB;
+  --hx-green-tint-2: #F0FAF3;      /* "running now" strip */
+  --hx-green-bright: #3DDC84;      /* overlays on the dark viewer */
+  --hx-green-pulse: #16A34A;
+
+  /* Failure / attention: red — needs attention, reject, errors, flagged regions */
+  --hx-red: #B42318;               /* ink on white 6.5:1; fill under white text */
+  --hx-red-tint: #FDECEA;
+  --hx-red-line: #F3B9B3;
+  --hx-red-bright: #FF6B6B;        /* overlays on the dark viewer */
+
+  /* Neutral chip */
+  --hx-chip-neutral-bg: #EDF0F3;
+  --hx-chip-neutral-ink: #3D444D;
+
+  /* Viewer (dark image pane) */
+  --hx-viewer-bg: #0C1014;
+  --hx-viewer-line: #1C2229;
+  --hx-viewer-text: #C8D0D8;
+  --hx-viewer-muted: #8B96A3;
+  --hx-viewer-chrome: #1A2027;
+  --hx-viewer-border: #2A323B;
+  --hx-viewer-label: #DFF7E8;
+  --hx-viewer-dim: rgba(12, 16, 20, 0.35);
+  --hx-viewer-dim-strong: rgba(12, 16, 20, 0.45);
+
+  /* Type */
+  --hx-font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --hx-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --hx-text-xs: 11.5px;
+  --hx-text-sm: 12.5px;
+  --hx-text-base: 14px;
+  --hx-text-md: 15px;
+  --hx-text-lg: 16px;
+  --hx-text-xl: 18px;
+  --hx-text-2xl: 22px;
+  --hx-text-3xl: 26px;
+  --hx-text-4xl: 28px;
+  --hx-leading: 1.45;
+  --hx-leading-prose: 1.5;
+  --hx-tracking-label: 0.06em;
+  --hx-tracking-tight: -0.01em;
+  --hx-tracking-tighter: -0.015em;
+
+  /* Space (4 px base) */
+  --hx-space-1: 4px;  --hx-space-2: 8px;  --hx-space-3: 12px; --hx-space-4: 16px; --hx-space-5: 20px;
+  --hx-space-6: 24px; --hx-space-7: 28px; --hx-space-8: 32px; --hx-space-10: 40px;
+
+  /* Radii */
+  --hx-radius-sm: 6px;
+  --hx-radius: 8px;
+  --hx-radius-lg: 12px;
+  --hx-radius-xl: 14px;
+  --hx-radius-pill: 999px;
+
+  /* Sizes */
+  --hx-target: 44px;
+  --hx-target-sm: 36px;
+  --hx-header-h: 56px;
+  --hx-viewer-w: 620px;
+  --hx-panel-min: 560px;
+  --hx-console-w: 480px;
+  --hx-upload-w: 520px;
+  --hx-cases-w: 320px;
+  --hx-page-max: 1240px;
+  --hx-marker: 28px;
+  --hx-marker-focus: 34px;
+  --hx-num-chip: 24px;
+
+  /* Shadows */
+  --hx-shadow-marker: 0 1px 5px rgba(0, 0, 0, 0.6);
+  --hx-shadow-note: 0 8px 24px rgba(21, 24, 28, 0.06);
+  --hx-shadow-chip: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* Motion */
+  --hx-pulse: pulse 1.2s ease-in-out infinite;
+  --hx-shimmer: shimmer 1.4s linear infinite;
+  --hx-scan: scan 3.4s ease-in-out infinite alternate;
+}
+
+/* Landing page (dark) — black ground, white type, one green accent */
+:root[data-theme="landing"] {
+  --lx-bg: #0A0C10;                /* equals the logo tile's background */
+  --lx-surface: #10141A;
+  --lx-line: #1E242C;
+  --lx-line-soft: #161B22;
+  --lx-text: #FFFFFF;
+  --lx-text-2: #E6EBE7;
+  --lx-body: #B5BDB7;
+  --lx-muted: #8A939A;
+  --lx-nav: #C2CAC5;
+  --lx-accent: #7FEE64;
+  --lx-accent-hover: #A6F58F;
+  --lx-accent-glow: rgba(127, 238, 100, 0.12);
+  --lx-accent-ring: rgba(127, 238, 100, 0.45);
+  --lx-pill-light: #F2F5F3;
+  --lx-pill-dark: #14181F;
+  --lx-pill-dark-hover: #1B2129;
+  --lx-pill-line: #2A313B;
+  --lx-badge: #FFFFFF;
+  --lx-h1: clamp(38px, 4.6vw, 62px);
+  --lx-h2: 30px;
+  --lx-footer-title: 28px;
+}
+
+@keyframes pulse   { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 1; } }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes scan    { 0% { top: 2%; } 100% { top: 97%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --hx-pulse: none; --hx-shimmer: none; --hx-scan: none; }
+}

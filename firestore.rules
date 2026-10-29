@@ -1,0 +1,166 @@
+rules_version = '2';
+
+// HelioDX Firestore rules.
+//
+// Everything is scoped by the `orgId` custom claim that the admin scripts
+// (`invite`, `demo-user`) set; a user with no claim can read only their own `users/{uid}` document.
+// Cloud Functions use the Admin SDK and bypass these rules, so anything the
+// pipeline writes (status progression, findings drafts, summaries) is
+// deliberately NOT allowed to the client here.
+//
+// Tested by functions/test/firestore.rules.test.ts against the emulator.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasOrg() {
+      return signedIn() && 'orgId' in request.auth.token;
+    }
+
+    function tokenOrgId() {
+      return request.auth.token.orgId;
+    }
+
+    function inOrg(orgId) {
+      return hasOrg() && tokenOrgId() == orgId;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // ---- organizations ----------------------------------------------------
+    // Members read their own organization; nothing is written from the app.
+    match /organizations/{orgId} {
+      allow read: if inOrg(orgId);
+      allow write: if false;
+    }
+
+    // ---- users ------------------------------------------------------------
+    // Invite-only: documents are created by the admin scripts (`invite`, `demo-user`).
+    // The client may only confirm the organization and edit how its name shows.
+    match /users/{uid} {
+      allow read: if isSelf(uid);
+      allow create, delete: if false;
+      allow update: if isSelf(uid)
+        && changedKeys().hasOnly(['orgConfirmedAt', 'displayName', 'title', 'updatedAt']);
+    }
+
+    // ---- studies ----------------------------------------------------------
+    match /studies/{studyId} {
+
+      function isOwner() {
+        return signedIn() && resource.data.clinicianUid == request.auth.uid;
+      }
+
+      // §4.11: sample studies belong to the workspace (owner id 'samples',
+      // which only the backend writes: a client can create a study only as
+      // itself); any member of their organization may read and review them,
+      // never soft-delete them.
+      function isWorkspaceSample() {
+        return hasOrg() && resource.data.orgId == tokenOrgId()
+          && resource.data.clinicianUid == 'samples';
+      }
+
+      function mayAct() {
+        return isOwner()
+          || (isWorkspaceSample() && !changedKeys().hasAny(['deletedAt']));
+      }
+
+      function keepsIdentity() {
+        return request.resource.data.orgId == resource.data.orgId
+          && request.resource.data.clinicianUid == resource.data.clinicianUid;
+      }
+
+      // Any member of the organization may read a study; list queries must
+      // filter on orgId == token orgId or they are rejected wholesale. Demo
+      // accounts (judges, F11) read only their own uploads plus the
+      // workspace's samples, so list queries from them must also filter on
+      // clinicianUid or on source == 'sample'.
+      allow read: if hasOrg() && resource.data.orgId == tokenOrgId()
+        && (request.auth.token.get('role', '') != 'demo'
+          || resource.data.clinicianUid == request.auth.uid
+          || isWorkspaceSample());
+
+      // Studies are created by the backend only (startUpload, createDemoStudy).
+      allow create: if false;
+
+      // Client updates:
+      //  1. review of a finished study: ready -> ready, review fields only
+      //  2. after signing the clinician report is frozen. The owner may
+      //     soft-delete, and while the patient summary is ready (written by
+      //     the backend from the signed report, B16) confirm or edit it, but
+      //     never its generated copy or source hash. Shares are recorded by
+      //     the backend only (shareStudy, B17), which also gates them.
+      allow update: if mayAct() && keepsIdentity() && (
+        (
+          resource.data.status == 'ready'
+          && request.resource.data.status == 'ready'
+          && changedKeys().hasOnly([
+            'findings', 'clinicianSummary', 'reviewHash', 'deletedAt', 'updatedAt'
+          ])
+        ) || (
+          resource.data.status in ['signed', 'shared', 'closed']
+          && request.resource.data.status == resource.data.status
+          && changedKeys().hasOnly(['deletedAt', 'updatedAt'])
+        ) || (
+          resource.data.status == 'patient_summary_ready'
+          && request.resource.data.status == resource.data.status
+          && changedKeys().hasOnly(['patientSummary', 'deletedAt', 'updatedAt'])
+          && (
+            !changedKeys().hasAny(['patientSummary'])
+            || (
+              request.resource.data.patientSummary is map
+              && request.resource.data.patientSummary.get('generated', null)
+                == resource.data.patientSummary.get('generated', null)
+              && request.resource.data.patientSummary.get('generatedFromReportHash', null)
+                == resource.data.patientSummary.get('generatedFromReportHash', null)
+            )
+          )
+        )
+      );
+
+      // Soft delete via `deletedAt`; hard deletes are an admin/Functions job.
+      allow delete: if false;
+
+      // Audit trail and per-case trace (B19), written only by Functions.
+      // Entries carry ids, statuses, codes, numbers and one-line results,
+      // never clinical text. Readable by organization admins, and in the
+      // synthetic demo organization by the account that created the study
+      // (the judges' console).
+      function mayReadCaseLog() {
+        let study = get(/databases/$(database)/documents/studies/$(studyId)).data;
+        return hasOrg() && study.orgId == tokenOrgId()
+          && (request.auth.token.get('role', '') == 'admin'
+            || (tokenOrgId() == 'demo' && (study.clinicianUid == request.auth.uid
+              || study.clinicianUid == 'samples')));
+      }
+
+      match /audit/{entryId} {
+        allow read: if mayReadCaseLog();
+        allow write: if false;
+      }
+
+      match /trace/{entryId} {
+        allow read: if mayReadCaseLog();
+        allow write: if false;
+      }
+    }
+
+    // Demo samples (F11): synthetic metadata for the sample picker, read by
+    // demo accounts; written by the setup script only.
+    match /samples/{sampleId} {
+      allow read: if hasOrg() && tokenOrgId() == 'demo';
+      allow write: if false;
+    }
+
+    // Anything not matched above is closed.
+  }
+}

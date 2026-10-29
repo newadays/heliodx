@@ -1,0 +1,15 @@
+{
+  "name": "heliodx",
+  "license": "AGPL-3.0-or-later",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build:web": "npm --prefix web ci && npm --prefix web run build"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.10"
+  }
+}

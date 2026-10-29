@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Report and sign</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.btn-dark{background:transparent;color:#C8D0D8;border-color:#2A323B;min-height:36px;padding:0 12px;font-size:13px}.btn-dark:hover{background:#1A2027;color:#FFFFFF}
+.btn-dark.on{background:#1A2027;color:#FFFFFF;border-color:#FFFFFF}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#5F6873;white-space:nowrap}
+.step.cur{color:#15181C;font-weight:600}.step.done{color:#137A3A}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;border:1.5px solid #C9CFD6;color:#5F6873;background:#FFFFFF;flex:0 0 auto}
+.step.cur .dot{background:#15181C;border-color:#15181C;color:#FFFFFF}.step.done .dot{background:#137A3A;border-color:#137A3A;color:#FFFFFF}
+.rule{width:22px;height:1px;background:#C9CFD6;flex:0 0 auto}
+.num{width:22px;height:22px;border-radius:50%;background:#15181C;color:#FFFFFF;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.viewer{background:#0C1014;color:#C8D0D8}
+.marker{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#137A3A;color:#FFFFFF;border:2px solid #FFFFFF;box-shadow:0 1px 5px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;padding:0;cursor:pointer;font-family:inherit}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border-bottom:2px solid transparent;font-weight:500;color:#5F6873;text-decoration:none;font-size:14px}
+.tab.cur{color:#15181C;border-color:#15181C;font-weight:600}
+.fl{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5}
+input[type=checkbox]{width:18px;height:18px;accent-color:#15181C;margin:0;flex:0 0 auto}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><a href="worklist.html" style="text-decoration:none">Worklist</a><span aria-hidden="true">›</span><span style="color:#15181C;font-weight:600">Sample Patient 1</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<div style="flex:1 1 auto;display:flex;flex-wrap:wrap;min-height:0">
+
+<section class="viewer" aria-label="Image viewer" style="flex:0 1 620px;min-width:0;display:flex;flex-direction:column">
+<div style="min-height:48px;display:flex;align-items:center;gap:12px;padding:6px 16px;border-bottom:1px solid #1C2229;flex-wrap:wrap">
+<strong style="color:#FFFFFF">Sample Patient 1</strong><span style="color:#8B96A3">34 M · Chest X-ray · PA</span>
+<div style="flex:1 1 auto"></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-dark on">Markers</button><button type="button" class="btn btn-dark">Measurements</button><button type="button" class="btn btn-dark">Fit</button><button type="button" class="btn btn-dark">1:1</button></div>
+</div>
+<div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="position:relative;width:100%;max-width:580px;aspect-ratio:1346/1140;overflow:hidden;border-radius:4px">
+<img src="../assets/cxr-sample-1.jpg" alt="Chest X-ray, PA view, Sample Patient 1, with six numbered finding markers" style="width:100%;height:100%;object-fit:contain;display:block">
+<button type="button" class="marker" aria-label="Finding 1" style="left:50%;top:55%">1</button>
+<button type="button" class="marker" aria-label="Finding 2" style="left:28%;top:36%">2</button>
+<button type="button" class="marker" aria-label="Finding 3" style="left:72%;top:36%">3</button>
+<button type="button" class="marker" aria-label="Finding 4, right side" style="left:17%;top:79%">4</button>
+<button type="button" class="marker" aria-label="Finding 4, left side" style="left:84%;top:79%">4</button>
+<button type="button" class="marker" aria-label="Finding 5" style="left:69%;top:54%">5</button>
+<button type="button" class="marker" aria-label="Finding 6" style="left:30%;top:56%">6</button>
+</div>
+</div>
+<div style="min-height:40px;display:flex;align-items:center;gap:16px;padding:6px 16px;border-top:1px solid #1C2229;font-size:12.5px;color:#8B96A3;flex-wrap:wrap">
+<span>Markers match the numbered findings in the report</span><span>Hover a line of the report to spotlight it</span>
+</div>
+</section>
+
+<section aria-label="Report" style="flex:1 1 560px;min-width:0;display:flex;flex-direction:column;background:#F4F6F8">
+<div style="padding:12px 28px;border-bottom:1px solid #E1E5EA;background:#FFFFFF;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<nav aria-label="Progress" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<div class="step done"><span class="dot"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Analyze</div><span class="rule"></span>
+<div class="step done"><span class="dot"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Review</div><span class="rule"></span>
+<div class="step cur"><span class="dot">3</span>Sign</div><span class="rule"></span>
+<div class="step"><span class="dot">4</span>Patient note</div><span class="rule"></span>
+<div class="step"><span class="dot">5</span>Share</div>
+</nav>
+<div style="flex:1 1 auto"></div>
+<span class="muted" style="font-size:12.5px">6 of 6 reviewed · 6 accepted · 1 wording edited</span>
+</div>
+
+<div style="padding:20px 28px;display:flex;flex-direction:column;gap:16px;flex:1 1 auto">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid #E1E5EA">
+<nav aria-label="Report views" style="display:flex;gap:22px">
+<a class="tab cur" href="#clinician">Clinician report</a>
+<a class="tab" href="share.html">Patient note <span class="chip chip-ok">Draft ready</span></a>
+</nav>
+<div style="display:flex;gap:4px;padding-bottom:4px"><button type="button" class="btn btn-ghost"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"></path></svg>Edit</button><button type="button" class="btn btn-ghost"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"></rect><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"></path></svg>Copy</button></div>
+</div>
+
+<article class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<h1 style="font-size:18px;font-weight:700;letter-spacing:-0.01em">Chest X-ray · PA · Sample Patient 1, 34 M</h1>
+<span class="muted" style="font-size:12.5px">Drafted from your 6 accepted findings</span>
+</div>
+
+<section style="display:flex;flex-direction:column;gap:8px">
+<span class="label">Findings</span>
+<ol style="list-style:none;padding:0;display:flex;flex-direction:column;gap:6px">
+<li class="fl"><span class="num">1</span><span>Cardiac silhouette within expected limits (cardiothoracic ratio 0.45; limit 0.55).</span></li>
+<li class="fl"><span class="num">2</span><span>Lung areas are symmetric (area difference 2.1%; limit 15%).</span></li>
+<li class="fl"><span class="num">3</span><span>Lung densities are symmetric (left/right mean brightness ratio 1.09; limit 1.25).</span></li>
+<li class="fl"><span class="num">4</span><span>Both costophrenic angles are sharp; no blunting on either side. <span class="chip chip-neutral" style="vertical-align:middle">Edited by you</span></span></li>
+<li class="fl"><span class="num">5</span><span>No focal consolidation in the left lung.</span></li>
+<li class="fl"><span class="num">6</span><span>No focal consolidation in the right lung.</span></li>
+</ol>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:8px">
+<span class="label">Impression</span>
+<ol style="padding-left:20px;display:flex;flex-direction:column;gap:4px;line-height:1.5">
+<li>No focal consolidation in either lung on this PA chest radiograph.</li>
+<li>Cardiac silhouette within expected limits.</li>
+<li>Lung areas and densities symmetric.</li>
+<li>Costophrenic angles sharp.</li>
+</ol>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:8px">
+<span class="label">Recommendation</span>
+<p style="line-height:1.5;text-wrap:pretty">Correlate clinically with the two-week history of cough; consider further evaluation if symptoms persist or worsen, and review with the official radiology interpretation.</p>
+</section>
+
+<div style="display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid #E1E5EA;font-size:12.5px;color:#5F6873"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"></circle><path d="M8 7v4M8 5v.5"></path></svg>AI-drafted for clinician review. Not a diagnosis — verify against the image before signing.</div>
+</article>
+
+</div>
+
+<footer style="padding:14px 28px;border-top:1px solid #E1E5EA;background:#FFFFFF;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+<label style="display:flex;align-items:center;gap:10px;font-size:13.5px;max-width:560px;text-wrap:pretty"><input type="checkbox" checked>I have reviewed the image and the findings. The impression and recommendation are my own.</label>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+<div style="display:flex;gap:10px"><a class="btn btn-ghost" href="review.html">Back to findings</a><a class="btn btn-primary" href="share.html"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg>Sign as Dr. Demo Clinician</a></div>
+<span class="muted" style="font-size:12px">Signing locks the report and records the time and a hash. The patient note is written from the signed version.</span>
+</div>
+</footer>
+</section>
+
+</div>
+</div>
+</body>
+</html>

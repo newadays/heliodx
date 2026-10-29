@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HelioDX — Patient note and share</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+body{margin:0;background:#F4F6F8;color:#15181C;font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#15181C}a:hover{color:#000000}
+h1,h2,h3,p,ol,ul{margin:0}
+.mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;white-space:nowrap;color:#15181C}
+.btn-primary{background:#15181C;color:#FFFFFF}.btn-primary:hover{background:#000000;color:#FFFFFF}
+.btn-secondary{background:#FFFFFF;border-color:#C9CFD6}.btn-secondary:hover{background:#F4F6F8;color:#15181C}
+.btn-ghost{background:transparent;color:#15181C;padding:0 10px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.chip-ok{background:#E6F4EA;color:#137A3A}.chip-warn{background:#FDECEA;color:#B42318}.chip-env{background:#FFFFFF;color:#15181C;border:1px solid #15181C}.chip-neutral{background:#EDF0F3;color:#3D444D}
+.card{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5F6873}
+.muted{color:#5F6873}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#5F6873;white-space:nowrap}
+.step.cur{color:#15181C;font-weight:600}.step.done{color:#137A3A}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;border:1.5px solid #C9CFD6;color:#5F6873;background:#FFFFFF;flex:0 0 auto}
+.step.cur .dot{background:#15181C;border-color:#15181C;color:#FFFFFF}.step.done .dot{background:#137A3A;border-color:#137A3A;color:#FFFFFF}
+.rule{width:22px;height:1px;background:#C9CFD6;flex:0 0 auto}
+.opt{display:grid;grid-template-columns:22px 36px minmax(0,1fr);gap:14px;align-items:center;padding:14px 16px;background:#FFFFFF;border:1px solid #E1E5EA;border-radius:12px;cursor:pointer}
+.opt.on{border-color:#15181C;box-shadow:0 0 0 3px rgba(21,24,28,.12)}
+.opt:hover{background:#FAFBFC}
+.ico{width:36px;height:36px;border-radius:8px;background:#EDF0F3;color:#3D444D;display:inline-flex;align-items:center;justify-content:center}
+.opt.on .ico{background:#15181C;color:#FFFFFF}
+input[type=radio]{width:18px;height:18px;accent-color:#15181C;margin:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:#15181C;margin:0;flex:0 0 auto}
+input[type=text]{font:inherit;font-size:14px;color:#15181C;border:1px solid #C9CFD6;border-radius:8px;padding:10px 12px;background:#FFFFFF;width:100%;min-height:44px}
+input[type=text]:focus{outline:2px solid #15181C;outline-offset:1px;border-color:#15181C}
+.note{background:#FFFFFF;border:1px solid #E1E5EA;border-radius:14px;padding:26px 28px;display:flex;flex-direction:column;gap:16px;max-width:460px;width:100%;box-shadow:0 8px 24px rgba(21,24,28,.06)}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
+<header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
+<a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
+<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<div style="flex:1 1 auto"></div>
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><a href="worklist.html" style="text-decoration:none">Worklist</a><span aria-hidden="true">›</span><span style="color:#15181C;font-weight:600">Sample Patient 1</span></nav>
+<div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
+</header>
+
+<div role="status" style="background:#E6F4EA;color:#137A3A;border-bottom:1px solid #BFE3CB;display:flex;align-items:center;gap:12px;padding:8px 28px;font-size:13px;flex-wrap:wrap">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg>
+<span><strong>Report signed</strong> by Dr. Demo Clinician · today 14:33 · <span class="mono">sha256 a6bd4ea5…</span> · locked</span>
+<div style="flex:1 1 auto"></div>
+<a href="sign.html" style="font-weight:600">View signed report</a>
+</div>
+
+<div style="flex:1 1 auto;display:flex;flex-wrap:wrap;min-height:0">
+
+<section aria-label="Patient note preview" style="flex:0 1 620px;min-width:0;display:flex;flex-direction:column;background:#E9EDF1;border-right:1px solid #E1E5EA">
+<div style="min-height:48px;display:flex;align-items:center;gap:12px;padding:6px 20px;border-bottom:1px solid #DCE1E6;flex-wrap:wrap">
+<span class="label">What Sample will receive</span><span class="chip chip-ok">Checked against the signed report</span>
+<div style="flex:1 1 auto"></div>
+<div style="display:flex;gap:2px"><button type="button" class="btn btn-ghost"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2z"></path></svg>Edit wording</button><button type="button" class="btn btn-ghost">Rewrite from report</button></div>
+</div>
+<div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:28px 24px">
+<article class="note" aria-label="Patient note">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<span style="font-weight:600;font-size:13px">Dr. Demo Clinician · Acme Health</span><span class="muted" style="font-size:12.5px">28 Oct 2026</span>
+</div>
+<h2 style="font-size:20px;font-weight:700;letter-spacing:-0.01em;line-height:1.25">About your chest X-ray</h2>
+<p style="font-size:15px;line-height:1.55;text-wrap:pretty">Hello Sample. I have looked at your chest X-ray. Your heart is a normal size. Both lungs look clear and even, with no sign of infection or fluid. The bottom edges of the lungs look sharp, which is what we expect to see.</p>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-weight:600;font-size:15px">What happens next</span>
+<p style="font-size:15px;line-height:1.55;text-wrap:pretty">I will consider this together with how you feel and your two weeks of cough. If your symptoms carry on or get worse, please come back so we can look further. A radiologist will also review this X-ray.</p>
+</div>
+<div style="border-top:1px solid #E1E5EA;padding-top:12px;display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:#5F6873">
+<span>Reviewed and approved by Dr. Demo Clinician (simulated) · HelioDX Demo</span>
+<span>This note explains your X-ray in plain language. Your full report stays in your record.</span>
+</div>
+</article>
+</div>
+</section>
+
+<section aria-label="Share" style="flex:1 1 560px;min-width:0;display:flex;flex-direction:column;background:#F4F6F8">
+<div style="padding:12px 28px;border-bottom:1px solid #E1E5EA;background:#FFFFFF;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<nav aria-label="Progress" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<div class="step done"><span class="dot"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Analyze</div><span class="rule"></span>
+<div class="step done"><span class="dot"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Review</div><span class="rule"></span>
+<div class="step done"><span class="dot"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Sign</div><span class="rule"></span>
+<div class="step done"><span class="dot"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5l2.3 2.3L9.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Patient note</div><span class="rule"></span>
+<div class="step cur"><span class="dot">5</span>Share</div>
+</nav>
+</div>
+
+<div style="padding:22px 28px;display:flex;flex-direction:column;gap:18px;flex:1 1 auto">
+<div style="display:flex;flex-direction:column;gap:6px">
+<h1 style="font-size:22px;font-weight:700;letter-spacing:-0.01em">Save the patient note as a PDF</h1>
+<p class="muted" style="text-wrap:pretty">One page, to print or hand to Sample. Only the plain-language note leaves HelioDX; the image and your clinical findings stay in the record.</p>
+</div>
+
+<div class="card" style="padding:14px 16px;display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;align-items:center">
+<span class="ico" style="background:#15181C;color:#FFFFFF"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.5h5l3 3v10H4z"></path><path d="M9 1.5v3h3M6 9h4M6 11.5h4"></path></svg></span>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">PDF · <span class="mono" style="font-weight:500">HelioDX-S-AI2Y7-patient-note.pdf</span></span><span class="muted" style="font-size:13px">Downloads here — no new tab. Sending by WhatsApp or email is not available yet.</span></div>
+</div>
+
+<div class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="width:24px;height:24px;border-radius:50%;background:#15181C;color:#FFFFFF;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">1</span><span style="font-weight:600">Record consent</span><span class="chip chip-neutral">Optional for a PDF</span></div>
+<label style="display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5"><input type="checkbox" checked style="margin-top:2px">Sample agreed to receive a printed or saved copy of this note.</label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:#5F6873">Consent note (optional)<input type="text" placeholder="e.g. agreed verbally at the visit, 28 Oct"></label>
+<p class="muted" style="font-size:12.5px;text-wrap:pretty">What you record here goes into the study's audit trail with the time.</p>
+</div>
+</div>
+
+<footer style="padding:14px 28px;border-top:1px solid #E1E5EA;background:#FFFFFF;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+<a class="btn btn-ghost" href="sign.html">Back to report</a>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:24px;height:24px;border-radius:50%;background:#15181C;color:#FFFFFF;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">2</span><a class="btn btn-primary" href="done.html"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.5 7l3.5 3.5L11.5 7M3 13.5h10"></path></svg>Download PDF</a></div>
+<span class="muted" style="font-size:12px">Saves the PDF and records the share in the audit trail.</span>
+</div>
+</footer>
+</section>
+
+</div>
+</div>
+</body>
+</html>
