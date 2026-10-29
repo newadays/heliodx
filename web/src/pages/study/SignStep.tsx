@@ -15,6 +15,7 @@ import { isSigned, patientOf, readOf, studyLabel, type FindingView, caseIdOf } f
 import { hhmm } from "~/lib/format";
 import { isTyping } from "~/lib/keys";
 
+import { DictateButton } from "./DictateButton";
 import { ReadBanner } from "./ReadBanner";
 
 const NEED_TEXT: Record<SignNeed, string> = {
@@ -26,6 +27,25 @@ const NEED_TEXT: Record<SignNeed, string> = {
   refresh_summary: "The report is still updating from your latest decisions.",
   confirm_impression: "Confirm the impression and recommendation are your own.",
 };
+
+/**
+ * B18 · Puts dictated text at the textarea's cursor (it keeps its selection
+ * after the mic button takes focus), or at the end when it was never focused.
+ */
+function insertAt(id: string, value: string, text: string): string {
+  const el = document.getElementById(id) as HTMLTextAreaElement | null;
+  const used = el?.dataset.focused === "1";
+  const start = used ? (el?.selectionStart ?? value.length) : value.length;
+  const end = used ? (el?.selectionEnd ?? value.length) : value.length;
+  const before = value.slice(0, start);
+  const after = value.slice(end);
+  const pad = before && !/\s$/.test(before) ? " " : "";
+  const tail = after && !/^\s/.test(after) ? " " : "";
+  const next = `${before}${pad}${text}${tail}${after}`;
+  const caret = before.length + pad.length + text.length;
+  requestAnimationFrame(() => el?.setSelectionRange(caret, caret));
+  return next;
+}
 
 /** Report lines: the frozen report once signed, else the accepted / edited findings in order. */
 function reportLines(study: Study, findings: FindingView[]): { n: number; text: string; edited: boolean }[] {
@@ -322,11 +342,14 @@ export function SignPanel({
           </section>
 
           <section className="sg-sec">
-            <label className="label" htmlFor="sg-impression">
-              Impression
-            </label>
+            <div className="sg-sec__head">
+              <label className="label" htmlFor="sg-impression">
+                Impression
+              </label>
+              {editing ? <DictateButton studyId={study.id} label="impression" onText={(t) => setImpression((v) => insertAt("sg-impression", v, t))} /> : null}
+            </div>
             {editing ? (
-              <textarea id="sg-impression" rows={4} value={impression} onChange={(e) => setImpression(e.target.value)} aria-describedby="sg-impression-hint" />
+              <textarea id="sg-impression" rows={4} value={impression} onChange={(e) => setImpression(e.target.value)} onFocus={(e) => (e.currentTarget.dataset.focused = "1")} aria-describedby="sg-impression-hint" />
             ) : (
               <ol className="sg-impression">{(summary?.impression ?? []).map((s, i) => <li key={i}>{s}</li>)}</ol>
             )}
@@ -338,11 +361,14 @@ export function SignPanel({
           </section>
 
           <section className="sg-sec">
-            <label className="label" htmlFor="sg-rec">
-              Recommendation
-            </label>
+            <div className="sg-sec__head">
+              <label className="label" htmlFor="sg-rec">
+                Recommendation
+              </label>
+              {editing ? <DictateButton studyId={study.id} label="recommendation" onText={(t) => setRecommendation((v) => insertAt("sg-rec", v, t))} /> : null}
+            </div>
             {editing ? (
-              <textarea id="sg-rec" rows={3} value={recommendation} onChange={(e) => setRecommendation(e.target.value)} />
+              <textarea id="sg-rec" rows={3} value={recommendation} onChange={(e) => setRecommendation(e.target.value)} onFocus={(e) => (e.currentTarget.dataset.focused = "1")} />
             ) : (
               <p className="sg-prose">{summary?.recommendation || <span className="muted">Not drafted yet.</span>}</p>
             )}

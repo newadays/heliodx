@@ -14,6 +14,12 @@ const PATHS: Record<string, ReactNode> = {
       <path d="M8 5v3.25l2 1.5" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="5.75" y="1.75" width="4.5" height="8" rx="2.25" />
+      <path d="M3.5 8a4.5 4.5 0 0 0 9 0M8 12.5v2" />
+    </>
+  ),
   flag: <path d="M3.5 14V2.5M3.5 3h8l-1.5 3 1.5 3h-8" />,
   edit: <path d="M11.5 2.5l2 2L5 13H3v-2z" />,
   chevronDown: <path d="M4 6l4 4 4-4" />,

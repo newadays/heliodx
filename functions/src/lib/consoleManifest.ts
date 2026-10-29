@@ -115,12 +115,15 @@ export function manifestModels(agents: ConsoleAgent[] = CONSOLE_AGENTS): string[
   return [...new Set(agents.flatMap((a) => a.models))];
 }
 
-/** "Coordination on Muse Wonder; model steps on Glimmer; segmentation on SAM 3.1." from the agents' models. */
+/** B18 · The clinician's dictated edits (Sign step); not an agent, so named here. */
+export const DICTATION_MODEL = "Muse Voice Transcribe";
+
+/** "Coordination on Muse Wonder; model steps on Glimmer; segmentation on SAM 3.1; dictation on Muse Voice Transcribe." from the agents' models. */
 export function manifestModelsNote(agents: ConsoleAgent[] = CONSOLE_AGENTS): string {
   const coord = agents.find((a) => a.id === "coordinator")?.models[0];
   const workers = [...new Set(agents.filter((a) => a.id !== "coordinator").flatMap((a) => a.models))];
   const [main, ...seg] = workers;
-  return [coord ? `Coordination on ${coord}` : null, main ? `model steps on ${main}` : null, seg.length ? `segmentation on ${seg.join(", ")}` : null]
+  return [coord ? `Coordination on ${coord}` : null, main ? `model steps on ${main}` : null, seg.length ? `segmentation on ${seg.join(", ")}` : null, `dictation on ${DICTATION_MODEL}`]
     .filter(Boolean)
     .join("; ")
     .replace(/^./, (c) => c.toUpperCase()) + ".";
