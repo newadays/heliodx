@@ -31,7 +31,7 @@ export function StageTimeline({ study, rows }: { study: Study; rows: StageRow[] 
               <span style={{ flex: "1 1 auto" }} />
               <span className="mono muted ev__time">{formatCost(r.ms, r.tokens)}</span>
             </div>
-            <p className={r.state === "failed" ? "inline-error" : "ev__line"}>{r.line}</p>
+            <p className={r.state === "failed" ? "inline-error" : "ev__line"}>{r.summary}</p>
             {r.kind === "model" && r.trace.length ? (
               <Link to={consolePath(study, r.key)} className="ev__link">
                 Open trace

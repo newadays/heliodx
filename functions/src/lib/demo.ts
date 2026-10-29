@@ -10,8 +10,10 @@ export const DEMO_ROLE = "demo";
 export const DEMO_STUDIES_PER_HOUR = 20;
 
 export const DEMO_ORGANIZATION = {
-  name: "HelioDX Demo",
-  legalName: "HelioDX demo clinic (synthetic)",
+  // Shown on the patient-note PDF header and in the app; the synthetic
+  // nature is stated by the case line and the research-prototype chip.
+  name: "HelioDX",
+  legalName: "HelioDX",
   domains: [] as string[],
   sharePolicy: { whatsapp: true, email: true, pdf: true, linkExpiryDays: 1 },
   demo: true,

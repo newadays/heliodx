@@ -22,6 +22,17 @@ export interface DemoAccount {
   resetLink: string | null;
 }
 
+/** Creates the demo organization, or brings an existing one's names up to date (e.g. the 29 Oct rename to "HelioDX"). */
+export async function ensureDemoOrganization(db: Firestore): Promise<void> {
+  const orgRef = db.collection("organizations").doc(DEMO_ORG);
+  const snap = await orgRef.get();
+  if (!snap.exists) {
+    await orgRef.set({ ...DEMO_ORGANIZATION, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  } else if (snap.get("name") !== DEMO_ORGANIZATION.name || snap.get("legalName") !== DEMO_ORGANIZATION.legalName) {
+    await orgRef.update({ name: DEMO_ORGANIZATION.name, legalName: DEMO_ORGANIZATION.legalName, updatedAt: FieldValue.serverTimestamp() });
+  }
+}
+
 /** Creates (or re-binds) a demo account with a confirmed, simulated clinician profile. */
 export async function addDemoUser(
   db: Firestore,
@@ -33,10 +44,7 @@ export async function addDemoUser(
   const displayName = input.displayName?.trim() || DEMO_PROFILE.displayName;
   const title = input.title === undefined ? DEMO_PROFILE.title : input.title?.trim() || null;
 
-  const orgRef = db.collection("organizations").doc(DEMO_ORG);
-  if (!(await orgRef.get()).exists) {
-    await orgRef.set({ ...DEMO_ORGANIZATION, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  }
+  await ensureDemoOrganization(db);
 
   let uid: string;
   let created = false;

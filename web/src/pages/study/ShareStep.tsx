@@ -181,7 +181,8 @@ export function NotePane({ study }: { study: Study }) {
               </div>
               <div className="note__foot">
                 <span>{note.attribution ?? `Reviewed and approved by ${note.reviewedBy}`}
-                  {study.source === "upload" ? " · HelioDX research prototype" : org?.name ? ` · ${org.name}` : ""}</span>
+                  {/* Samples and uploads carry their provenance in the PDF's case line instead. */}
+                  {study.source !== "upload" && study.source !== "sample" && org?.name ? ` · ${org.name}` : ""}</span>
                 <span>This note explains your X-ray in plain language. Your full report stays in your record.</span>
               </div>
             </>

@@ -339,6 +339,7 @@ Mockup: `worklist.html` (two sections, source tags, source filter); `review.html
 - Report title keeps the case ID: `Chest X-ray · PA · Upload 1 · 28 Oct · U-7K2P`.
 - Signed PDF footer: upload → `Case U-7K2P · uploaded by Dr. Demo Clinician · de-identified in browser · HelioDX research prototype`; sample → `Case S-AI2Y7 · sample study, synthetic patient · HelioDX research prototype`.
 - Patient note approved-by line: sample → "Reviewed and approved by Dr. Demo Clinician (simulated) · HelioDX Demo"; upload → "Reviewed and approved by Dr. Demo Clinician · HelioDX research prototype" (drop "(simulated)", keep the prototype wording). The share panel for a sample adds the muted line "This is a sample study — nothing is sent; the share is recorded for the demo." and sends nowhere.
+  - *As built (29 Oct):* the demo organization is named "HelioDX" (was "HelioDX Demo" / "HelioDX demo clinic (synthetic)"), so the PDF header reads "HelioDX". The approved-by line is just "Reviewed and approved by Dr. Demo Clinician" (plus "(simulated)" for samples); the case line under the disclaimer carries the source and "HelioDX research prototype" once, so the prototype wording no longer repeats.
 
 **Console (amends §4.8, §4.9).**
 - Case list rows and the case `<select>` show the source tag after the name; the case ID shows its prefix.

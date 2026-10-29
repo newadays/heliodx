@@ -1,19 +1,21 @@
 /**
- * Card W9 · Agent console side panel on the worklist (SPEC §4.8): what is
- * running now, the selected case's stage timeline and totals, live.
+ * Agent console side panel on the worklist (design/agent-console SPEC §2): a
+ * compact projection of the console page for the selected case — what is
+ * running, the first four statistics and the step timeline, live.
  */
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import type { Study } from "@/types/study";
-import { useNow, useTrace } from "~/data/hooks";
-import { caseIdOf, currentStage, analysisElapsedMs, patientOf, viewStatus } from "~/data/model";
-import { stageRows, traceTotals } from "~/data/timeline";
-import { duration, tokens } from "~/lib/format";
+import { manifestModels } from "@/utils/consoleRun";
+import { useLiveTrace, useNow } from "~/data/hooks";
+import { analysisElapsedMs, arrivedAt, caseIdOf, currentStage, patientOf, viewStatus } from "~/data/model";
+import { runExport, runStats, stageRows } from "~/data/timeline";
 import { saveJson } from "~/lib/download";
 import { consolePath, studyPath } from "~/lib/paths";
 
 import { Icon } from "./Icon";
+import { RunStatTiles } from "./RunStatTiles";
 import { StageTimeline } from "./Timeline";
 
 const STATUS_WORDS: Record<string, string> = {
@@ -24,6 +26,12 @@ const STATUS_WORDS: Record<string, string> = {
   signed: "signed",
   shared: "signed and shared",
 };
+
+/** "Glimmer and SAM 3.1" → "Model steps run on Glimmer; segmentation on SAM 3.1." from the manifest. */
+function modelsNote(): string {
+  const [first, ...rest] = manifestModels();
+  return rest.length ? `Model steps run on ${first}; segmentation on ${rest.join(", ")}.` : `Model steps run on ${first}.`;
+}
 
 export function ConsolePanel({
   studies,
@@ -37,8 +45,10 @@ export function ConsolePanel({
   onClose: () => void;
 }) {
   const now = useNow(1000);
-  const trace = useTrace(selected?.id ?? null);
-  const running = studies.find((s) => viewStatus(s) === "analyzing");
+  const { trace, live } = useLiveTrace(selected?.id ?? null);
+  // Newest running case first; the strip names it and counts the rest.
+  const running = studies.filter((s) => viewStatus(s) === "analyzing").sort((a, b) => (arrivedAt(b) ?? 0) - (arrivedAt(a) ?? 0));
+  const newest = running[0];
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -48,17 +58,21 @@ export function ConsolePanel({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const rows = selected ? stageRows(selected, trace, now) : [];
-  const totals = selected ? traceTotals(selected, rows) : null;
+  const steps = selected ? stageRows(selected, trace, now) : [];
+  const stats = selected ? runStats(selected, steps, now) : null;
 
   return (
     <aside aria-label="Agent console" className="cpanel">
       <div className="cpanel__head">
         <h2>Agent console</h2>
-        <span className="chip chip-ok">
-          <span className="pulse" aria-hidden="true" />
-          Live
-        </span>
+        {live === "live" ? (
+          <span className="chip chip-ok">
+            <span className="pulse" aria-hidden="true" />
+            Live
+          </span>
+        ) : (
+          <span className="chip chip-neutral">{live === "reconnecting" ? "Reconnecting…" : "Connected"}</span>
+        )}
         <div style={{ flex: "1 1 auto" }} />
         <Link className="btn btn-secondary btn-sm" to={consolePath(selected)}>
           <Icon name="external" size={14} />
@@ -68,13 +82,19 @@ export function ConsolePanel({
           <Icon name="close" />
         </button>
       </div>
+      {live === "reconnecting" ? (
+        <p className="cpanel__reconnect muted" role="status">
+          Reconnecting… what is shown stays as it was.
+        </p>
+      ) : null}
 
       <div className="cpanel__body">
-        {running ? (
-          <Link to={studyPath(running, "analyzing")} className="cpanel__running">
+        {newest ? (
+          <Link to={studyPath(newest, "analyzing")} className="cpanel__running">
             <span className="pulse" aria-hidden="true" />
             <span>
-              <strong>Running now:</strong> {patientOf(running).displayName} · {currentStage(running) || "Queued"} · {Math.round(analysisElapsedMs(running, now) / 1000)} s
+              <strong>Running now:</strong> {patientOf(newest).displayName} · {currentStage(newest) || "Queued"} · {Math.round(analysisElapsedMs(newest, now) / 1000)} s
+              {running.length > 1 ? ` · +${running.length - 1} more` : ""}
             </span>
             <span style={{ flex: "1 1 auto" }} />
             <span className="cpanel__follow">Follow</span>
@@ -92,27 +112,10 @@ export function ConsolePanel({
           </select>
         </label>
 
-        {selected && totals ? (
+        {selected && stats ? (
           <>
-            <div className="stats">
-              <div className="stat">
-                <b>{duration(totals.agentTimeMs)}</b>
-                <span>Agent time</span>
-              </div>
-              <div className="stat">
-                <b>{tokens(totals.tokens)}</b>
-                <span>Tokens</span>
-              </div>
-              <div className="stat">
-                <b>{totals.modelSteps}</b>
-                <span>Model steps</span>
-              </div>
-              <div className="stat">
-                <b>{totals.clinicianSteps}</b>
-                <span>Clinician steps</span>
-              </div>
-            </div>
-            <StageTimeline study={selected} rows={rows} />
+            <RunStatTiles stats={stats} variant="panel" />
+            <StageTimeline study={selected} rows={steps} />
           </>
         ) : (
           <p className="muted">Pick a case to see its agent steps.</p>
@@ -120,12 +123,12 @@ export function ConsolePanel({
       </div>
 
       <div className="cpanel__foot">
-        <span className="muted">Model steps run on Glimmer; segmentation on SAM 3.1.</span>
+        <span className="muted">{modelsNote()}</span>
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          disabled={!selected}
-          onClick={() => selected && saveJson({ caseId: caseIdOf(selected), stages: rows.map(({ trace: t, ...r }) => ({ ...r, calls: t })) }, `HelioDX-${caseIdOf(selected)}-trace.json`)}
+          disabled={!selected || !stats}
+          onClick={() => selected && stats && saveJson(runExport(selected, steps, stats), `HelioDX-${caseIdOf(selected)}-trace.json`)}
         >
           <Icon name="download" size={14} />
           Export trace
