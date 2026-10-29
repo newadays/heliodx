@@ -70,6 +70,7 @@ describe("buildTimeline", () => {
       ["intake", "done"],
       ["triage", "critical"],
       ["prep", "done"],
+      ["coordinator", "pending"],
       ["signed", "human"],
       ["summary", "done"],
       ["shared", "human"],
@@ -83,22 +84,34 @@ describe("buildTimeline", () => {
     expect(rows[0].agent).toBe("Sample");
     expect(rows[2].line).toBe("Priority critical. L/R density ratio 1.31 · threshold 1.25 exceeded; CTR 0.44 within limits");
     expect(rows[3].line).toBe("Draft ready: 2 proposed observations, 1 measurement, 1 overlay.");
-    expect(rows[4].line).toBe("1 accepted, 1 edited, 0 rejected. Signed by Dr. Demo Clinician.");
-    expect(rows[4].models).toEqual([]);
-    expect(rows[5].line).toContain("mapped to signed sentences");
-    expect(rows[6].line).toBe("1 share · PDF · consent recorded");
+    expect(rows[5].line).toBe("1 accepted, 1 edited, 0 rejected. Signed by Dr. Demo Clinician.");
+    expect(rows[5].models).toEqual([]);
+    expect(rows[6].line).toContain("mapped to signed sentences");
+    expect(rows[7].line).toBe("1 share · PDF · consent recorded");
   });
 
   it("greys out stages not reached, shows the running stage, and the failed stage", () => {
     const running = buildTimeline(study({ status: "classifying", priority: undefined, signed: undefined, shares: [], pipeline: { runId: "r", stepTimestamps: { quality_check: ts(T0), classifying: ts(T0 + 10_000) } } }), trace, T0 + 25_000);
-    expect(running.map((r) => r.state)).toEqual(["done", "done", "running", "pending", "pending", "pending", "pending"]);
+    expect(running.map((r) => r.state)).toEqual(["done", "done", "running", "pending", "pending", "pending", "pending", "pending"]);
     expect(running[2].line).toBe("In progress for 15 s.");
-    expect(running[4].line).toBe("Waiting for the clinician to review and sign.");
-    expect(running[4].at).toBe(0);
+    expect(running[5].line).toBe("Waiting for the clinician to review and sign.");
+    expect(running[5].at).toBe(0);
 
     const failed = buildTimeline(study({ status: "failed", priority: undefined, signed: undefined, shares: [], pipeline: { runId: "r", stepTimestamps: { quality_check: ts(T0) }, error: { code: "quality_rejected", message: "", at: "quality_check" } } }), [], T0);
     expect(failed[1]).toMatchObject({ state: "failed", line: "Stopped: quality_rejected." });
     expect(failed[2].state).toBe("pending");
+  });
+
+  it("B13: shows the coordinator's decisions with the Muse Wonder badge, critical when it escalated", () => {
+    const coord = [
+      ev(1, "coordination", { kind: "check", name: "plan_study", model: "muse-wonder-1.0", result: "Draft ready; urgent lane." }),
+      ev(2, "coordination", { kind: "check", name: "escalate_to_human", model: "muse-wonder-1.0", result: "urgent read is 4 min past its SLA." }),
+    ];
+    const row = buildTimeline(study(), coord, T0 + 400_000).find((r) => r.key === "coordinator")!;
+    expect(row.models).toEqual(["Muse Wonder"]);
+    expect(row.state).toBe("critical");
+    expect(row.line).toBe("Planned: Draft ready; urgent lane. · Escalated: urgent read is 4 min past its SLA.");
+    expect(buildTimeline(study(), [], T0).find((r) => r.key === "coordinator")!.state).toBe("pending");
   });
 });
 

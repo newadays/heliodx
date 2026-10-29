@@ -69,7 +69,23 @@ function MetaLine({ study }: { study: Study }) {
   );
 }
 
+/** B13 · The coordinator escalated this case to a human: say so under the status. */
 function StatusCell({ study, now }: { study: Study; now: number }) {
+  const escalation = study.flags?.needsHuman ? study.coordinator?.escalation : null;
+  return (
+    <div className="wl-status-col">
+      <StatusChip study={study} now={now} />
+      {escalation ? (
+        <span className="wl-flag">
+          <Icon name="flag" size={12} />
+          Flagged by coordinator · {escalation.reason}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function StatusChip({ study, now }: { study: Study; now: number }) {
   const vs = viewStatus(study);
   const detail = statusDetail(study, now);
   if (vs === "analyzing") {

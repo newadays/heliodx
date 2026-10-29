@@ -8,6 +8,7 @@ const PATHS: Record<string, ReactNode> = {
   check: <path d="M3.5 8.5l3 3 6-7" strokeWidth={2} />,
   checkAll: <path d="M2.5 8.5l3 3 6-7M8.5 11.5l5.5-7" />,
   close: <path d="M4 4l8 8M12 4l-8 8" />,
+  flag: <path d="M3.5 14V2.5M3.5 3h8l-1.5 3 1.5 3h-8" />,
   edit: <path d="M11.5 2.5l2 2L5 13H3v-2z" />,
   chevronDown: <path d="M4 6l4 4 4-4" />,
   chevronUp: <path d="M4 10l4-4 4 4" />,

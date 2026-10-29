@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import type { Study, TraceEntry } from "@/types/study";
-import { callsByTool, manifestModels, runIdOf, runStatusOf, type RunStatus } from "@/utils/consoleRun";
+import { callsByTool, manifestModelsNote, runIdOf, runStatusOf, type RunStatus } from "@/utils/consoleRun";
 import { useAuth } from "~/auth/AuthContext";
 import { AppShell } from "~/components/AppShell";
 import { Icon } from "~/components/Icon";
@@ -418,7 +418,7 @@ export default function ConsolePage() {
                   {tool && !shown.length ? <p className="muted tr-none">No step in this run called {tool}.</p> : null}
                 </div>
               </div>
-              <p className="muted cons__foot">Model steps run on {manifestModels().join(" and ")}; prompts and raw answers are kept for demo cases only.</p>
+              <p className="muted cons__foot">{manifestModelsNote()} Prompts and raw answers are kept for demo cases only.</p>
             </>
           ) : (
             <div className="cons__empty">

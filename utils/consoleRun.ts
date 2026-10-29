@@ -152,7 +152,7 @@ export function callsByTool(steps: ConsoleStep[]): Record<string, number> {
   return out;
 }
 
-const STEP_OF: Record<ConsoleAgent["id"], string> = { intake: "intake", triage: "triage", prep: "prep", summary: "summary" };
+const STEP_OF: Record<ConsoleAgent["id"], string> = { coordinator: "coordinator", intake: "intake", triage: "triage", prep: "prep", summary: "summary" };
 
 /** Whether the agent ran in this run, is running now, or has not run. */
 export function agentStatus(agent: ConsoleAgent, steps: ConsoleStep[]): "ran" | "running" | "idle" {
@@ -182,4 +182,4 @@ export function clock(ms: number): string {
 }
 
 export { CONSOLE_AGENTS, CONSOLE_TOOLS };
-export { manifestModels } from "@/functions/src/lib/consoleManifest";
+export { manifestModels, manifestModelsNote } from "@/functions/src/lib/consoleManifest";

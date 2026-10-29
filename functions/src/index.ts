@@ -22,6 +22,7 @@ export { retryPipeline } from "./callables/retryPipeline";
 export { regenerateSummaries } from "./callables/regenerateSummaries";
 export { onStudyImageUploaded } from "./triggers/onStudyImageUploaded";
 export { requeueStudies } from "./scheduled/requeueStudies";
+export { coordinatorTick } from "./scheduled/coordinatorTick";
 export { signStudy } from "./callables/signStudy";
 export { generatePatientSummary } from "./callables/generatePatientSummary";
 export { shareStudy } from "./callables/shareStudy";

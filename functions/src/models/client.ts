@@ -35,6 +35,8 @@ export interface GenerateJsonInput<S extends z.ZodType> {
    * Clinical calls default to low to keep latency down.
    */
   reasoningEffort?: "low" | "medium" | "high";
+  /** Replaces the clinical system instruction (the coordinator is not a clinical agent). */
+  system?: string;
 }
 
 /** `max_tokens` to request: the answer budget plus room for hidden reasoning. */
@@ -77,7 +79,7 @@ export async function generateJson<S extends z.ZodType>(input: GenerateJsonInput
       post(target, {
         model: target.model,
         messages: [
-          { role: "system", content: systemPrompt(target, input.reasoningEffort) },
+          { role: "system", content: input.system ?? systemPrompt(target, input.reasoningEffort) },
           { role: "user", content: [...imagePart, { type: "text", text: prompt + contextText }] },
         ],
         temperature: input.temperature ?? 0.2,

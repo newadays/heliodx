@@ -67,6 +67,24 @@ export function stageDetail(row: StageRow, study: Study): StageDetail {
         overlays: [],
       };
     }
+    case "coordinator": {
+      // B13: Muse Wonder sees only the de-identified queue; the rules fallback decides the same way.
+      const c = study.coordinator;
+      return {
+        inputs: ["De-identified queue state only: study ids, stages, priorities, ages, SLA and flags", "Never images, clinical text or identifiers"],
+        output: {
+          title: "Decisions",
+          lines: [
+            c?.plannedAt ? `Planned: ${c.lane ?? "routine"} lane · radiologist read ${c.radiologistReadSuggested ? "recommended" : "not needed"} (recorded, not enforced yet)` : "",
+            c?.requeues ? "Requeued once after a model failure" : "",
+            c?.escalation ? `Escalated to the clinician: ${c.escalation.reason}` : "",
+            c?.by ? `Decided by ${c.by === "rules" ? "the rules fallback" : "Muse Wonder"}` : "",
+          ].filter(Boolean),
+        },
+        measurements: [],
+        overlays: [],
+      };
+    }
     case "summary":
       return {
         inputs: ["The signed report only (impression and recommendation)"],

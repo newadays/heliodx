@@ -8,6 +8,7 @@
  * the console never shows clinical free text.
  */
 import type { Study, StudyStatus, TraceEntry } from "@/types/study";
+import { slaBudgetMs } from "@/functions/src/lib/sla";
 import { tsToMillis } from "@/utils/millis";
 import { receivedLine } from "@/utils/studySource";
 
@@ -30,7 +31,7 @@ export interface TimelineRow {
   trace: TraceEntry[];
 }
 
-const MODEL_LABEL: Record<string, string> = { glimmer: "Glimmer", "sam-3.1": "SAM 3.1", mock: "Mock" };
+const MODEL_LABEL: Record<string, string> = { glimmer: "Glimmer", "sam-3.1": "SAM 3.1", "muse-wonder-1.0": "Muse Wonder", mock: "Mock" };
 
 export function modelLabel(model: string): string {
   return MODEL_LABEL[model] ?? model;
@@ -72,6 +73,7 @@ const STAGES: StageDef[] = [
   { key: "intake", label: "Intake", agent: "Intake", traceStages: ["quality_check"], enters: "quality_check", exits: "classifying", pending: "Not started." },
   { key: "triage", label: "Triage", agent: "Triage", traceStages: ["classifying"], enters: "classifying", exits: "detecting", pending: "Waits for intake." },
   { key: "prep", label: "Prep", agent: "Prep", traceStages: ["detecting", "summarizing"], enters: "detecting", exits: "ready", pending: "Waits for triage." },
+  { key: "coordinator", label: "Coordinator", agent: "Coordinator", traceStages: ["coordination"], enters: "queued", exits: null, pending: "Plans the case once its draft is ready, and escalates it if it stalls or runs past its SLA." },
   { key: "signed", label: "Signed", agent: "Clinician", traceStages: ["reset", "signed"], enters: "signed", exits: null, human: true, pending: "Waiting for the clinician to review and sign." },
   { key: "summary", label: "Patient summary", agent: "Summary", traceStages: ["patient_summary"], enters: "patient_summary_ready", exits: null, pending: "Written after signing, from the signed report." },
   { key: "shared", label: "Shared", agent: "Clinician", traceStages: ["sharing"], enters: "shared", exits: null, human: true, pending: "Shared only after every next step is confirmed and the patient consents." },
@@ -126,6 +128,9 @@ function lineFor(def: StageDef, study: Study, trace: TraceEntry[]): string {
       const by = study.signed?.name ? ` Signed by ${study.signed.name}.` : "";
       return `${n("accepted")} accepted, ${n("edited")} edited, ${n("rejected")} rejected.${by}`;
     }
+    case "coordinator":
+      // B13: each decision's one-line reason, in order ("(rules)" when the fallback decided).
+      return trace.map((t) => `${t.name === "plan_study" ? "Planned" : t.name === "requeue_study" ? "Requeued" : "Escalated"}: ${t.result ?? ""}`).join(" · ") || "No decisions yet.";
     case "summary":
       return result("map_next_steps") ?? (study.patientSummary ? `${study.patientSummary.nextSteps?.length ?? 0} next steps.` : "Written.");
     case "shared": {
@@ -145,6 +150,21 @@ export function buildTimeline(study: Study, trace: TraceEntry[], now: number = D
   return STAGES.map((def) => {
     const rows = sorted.filter((t) => def.traceStages.includes(t.stage));
     const isReached = reached >= rank(def.enters) && (study.status !== "failed" || rank(def.enters) <= reached);
+    if (def.key === "coordinator") {
+      // Decided by the coordinator tick at any stage (plan, requeue, escalate): shown once it has acted.
+      return {
+        key: def.key,
+        label: def.label,
+        agent: def.agent,
+        models: [...new Set(rows.map((t) => t.model).filter((m): m is string => !!m))].map(modelLabel),
+        state: (rows.length ? (rows.some((t) => t.name === "escalate_to_human") ? "critical" : "done") : "pending") as RowState,
+        at: rows.length ? tsToMillis(rows[0].at) : 0,
+        ms: null,
+        tokens: 0,
+        line: rows.length ? lineFor(def, study, rows) : def.pending,
+        trace: rows,
+      };
+    }
     let at = def.key === "received" ? tsToMillis(study.createdAt) : stepAt(study, def.enters);
     if (def.key === "signed") at = tsToMillis(study.signed?.at) || at;
     if (def.key === "shared") at = tsToMillis(study.shares?.[0]?.sentAt) || at;
@@ -195,7 +215,7 @@ export function slaLabel(study: Study, now: number): { text: string; level: "cri
   if (!p || p === "routine" || rank(study.status) >= rank("signed")) return null;
   const start = stepAt(study, "detecting") || tsToMillis(study.createdAt);
   if (!start) return null;
-  const budget = (p === "critical" ? 5 : 30) * 60_000;
+  const budget = slaBudgetMs(p) ?? 0;
   const left = start + budget - now;
   const abs = Math.abs(left);
   const mm = Math.floor(abs / 60_000);

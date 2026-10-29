@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { CoordinatorPlanSchema } from "../src/coordinator/plan";
 import { CONSOLE_AGENTS, CONSOLE_TOOLS, isModelCall, manifestModels } from "../src/lib/consoleManifest";
 
 function sources(dir: string): string[] {
@@ -20,6 +21,8 @@ function tracedNames(): string[] {
     for (const m of src.matchAll(/(traceEvent\(\{|kind: "(?:tool|check|model)")[\s\S]{0,240}?name: "([a-z_]+)"/g)) names.add(m[2]);
     for (const m of src.matchAll(/tool: "([a-z_]+)"/g)) names.add(m[1]);
   }
+  // The coordinator traces its actions by name (`name: a.action`).
+  for (const action of CoordinatorPlanSchema.shape.actions.element.shape.action.options) names.add(action);
   return [...names].filter((n) => !isModelCall(n));
 }
 
@@ -35,7 +38,7 @@ describe("console manifest", () => {
     expect(new Set(CONSOLE_TOOLS.map((t) => t.name)).size).toBe(CONSOLE_TOOLS.length);
     const owners = new Set<string>([...CONSOLE_AGENTS.map((a) => a.id), "clinician", "system"]);
     expect(CONSOLE_TOOLS.filter((t) => !owners.has(t.owner))).toEqual([]);
-    expect(CONSOLE_AGENTS.map((a) => a.order)).toEqual([1, 2, 3, 4]);
-    expect(manifestModels()).toEqual(["Glimmer", "SAM 3.1"]);
+    expect(CONSOLE_AGENTS.map((a) => a.order)).toEqual([0, 1, 2, 3, 4]);
+    expect(manifestModels()).toEqual(["Muse Wonder", "Glimmer", "SAM 3.1"]);
   });
 });

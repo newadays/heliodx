@@ -39,6 +39,9 @@ button.wl-name[aria-pressed="true"]{color:var(--hx-ink);text-decoration:underlin
 .wl-sub{font-size:13px}
 .wl-ind{font-size:13.5px}
 .wl-status{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.wl-status-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.wl-flag{display:inline-flex;align-items:flex-start;gap:5px;font-size:12px;font-weight:600;color:var(--hx-red);line-height:1.35}
+.wl-flag svg{flex:none;margin-top:2px}
 .wl-bar{height:4px;width:120px}
 .wl-detail{font-size:12.5px}
 .wl-time{font-size:13px}

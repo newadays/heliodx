@@ -347,6 +347,17 @@ export interface Study {
   findings: Finding[];
   clinicianSummary: ClinicianSummary | null;
   /** B23 background draft: `forHash` is claimed while drafting and cleared with `failedAt` when the model didn't answer. */
+  /** B13 · The coordinator's decisions (Muse Wonder, or the rules fallback when `by` is "rules"). */
+  coordinator?: {
+    plannedAt?: unknown;
+    lane?: StudyPriority;
+    /** Recommended, not enforced until radiologist reads exist (B14). */
+    radiologistReadSuggested?: boolean;
+    reason?: string;
+    by?: string;
+    requeues?: number;
+    escalation?: { reason: string; at: unknown; by: string };
+  } | null;
   reportDraft?: {
     forHash?: string | null;
     startedAt?: unknown;
