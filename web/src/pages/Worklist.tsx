@@ -19,7 +19,7 @@ import { useToast } from "~/components/Toast";
 import { UploadPanel, type PendingUpload, type UploadPanelHandle } from "~/upload/UploadPanel";
 import { deleteUpload, downloadDeidentified, resetSample, warmModels } from "~/data/actions";
 import { useNow, useStorageUrl, useStudies } from "~/data/hooks";
-import { analysisProgress, arrivedAt, caseIdOf, defaultStep, indicationOf, isSigned, patientOf, statusDetail, studyLabel, verdict, findingsOf, viewStatus, type ViewStatus } from "~/data/model";
+import { analysisProgress, arrivedAt, caseIdOf, defaultStep, indicationOf, isSigned, patientOf, readOf, statusDetail, studyLabel, verdict, findingsOf, viewStatus, type ViewStatus } from "~/data/model";
 import { hhmm } from "~/lib/format";
 import { consolePath, studyPath } from "~/lib/paths";
 import { readFlag, writeFlag } from "~/lib/storage";
@@ -69,12 +69,19 @@ function MetaLine({ study }: { study: Study }) {
   );
 }
 
-/** B13 · The coordinator escalated this case to a human: say so under the status. */
+/** B13 · The coordinator escalated this case to a human: say so under the status. B14 · The radiologist read, while unsigned. */
 function StatusCell({ study, now }: { study: Study; now: number }) {
   const escalation = study.flags?.needsHuman ? study.coordinator?.escalation : null;
+  const read = isSigned(study) ? null : readOf(study, now);
   return (
     <div className="wl-status-col">
       <StatusChip study={study} now={now} />
+      {read && read.state !== "none" ? (
+        <span className="wl-read muted">
+          <Icon name={read.state === "signed" ? "check" : "clock"} size={12} />
+          {read.state === "signed" ? "Radiologist read signed" : `Radiologist read · ${read.line.replace(/^Sent to /, "")}`}
+        </span>
+      ) : null}
       {escalation ? (
         <span className="wl-flag">
           <Icon name="flag" size={12} />

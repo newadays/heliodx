@@ -352,12 +352,32 @@ export interface Study {
     lane?: StudyPriority;
     /** The priority before planning: the SLA budget stays at it, so a raised lane never shortens the clock retroactively. */
     fromPriority?: StudyPriority | null;
-    /** Recommended, not enforced until radiologist reads exist (B14). */
+    /** A hint shown to the clinician; the read gate itself is code (B14, functions/src/radiology/gate.ts). */
     radiologistReadSuggested?: boolean;
     reason?: string;
     by?: string;
     requeues?: number;
     escalation?: { reason: string; at: unknown; by: string };
+  } | null;
+  /**
+   * B14 · The radiologist read the gate requires, done by a simulated
+   * radiologist (fast / slow / silent). Written only by Functions.
+   */
+  radiologistRead?: {
+    required: true;
+    reason: "critical" | "weak_finding" | "requested" | "needs_human";
+    status: "assigned" | "signed";
+    assignee: string;
+    assigneeName: string;
+    profile: "fast" | "slow" | "silent";
+    simulated: true;
+    assignedAt: unknown;
+    eta: unknown;
+    nudgedAt?: unknown;
+    reassignedFrom?: string;
+    requestedBy?: string;
+    signedAt?: unknown;
+    note?: string;
   } | null;
   /** B23 background draft: `forHash` is claimed while drafting and cleared with `failedAt` when the model didn't answer. */
   reportDraft?: {

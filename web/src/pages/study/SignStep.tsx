@@ -11,13 +11,16 @@ import { clinicianName, useAuth } from "~/auth/AuthContext";
 import { Icon } from "~/components/Icon";
 import { useToast } from "~/components/Toast";
 import { regenerateReport, saveReport, signStudy, type SignNeed } from "~/data/actions";
-import { isSigned, patientOf, studyLabel, type FindingView, caseIdOf } from "~/data/model";
+import { isSigned, patientOf, readOf, studyLabel, type FindingView, caseIdOf } from "~/data/model";
 import { hhmm } from "~/lib/format";
 import { isTyping } from "~/lib/keys";
 
+import { ReadBanner } from "./ReadBanner";
+
 const NEED_TEXT: Record<SignNeed, string> = {
   decide_every_finding: "Decide every finding first (accept, edit or reject).",
-  close_radiologist_read: "Close the radiologist read first.",
+  request_radiologist_read: "A radiologist read is required. Request one above.",
+  close_radiologist_read: "Wait for the radiologist read to be signed.",
   write_impression: "Write an impression.",
   write_recommendation: "Write a recommendation.",
   refresh_summary: "The report is still updating from your latest decisions.",
@@ -56,6 +59,13 @@ export function SignPanel({
   const [attested, setAttested] = useState(false);
   const [signing, setSigning] = useState(false);
   const [needs, setNeeds] = useState<SignNeed[]>([]);
+  // B14: an open read blocks signing (the server refuses too); the banner says who has it.
+  const readOpen = !signed && readOf(study, 0).state === "open";
+  const readStatus = study.radiologistRead?.status ?? null;
+  useEffect(() => {
+    // The read was requested or signed since the refusal: that need is stale.
+    if (readStatus) setNeeds((n) => n.filter((x) => x !== "request_radiologist_read" && (readStatus !== "signed" || x !== "close_radiologist_read")));
+  }, [readStatus]);
   const [editing, setEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
   const summary = signed ? study.report?.summary : study.clinicianSummary;
@@ -261,6 +271,8 @@ export function SignPanel({
             </span>
           </div>
 
+          <ReadBanner study={study} />
+
           {stale ? (
             <div className="sg-updating" role="status">
               {draftFailed && !updating ? (
@@ -407,13 +419,15 @@ export function SignPanel({
                 <button type="button" className="btn btn-ghost" onClick={onBack}>
                   Back to findings
                 </button>
-                <button type="button" className="btn btn-primary" disabled={!attested || signing || editing} aria-describedby="sg-sign-hint" onClick={() => void sign()}>
+                <button type="button" className="btn btn-primary" disabled={!attested || signing || editing || readOpen} aria-describedby="sg-sign-hint" onClick={() => void sign()}>
                   {signing ? <span className="spinner" aria-hidden="true" /> : <Icon name="lock" />}
                   {signing ? "Signing…" : `Sign as ${name}`}
                 </button>
               </div>
               <span id="sg-sign-hint" className="muted sg-hint">
-                {attested
+                {readOpen
+                  ? "Signing waits for the radiologist read."
+                  : attested
                   ? "Signing locks the report and records the time and a hash. The patient note is written from the signed version."
                   : "Tick the confirmation to sign."}
               </span>

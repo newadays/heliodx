@@ -75,13 +75,32 @@ export function stageDetail(row: StageRow, study: Study): StageDetail {
         output: {
           title: "Decisions",
           lines: [
-            c?.plannedAt ? `Planned: ${c.lane ?? "routine"} lane · radiologist read ${c.radiologistReadSuggested ? "recommended" : "not needed"} (recorded, not enforced yet)` : "",
+            c?.plannedAt ? `Planned: ${c.lane ?? "routine"} lane · radiologist read ${c.radiologistReadSuggested ? "recommended" : "not needed"} (a hint; the read gate is code)` : "",
             c?.requeues ? "Requeued once after a model failure" : "",
             c?.escalation ? `Escalated to the clinician: ${c.escalation.reason}` : "",
             c?.by ? `Decided by ${c.by === "rules" ? "the rules fallback" : "Muse Wonder"}` : "",
           ].filter(Boolean),
         },
         measurements: [],
+        overlays: [],
+      };
+    }
+    case "read": {
+      // B14: the gate rule is code; the readers are simulated.
+      const r = study.radiologistRead;
+      return {
+        inputs: ["The gate rule: critical priority, an accepted finding with weak evidence, a clinician request, or a human flag", "Simulated readers (fast, slow, silent); no model"],
+        output: {
+          title: "Read",
+          lines: r
+            ? [
+                `${r.assigneeName} (simulated) · ${r.profile}`,
+                r.reassignedFrom ? `Reassigned from ${r.reassignedFrom} (simulated)` : "",
+                r.status === "signed" ? `Signed · ${r.note ?? ""}` : "Open",
+              ].filter(Boolean)
+            : ["No read"],
+        },
+        measurements: results(calls, () => true),
         overlays: [],
       };
     }

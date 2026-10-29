@@ -10,6 +10,7 @@ import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import type { getStorage } from "firebase-admin/storage";
 
 import { SAMPLE_OWNER } from "./access";
+import { DEFAULT_ROSTER } from "../radiology/roster";
 import { DEMO_ORG, DEMO_ORGANIZATION, DEMO_PROFILE, DEMO_ROLE } from "./demo";
 
 type Bucket = ReturnType<ReturnType<typeof getStorage>["bucket"]>;
@@ -22,14 +23,20 @@ export interface DemoAccount {
   resetLink: string | null;
 }
 
-/** Creates the demo organization, or brings an existing one's names up to date (e.g. the 29 Oct rename to "HelioDX"). */
+/** Creates the demo organization, or brings an existing one up to date (the 29 Oct rename to "HelioDX", the B14 radiologist roster). */
 export async function ensureDemoOrganization(db: Firestore): Promise<void> {
   const orgRef = db.collection("organizations").doc(DEMO_ORG);
   const snap = await orgRef.get();
   if (!snap.exists) {
-    await orgRef.set({ ...DEMO_ORGANIZATION, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  } else if (snap.get("name") !== DEMO_ORGANIZATION.name || snap.get("legalName") !== DEMO_ORGANIZATION.legalName) {
-    await orgRef.update({ name: DEMO_ORGANIZATION.name, legalName: DEMO_ORGANIZATION.legalName, updatedAt: FieldValue.serverTimestamp() });
+    await orgRef.set({ ...DEMO_ORGANIZATION, radiologists: DEFAULT_ROSTER, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  } else if (snap.get("name") !== DEMO_ORGANIZATION.name || snap.get("legalName") !== DEMO_ORGANIZATION.legalName || !Array.isArray(snap.get("radiologists"))) {
+    // B14: the simulated radiologists' roster, added to organizations created before it existed.
+    await orgRef.update({
+      name: DEMO_ORGANIZATION.name,
+      legalName: DEMO_ORGANIZATION.legalName,
+      ...(Array.isArray(snap.get("radiologists")) ? {} : { radiologists: DEFAULT_ROSTER }),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
   }
 }
 

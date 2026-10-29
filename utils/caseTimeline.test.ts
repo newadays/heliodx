@@ -71,6 +71,7 @@ describe("buildTimeline", () => {
       ["triage", "critical"],
       ["prep", "done"],
       ["coordinator", "pending"],
+      ["read", "pending"],
       ["signed", "human"],
       ["summary", "done"],
       ["shared", "human"],
@@ -84,18 +85,18 @@ describe("buildTimeline", () => {
     expect(rows[0].agent).toBe("Sample");
     expect(rows[2].line).toBe("Priority critical. L/R density ratio 1.31 · threshold 1.25 exceeded; CTR 0.44 within limits");
     expect(rows[3].line).toBe("Draft ready: 2 proposed observations, 1 measurement, 1 overlay.");
-    expect(rows[5].line).toBe("1 accepted, 1 edited, 0 rejected. Signed by Dr. Demo Clinician.");
-    expect(rows[5].models).toEqual([]);
-    expect(rows[6].line).toContain("mapped to signed sentences");
-    expect(rows[7].line).toBe("1 share · PDF · consent recorded");
+    expect(rows[6].line).toBe("1 accepted, 1 edited, 0 rejected. Signed by Dr. Demo Clinician.");
+    expect(rows[6].models).toEqual([]);
+    expect(rows[7].line).toContain("mapped to signed sentences");
+    expect(rows[8].line).toBe("1 share · PDF · consent recorded");
   });
 
   it("greys out stages not reached, shows the running stage, and the failed stage", () => {
     const running = buildTimeline(study({ status: "classifying", priority: undefined, signed: undefined, shares: [], pipeline: { runId: "r", stepTimestamps: { quality_check: ts(T0), classifying: ts(T0 + 10_000) } } }), trace, T0 + 25_000);
-    expect(running.map((r) => r.state)).toEqual(["done", "done", "running", "pending", "pending", "pending", "pending", "pending"]);
+    expect(running.map((r) => r.state)).toEqual(["done", "done", "running", "pending", "pending", "pending", "pending", "pending", "pending"]);
     expect(running[2].line).toBe("In progress for 15 s.");
-    expect(running[5].line).toBe("Waiting for the clinician to review and sign.");
-    expect(running[5].at).toBe(0);
+    expect(running[6].line).toBe("Waiting for the clinician to review and sign.");
+    expect(running[6].at).toBe(0);
 
     const failed = buildTimeline(study({ status: "failed", priority: undefined, signed: undefined, shares: [], pipeline: { runId: "r", stepTimestamps: { quality_check: ts(T0) }, error: { code: "quality_rejected", message: "", at: "quality_check" } } }), [], T0);
     expect(failed[1]).toMatchObject({ state: "failed", line: "Stopped: quality_rejected." });

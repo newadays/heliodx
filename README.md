@@ -201,6 +201,15 @@ cd functions && npm run test:rules                 # security rules, inside the 
   before it is escalated to a clinician.
 - The coordinator's reading SLA (critical 5 min, urgent 30) pauses while a
   clinician has the case in review.
+- Radiologist reads are simulated. A read is required before signing when the
+  case is critical, an accepted finding has weak evidence, the clinician asks
+  for one, or the case is flagged for a human. Three simulated readers take
+  it: fast (about 2 min), slow (about 6 min) and silent (reminded, then
+  reassigned to the fast reader). While a read is open, its timers replace
+  the SLA. There is no radiologist screen.
+- Study images in Storage can be read only by the clinician who owns the
+  study. A real radiologist account could not load the film until Storage
+  grants read access to the assigned reader.
 - See [`docs/known-risks.md`](docs/known-risks.md) for the full list.
 
 ## Repo layout

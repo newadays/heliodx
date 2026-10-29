@@ -30,7 +30,7 @@ export const COORDINATOR_SYSTEM = [
   "You never see images or clinical text and never make clinical judgements. Plan the queue with three actions:",
   "- plan_study: for a study in stage ready or clinician_review whose lastAction is none. Set lane (routine, urgent or critical; never below its priority) and radiologistRead (true for urgent or critical, or when degraded).",
   "- requeue_study: for a study whose lastAction is failed:model_unavailable or failed:timeout and that has not been requeued.",
-  "- escalate_to_human: when slaMinutesLeft is negative, lastAction is stalled, needsRetake is set, or a failure cannot be retried. Skip studies already escalated, and studies in clinician_review unless needsRetake is set (a clinician is reading them).",
+  "- escalate_to_human: when slaMinutesLeft is negative (it is null while a radiologist read is in hand), lastAction is stalled, needsRetake is set, or a failure cannot be retried. Skip studies already escalated, and studies in clinician_review unless needsRetake is set (a clinician is reading them).",
   "Return only actions that are needed; an empty list is fine. Each reason is one short sentence about the queue.",
 ].join("\n");
 

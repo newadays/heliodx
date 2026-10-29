@@ -72,7 +72,7 @@ export async function saveReport(studyId: string, current: ClinicianSummary, val
   await updateDoc(doc(db, "studies", studyId), { clinicianSummary: { ...current, ...value, editedByClinician: true }, updatedAt: serverTimestamp() });
 }
 
-export type SignNeed = "decide_every_finding" | "close_radiologist_read" | "write_impression" | "write_recommendation" | "refresh_summary" | "confirm_impression";
+export type SignNeed = "decide_every_finding" | "request_radiologist_read" | "close_radiologist_read" | "write_impression" | "write_recommendation" | "refresh_summary" | "confirm_impression";
 
 export type SignOutcome = { ok: true; reportHash: string; signedAt: string } | { ok: false; needs: SignNeed[]; message: string };
 
@@ -94,6 +94,11 @@ export async function signStudy(studyId: string, confirmImpression: boolean): Pr
     }
     throw error;
   }
+}
+
+/** B14: sends the case to a simulated radiologist; the read then appears on the study document. */
+export async function requestRadiologistRead(studyId: string): Promise<void> {
+  await httpsCallable<{ studyId: string }, { assigned: true }>(functions, "requestRadiologistRead")({ studyId });
 }
 
 export async function generatePatientNote(studyId: string): Promise<void> {

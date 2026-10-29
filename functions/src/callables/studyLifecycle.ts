@@ -55,7 +55,7 @@ export async function deleteUploadCore(deps: { db: Firestore; bucket: Bucket }, 
   return { deleted: true };
 }
 
-/** Returns a sample to its fresh draft: decisions, signature, note, shares and the coordinator's marks cleared. */
+/** Returns a sample to its fresh draft: decisions, signature, note, shares, the coordinator's marks and any radiologist read cleared. */
 export async function resetSampleCore(db: Firestore, caller: Caller, req: { studyId?: unknown }): Promise<{ reset: true }> {
   const { uid, orgId } = asCaller(caller);
   const { ref } = await load(db, req.studyId);
@@ -83,6 +83,7 @@ export async function resetSampleCore(db: Firestore, caller: Caller, req: { stud
       "demo.autopilot": FieldValue.delete(),
       // B13: the coordinator's plan, escalation and any lane it raised.
       coordinator: FieldValue.delete(),
+      radiologistRead: FieldValue.delete(),
       "flags.needsHuman": false,
       ...(study.coordinator?.plannedAt ? { priority: study.coordinator.fromPriority ?? study.priority ?? null } : {}),
       ...Object.fromEntries(AFTER_DRAFT_STEPS.map((s) => [`pipeline.stepTimestamps.${s}`, FieldValue.delete()])),

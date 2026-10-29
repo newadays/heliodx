@@ -72,6 +72,7 @@ describe("consoleSteps", () => {
       ["triage", "model"],
       ["prep", "model"],
       ["coordinator", "model"],
+      ["read", "clinician"],
       ["signed", "clinician"],
       ["summary", "model"],
       ["shared", "clinician"],
@@ -80,14 +81,14 @@ describe("consoleSteps", () => {
     expect(intake.calls.map((c) => c.name)).toEqual(["segment_region", "segment_region", "measure_quality"]);
     expect([intake.checksPassed, intake.checksFailed]).toEqual([1, 0]);
     expect(intake.summary).toMatch(/· 3 tool calls$/);
-    expect(steps[6].title).toBe("Patient note");
+    expect(steps[7].title).toBe("Patient note");
   });
 
   it("counts a failed check, and a model call is never a tool call", () => {
     const failing = [...trace, ev(9, "patient_summary", { kind: "check", name: "check_patient_summary", ok: false })];
     const steps = consoleSteps(study(), failing, T0 + 400_000);
-    expect(steps[6].checksFailed).toBe(1);
-    expect(steps[6].recovered).toEqual({});
+    expect(steps[7].checksFailed).toBe(1);
+    expect(steps[7].recovered).toEqual({});
     expect(steps.flatMap((s) => s.calls).some((c) => c.name.endsWith(".chat"))).toBe(false);
   });
 });

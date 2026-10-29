@@ -6,6 +6,7 @@
  * fall back to values derived here.
  */
 import { confidenceBand, evidenceLine } from "@/functions/src/lib/evidence";
+import { readNeed, readRequirement, READ_REASON_TEXT } from "@/functions/src/radiology/gate";
 import type { Finding, FindingStatus, ShareChannel, Study, StudyStatus } from "@/types/study";
 import { caseId as derivedCaseId } from "@/utils/caseTimeline";
 import { tsToMillis } from "@/utils/millis";
@@ -257,6 +258,36 @@ export function isQualityRejected(study: Study): boolean {
 /** Quality notes that didn't stop the analysis (glare, exposure, a model "retake"), for Review. */
 export function qualityWarnings(study: Study): string[] {
   return study.pipeline?.quality?.warnings ?? [];
+}
+
+/**
+ * B14 · The radiologist read as one line: "Sent to Dr. N. Okafor (simulated)
+ * · critical · ETA 3 min", "Read by Dr. N. Okafor (simulated) · Agree …".
+ * `need` is what signing waits for: "request" (required, none yet), "close"
+ * (open) or null.
+ */
+export interface ReadView {
+  state: "none" | "open" | "signed";
+  need: "request" | "close" | null;
+  line: string;
+  /** Why the gate requires a read, when it does. */
+  reason: string | null;
+  /** The coordinator recommended one (a hint, not the gate). */
+  suggested: boolean;
+}
+
+export function readOf(study: Study, now: number): ReadView {
+  const r = study.radiologistRead;
+  const gate = readRequirement(study);
+  const reason = r ? READ_REASON_TEXT[r.reason] : gate ? READ_REASON_TEXT[gate.reason] : null;
+  const suggested = !!study.coordinator?.radiologistReadSuggested;
+  if (!r) return { state: "none", need: readNeed(study), line: gate ? `Radiologist read required · ${reason}` : "", reason, suggested };
+  const who = `${r.assigneeName} (simulated)`;
+  if (r.status === "signed") return { state: "signed", need: null, line: `Read by ${who}${r.note ? ` · ${r.note}` : ""}`, reason, suggested };
+  const left = tsToMillis(r.eta) - now;
+  const eta = left > 30_000 ? `ETA ${Math.max(1, Math.round(left / 60_000))} min` : r.profile === "silent" && r.nudgedAt ? "reminder sent" : "due now";
+  const from = r.reassignedFrom ? ` · reassigned from ${r.reassignedFrom} (simulated)` : "";
+  return { state: "open", need: "close", line: `Sent to ${who} · ${reason} · ${eta}${from}`, reason, suggested };
 }
 
 /** Worklist status line under the chip. */

@@ -84,7 +84,8 @@ function recoveredChecks(checks: TraceEntry[]): Record<string, "retried" | "over
 
 export function consoleSteps(study: Study, trace: TraceEntry[], now = Date.now()): ConsoleStep[] {
   return buildTimeline(study, trace, now).map((r) => {
-    const kind: StepKind = r.state === "human" ? "clinician" : r.key === "received" ? "system" : "model";
+    // B14: the radiologist read is a human step (simulated readers, no model) whatever its state.
+    const kind: StepKind = r.state === "human" || r.key === "read" ? "clinician" : r.key === "received" ? "system" : "model";
     const calls = toolCalls(r.trace);
     const checks = calls.filter(isCheck);
     const failed = checks.filter((c) => !c.ok);
@@ -137,7 +138,8 @@ export function runStats(study: Study, steps: ConsoleStep[], now = Date.now()): 
     observations: study.findings?.length ?? 0,
     checksPassed: reached.reduce((n, s) => n + s.checksPassed, 0),
     checksFailed: reached.reduce((n, s) => n + s.checksFailed, 0),
-    clinicianSteps: reached.filter((s) => s.kind === "clinician").length,
+    // The radiologist read is a human step too, but not the clinician's.
+    clinicianSteps: reached.filter((s) => s.kind === "clinician" && s.key !== "read").length,
     arrivalToSharedMs: shared && arrived ? shared - arrived : null,
     // Only while the run is open: a failed run has stopped, so nothing ticks.
     arrivalToNowMs: !shared && arrived && study.status !== "failed" ? Math.max(0, now - arrived) : null,
@@ -152,7 +154,7 @@ export function callsByTool(steps: ConsoleStep[]): Record<string, number> {
   return out;
 }
 
-const STEP_OF: Record<ConsoleAgent["id"], string> = { coordinator: "coordinator", intake: "intake", triage: "triage", prep: "prep", summary: "summary" };
+const STEP_OF: Record<ConsoleAgent["id"], string> = { coordinator: "coordinator", intake: "intake", triage: "triage", prep: "prep", radiologist: "read", summary: "summary" };
 
 /** Whether the agent ran in this run, is running now, or has not run. */
 export function agentStatus(agent: ConsoleAgent, steps: ConsoleStep[]): "ran" | "running" | "idle" {

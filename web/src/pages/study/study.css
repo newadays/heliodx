@@ -75,6 +75,13 @@
 /* Review (W5) */
 .rv-quality{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--hx-ink);background:var(--hx-surface-tint);border:1px solid var(--hx-line-strong);border-radius:var(--hx-radius);padding:8px 10px;margin-top:12px}
 .rv-quality svg{flex:none;margin-top:2px}
+/* B14 radiologist read banner (Review and Sign) */
+.rd-banner{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--hx-ink);background:var(--hx-surface-tint);border:1px solid var(--hx-line-strong);border-radius:var(--hx-radius);padding:8px 10px;margin-top:12px}
+.rd-banner svg{flex:none}
+.rd-banner__text{flex:1 1 220px;min-width:0}
+.rd-banner--need{border-color:var(--hx-red)}
+.rd-banner--need>svg{color:var(--hx-red)}
+.rd-banner--done>svg{color:var(--hx-green)}
 .rv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .rv-head__text{display:flex;flex-direction:column;gap:6px}
 .rv-verdict{display:flex;align-items:center;gap:8px;flex-wrap:wrap}

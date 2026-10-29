@@ -403,7 +403,7 @@ export default function ConsolePage() {
                           </span>
                           <span role="cell" className={r.state === "failed" ? "inline-error" : "tr-sum"}>
                             {failed ? <span className="chip chip-warn tr-failed">Failed</span> : null}
-                            {r.state === "running" ? <span className="tr-skel" aria-hidden="true" /> : r.summary}
+                            {r.state === "running" && r.key !== "read" ? <span className="tr-skel" aria-hidden="true" /> : r.summary}
                           </span>
                           <span role="cell">
                             <button type="button" className="ib ib-flat" aria-expanded={isOpen} aria-controls={`detail-${r.key}`} aria-label={`${isOpen ? "Collapse" : "Expand"} ${r.title}`} disabled={pending} onClick={() => toggle(r.key)}>

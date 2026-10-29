@@ -18,8 +18,8 @@ import type { PipelineErrorCode } from "../pipeline/errors";
 import { nextStep } from "../pipeline/retryPolicy";
 import { assertTransition, isStudyStatus, WrongStateError, type StudyFlags, type StudyStatus } from "./stateMachine";
 
-/** Who caused a write: the pipeline, a scheduled job, or a signed-in user. */
-export type Actor = "pipeline" | "scheduler" | "coordinator" | { uid: string };
+/** Who caused a write: the pipeline, a scheduled job, the coordinator, a simulated radiologist (B14), or a signed-in user. */
+export type Actor = "pipeline" | "scheduler" | "coordinator" | "radiologist" | { uid: string };
 
 export interface AuditEntry {
   at: FieldValue;

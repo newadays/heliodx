@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { CoordinatorPlanSchema } from "../src/coordinator/plan";
 import { CONSOLE_AGENTS, CONSOLE_TOOLS, isModelCall, manifestModels } from "../src/lib/consoleManifest";
+import { STEP_NAME } from "../src/radiology/reads";
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {
@@ -23,6 +24,8 @@ function tracedNames(): string[] {
   }
   // The coordinator traces its actions by name (`name: a.action`).
   for (const action of CoordinatorPlanSchema.shape.actions.element.shape.action.options) names.add(action);
+  // B14: the read steps are traced by name (`name: STEP_NAME[step]`).
+  for (const n of Object.values(STEP_NAME)) names.add(n);
   return [...names].filter((n) => !isModelCall(n));
 }
 
@@ -38,7 +41,7 @@ describe("console manifest", () => {
     expect(new Set(CONSOLE_TOOLS.map((t) => t.name)).size).toBe(CONSOLE_TOOLS.length);
     const owners = new Set<string>([...CONSOLE_AGENTS.map((a) => a.id), "clinician", "system"]);
     expect(CONSOLE_TOOLS.filter((t) => !owners.has(t.owner))).toEqual([]);
-    expect(CONSOLE_AGENTS.map((a) => a.order)).toEqual([0, 1, 2, 3, 4]);
+    expect(CONSOLE_AGENTS.map((a) => a.order)).toEqual([0, 1, 2, 3, 4, 5]);
     expect(manifestModels()).toEqual(["Muse Wonder", "Glimmer", "SAM 3.1"]);
   });
 });

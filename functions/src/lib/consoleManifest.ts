@@ -11,7 +11,7 @@
  * tokens and the agent time.
  */
 export interface ConsoleAgent {
-  id: "coordinator" | "intake" | "triage" | "prep" | "summary";
+  id: "coordinator" | "intake" | "triage" | "prep" | "radiologist" | "summary";
   name: string;
   models: string[];
   /** One sentence. */
@@ -65,11 +65,19 @@ export const CONSOLE_AGENTS: ConsoleAgent[] = [
     stages: ["detecting", "summarizing"],
   },
   {
+    id: "radiologist",
+    name: "Radiologist (simulated)",
+    models: [],
+    role: "Reads the case when the gate requires it (critical, an accepted weak finding, a clinician request or a human flag). Simulated fast, slow and silent readers; no model.",
+    order: 4,
+    stages: ["radiology"],
+  },
+  {
     id: "summary",
     name: "Summary",
     models: ["Glimmer"],
     role: "Writes the patient note from the signed report only and checks every sentence against it.",
-    order: 4,
+    order: 5,
     stages: ["patient_summary"],
   },
 ];
@@ -95,6 +103,10 @@ export const CONSOLE_TOOLS: ConsoleTool[] = [
   { name: "reset_sample", params: [], description: "Returns a sample study to its fresh draft.", kind: "check", owner: "clinician" },
   { name: "plan_study", params: ["studyId", "lane", "radiologistRead"], description: "Sets the reading lane (never below the study's priority) and recommends a radiologist read.", kind: "check", owner: "coordinator" },
   { name: "requeue_study", params: ["studyId"], description: "Puts a study whose model call failed back in the queue, once.", kind: "check", owner: "coordinator" },
+  { name: "assign_read", params: ["studyId", "reason"], description: "Sends the case to a simulated radiologist: critical goes to the fast reader, the rest rotate.", kind: "check", owner: "coordinator" },
+  { name: "nudge_read", params: ["studyId"], description: "Reminds a reader whose ETA has passed.", kind: "check", owner: "coordinator" },
+  { name: "reassign_read", params: ["studyId"], description: "Moves a read a silent reader didn't answer after the reminder to the fast reader.", kind: "check", owner: "coordinator" },
+  { name: "sign_read", params: ["studyId"], description: "The simulated radiologist signs the read with a short note; findings and the report are untouched.", kind: "check", owner: "radiologist" },
   { name: "escalate_to_human", params: ["studyId", "reason"], description: "Flags the case for the clinician: overdue SLA, stalled run, retake needed or a failure that can't be retried.", kind: "check", owner: "coordinator" },
 ];
 
