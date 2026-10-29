@@ -11,18 +11,41 @@ import { clinicianName, useAuth } from "~/auth/AuthContext";
 import { Icon } from "~/components/Icon";
 import { useToast } from "~/components/Toast";
 import { regenerateReport, saveReport, signStudy, type SignNeed } from "~/data/actions";
-import { isSigned, patientOf, studyLabel, type FindingView, caseIdOf } from "~/data/model";
+import { isSigned, patientOf, readOf, studyLabel, type FindingView, caseIdOf } from "~/data/model";
 import { hhmm } from "~/lib/format";
 import { isTyping } from "~/lib/keys";
 
+import { DictateButton } from "./DictateButton";
+import { ReadBanner } from "./ReadBanner";
+
 const NEED_TEXT: Record<SignNeed, string> = {
   decide_every_finding: "Decide every finding first (accept, edit or reject).",
-  close_radiologist_read: "Close the radiologist read first.",
+  request_radiologist_read: "A radiologist read is required. Request one above.",
+  close_radiologist_read: "Wait for the radiologist read to be signed.",
   write_impression: "Write an impression.",
   write_recommendation: "Write a recommendation.",
   refresh_summary: "The report is still updating from your latest decisions.",
   confirm_impression: "Confirm the impression and recommendation are your own.",
 };
+
+/**
+ * B18 · Puts dictated text at the textarea's cursor (it keeps its selection
+ * after the mic button takes focus), or at the end when it was never focused.
+ */
+function insertAt(id: string, value: string, text: string): string {
+  const el = document.getElementById(id) as HTMLTextAreaElement | null;
+  const used = el?.dataset.focused === "1";
+  const start = used ? (el?.selectionStart ?? value.length) : value.length;
+  const end = used ? (el?.selectionEnd ?? value.length) : value.length;
+  const before = value.slice(0, start);
+  const after = value.slice(end);
+  const pad = before && !/\s$/.test(before) ? " " : "";
+  const tail = after && !/^\s/.test(after) ? " " : "";
+  const next = `${before}${pad}${text}${tail}${after}`;
+  const caret = before.length + pad.length + text.length;
+  requestAnimationFrame(() => el?.setSelectionRange(caret, caret));
+  return next;
+}
 
 /** Report lines: the frozen report once signed, else the accepted / edited findings in order. */
 function reportLines(study: Study, findings: FindingView[]): { n: number; text: string; edited: boolean }[] {
@@ -56,6 +79,13 @@ export function SignPanel({
   const [attested, setAttested] = useState(false);
   const [signing, setSigning] = useState(false);
   const [needs, setNeeds] = useState<SignNeed[]>([]);
+  // B14: an open read blocks signing (the server refuses too); the banner says who has it.
+  const readOpen = !signed && readOf(study, 0).state === "open";
+  const readStatus = study.radiologistRead?.status ?? null;
+  useEffect(() => {
+    // The read was requested or signed since the refusal: that need is stale.
+    if (readStatus) setNeeds((n) => n.filter((x) => x !== "request_radiologist_read" && (readStatus !== "signed" || x !== "close_radiologist_read")));
+  }, [readStatus]);
   const [editing, setEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
   const summary = signed ? study.report?.summary : study.clinicianSummary;
@@ -261,6 +291,8 @@ export function SignPanel({
             </span>
           </div>
 
+          <ReadBanner study={study} />
+
           {stale ? (
             <div className="sg-updating" role="status">
               {draftFailed && !updating ? (
@@ -310,11 +342,14 @@ export function SignPanel({
           </section>
 
           <section className="sg-sec">
-            <label className="label" htmlFor="sg-impression">
-              Impression
-            </label>
+            <div className="sg-sec__head">
+              <label className="label" htmlFor="sg-impression">
+                Impression
+              </label>
+              {editing ? <DictateButton studyId={study.id} label="impression" onText={(t) => setImpression((v) => insertAt("sg-impression", v, t))} /> : null}
+            </div>
             {editing ? (
-              <textarea id="sg-impression" rows={4} value={impression} onChange={(e) => setImpression(e.target.value)} aria-describedby="sg-impression-hint" />
+              <textarea id="sg-impression" rows={4} value={impression} onChange={(e) => setImpression(e.target.value)} onFocus={(e) => (e.currentTarget.dataset.focused = "1")} aria-describedby="sg-impression-hint" />
             ) : (
               <ol className="sg-impression">{(summary?.impression ?? []).map((s, i) => <li key={i}>{s}</li>)}</ol>
             )}
@@ -326,11 +361,14 @@ export function SignPanel({
           </section>
 
           <section className="sg-sec">
-            <label className="label" htmlFor="sg-rec">
-              Recommendation
-            </label>
+            <div className="sg-sec__head">
+              <label className="label" htmlFor="sg-rec">
+                Recommendation
+              </label>
+              {editing ? <DictateButton studyId={study.id} label="recommendation" onText={(t) => setRecommendation((v) => insertAt("sg-rec", v, t))} /> : null}
+            </div>
             {editing ? (
-              <textarea id="sg-rec" rows={3} value={recommendation} onChange={(e) => setRecommendation(e.target.value)} />
+              <textarea id="sg-rec" rows={3} value={recommendation} onChange={(e) => setRecommendation(e.target.value)} onFocus={(e) => (e.currentTarget.dataset.focused = "1")} />
             ) : (
               <p className="sg-prose">{summary?.recommendation || <span className="muted">Not drafted yet.</span>}</p>
             )}
@@ -407,13 +445,15 @@ export function SignPanel({
                 <button type="button" className="btn btn-ghost" onClick={onBack}>
                   Back to findings
                 </button>
-                <button type="button" className="btn btn-primary" disabled={!attested || signing || editing} aria-describedby="sg-sign-hint" onClick={() => void sign()}>
+                <button type="button" className="btn btn-primary" disabled={!attested || signing || editing || readOpen} aria-describedby="sg-sign-hint" onClick={() => void sign()}>
                   {signing ? <span className="spinner" aria-hidden="true" /> : <Icon name="lock" />}
                   {signing ? "Signing…" : `Sign as ${name}`}
                 </button>
               </div>
               <span id="sg-sign-hint" className="muted sg-hint">
-                {attested
+                {readOpen
+                  ? "Signing waits for the radiologist read."
+                  : attested
                   ? "Signing locks the report and records the time and a hash. The patient note is written from the signed version."
                   : "Tick the confirmation to sign."}
               </span>

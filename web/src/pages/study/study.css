@@ -75,6 +75,13 @@
 /* Review (W5) */
 .rv-quality{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--hx-ink);background:var(--hx-surface-tint);border:1px solid var(--hx-line-strong);border-radius:var(--hx-radius);padding:8px 10px;margin-top:12px}
 .rv-quality svg{flex:none;margin-top:2px}
+/* B14 radiologist read banner (Review and Sign) */
+.rd-banner{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--hx-ink);background:var(--hx-surface-tint);border:1px solid var(--hx-line-strong);border-radius:var(--hx-radius);padding:8px 10px;margin-top:12px}
+.rd-banner svg{flex:none}
+.rd-banner__text{flex:1 1 220px;min-width:0}
+.rd-banner--need{border-color:var(--hx-red)}
+.rd-banner--need>svg{color:var(--hx-red)}
+.rd-banner--done>svg{color:var(--hx-green)}
 .rv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .rv-head__text{display:flex;flex-direction:column;gap:6px}
 .rv-verdict{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -119,6 +126,14 @@
 .sg-report__title{font-size:var(--hx-text-xl)!important;font-weight:700;letter-spacing:var(--hx-tracking-tight)}
 .sg-updating{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--hx-ink);background:var(--hx-surface-tint);border:1px solid var(--hx-line-strong);border-radius:var(--hx-radius);padding:6px 10px;min-height:36px}
 .sg-sec{display:flex;flex-direction:column;gap:8px}
+/* B18 dictation */
+.sg-sec__head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dict{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.dict-btn.is-recording{border-color:var(--hx-red)}
+.dict-dot{width:8px;height:8px;border-radius:50%;background:var(--hx-red);animation:dictPulse 1s ease-in-out infinite}
+.dict-note,.dict-off{font-size:12px}
+@keyframes dictPulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.dict-dot{animation:none}}
 .sg-findings{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px}
 .fl{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5}
 .fl .chip{vertical-align:middle}

@@ -136,6 +136,8 @@ describe("studies: review of a ready study", () => {
     await assertFails(updateDoc(doc(db, "studies", "ready-a1"), { modality: "skin" }));
     await assertFails(updateDoc(doc(db, "studies", "ready-a1"), { patient: { name: "Someone Else" } }));
     await assertFails(updateDoc(doc(db, "studies", "ready-a1"), { pipeline: { runId: "x" } }));
+    // B14: the read is written only by Functions; a client can't open, sign or clear it.
+    await assertFails(updateDoc(doc(db, "studies", "ready-a1"), { radiologistRead: { required: true, status: "signed" }, updatedAt: new Date() }));
   });
 
   it("colleagues in the same organization may read but not review", async () => {

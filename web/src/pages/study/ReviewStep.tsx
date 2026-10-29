@@ -15,6 +15,8 @@ import { bandBars, bandLabel, qualityWarnings, verdict, type FindingView } from 
 import { isTyping } from "~/lib/keys";
 import { MonoNumbers } from "~/lib/text";
 
+import { ReadBanner } from "./ReadBanner";
+
 function withoutEdit(f: Finding): Finding {
   const { editedText: _edit, ...rest } = f;
   void _edit;
@@ -318,6 +320,8 @@ export function ReviewPanel({
             </span>
           </div>
         ) : null}
+
+        <ReadBanner study={study} />
 
         <div className="rv-toolbar">
           <button type="button" className="btn btn-secondary" disabled={!canDecide || !pendingNormal.length} onClick={acceptAllNormal}>

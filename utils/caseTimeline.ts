@@ -9,6 +9,7 @@
  */
 import type { Study, StudyStatus, TraceEntry } from "@/types/study";
 import { slaBudgetMs } from "@/functions/src/lib/sla";
+import { readRequirement, READ_REASON_TEXT } from "@/functions/src/radiology/gate";
 import { tsToMillis } from "@/utils/millis";
 import { receivedLine } from "@/utils/studySource";
 
@@ -31,7 +32,7 @@ export interface TimelineRow {
   trace: TraceEntry[];
 }
 
-const MODEL_LABEL: Record<string, string> = { glimmer: "Glimmer", "sam-3.1": "SAM 3.1", "muse-wonder-1.0": "Muse Wonder", mock: "Mock" };
+const MODEL_LABEL: Record<string, string> = { glimmer: "Glimmer", "sam-3.1": "SAM 3.1", "muse-wonder-1.0": "Muse Wonder", "muse-voice-transcribe-1.0": "Muse Voice Transcribe", mock: "Mock" };
 
 export function modelLabel(model: string): string {
   return MODEL_LABEL[model] ?? model;
@@ -74,7 +75,8 @@ const STAGES: StageDef[] = [
   { key: "triage", label: "Triage", agent: "Triage", traceStages: ["classifying"], enters: "classifying", exits: "detecting", pending: "Waits for intake." },
   { key: "prep", label: "Prep", agent: "Prep", traceStages: ["detecting", "summarizing"], enters: "detecting", exits: "ready", pending: "Waits for triage." },
   { key: "coordinator", label: "Coordinator", agent: "Coordinator", traceStages: ["coordination"], enters: "queued", exits: null, pending: "Plans the case once its draft is ready, and escalates it if it stalls or runs past its SLA." },
-  { key: "signed", label: "Signed", agent: "Clinician", traceStages: ["reset", "signed"], enters: "signed", exits: null, human: true, pending: "Waiting for the clinician to review and sign." },
+  { key: "read", label: "Radiologist read", agent: "Radiologist", traceStages: ["radiology"], enters: "ready", exits: null, pending: "Not required for this case." },
+  { key: "signed", label: "Signed", agent: "Clinician", traceStages: ["reset", "dictation", "signed"], enters: "signed", exits: null, human: true, pending: "Waiting for the clinician to review and sign." },
   { key: "summary", label: "Patient summary", agent: "Summary", traceStages: ["patient_summary"], enters: "patient_summary_ready", exits: null, pending: "Written after signing, from the signed report." },
   { key: "shared", label: "Shared", agent: "Clinician", traceStages: ["sharing"], enters: "shared", exits: null, human: true, pending: "Shared only after every next step is confirmed and the patient consents." },
 ];
@@ -150,6 +152,7 @@ export function buildTimeline(study: Study, trace: TraceEntry[], now: number = D
   return STAGES.map((def) => {
     const rows = sorted.filter((t) => def.traceStages.includes(t.stage));
     const isReached = reached >= rank(def.enters) && (study.status !== "failed" || rank(def.enters) <= reached);
+    if (def.key === "read") return readRow(def, study, rows);
     if (def.key === "coordinator") {
       // Decided by the coordinator tick at any stage (plan, requeue, escalate): shown once it has acted.
       return {
@@ -194,6 +197,24 @@ export function buildTimeline(study: Study, trace: TraceEntry[], now: number = D
     const agent = def.key === "received" && study.source === "sample" ? "Sample" : def.agent;
     return { key: def.key, label: def.label, agent, models, state, at: isReached ? at : 0, ms: state === "pending" ? null : ms, tokens, line, trace: rows };
   });
+}
+
+/**
+ * B14 · The radiologist read: running while a simulated reader has it, a
+ * human step once signed. Before any read, says whether the gate requires one.
+ */
+function readRow(def: StageDef, study: Study, rows: TraceEntry[]): TimelineRow {
+  const read = study.radiologistRead;
+  const base = { key: def.key, label: def.label, agent: read ? `${read.assigneeName} (simulated)` : def.agent, models: [], ms: null, tokens: 0, trace: rows };
+  if (!read) {
+    const gate = rank(study.status) < rank("signed") ? readRequirement(study) : null;
+    return { ...base, state: "pending", at: 0, line: gate ? `Required: ${READ_REASON_TEXT[gate.reason]}. Not requested yet.` : def.pending };
+  }
+  const at = tsToMillis(read.assignedAt);
+  const signedAt = tsToMillis(read.signedAt);
+  const start = tsToMillis(rows[0]?.at) || at;
+  const line = rows.map((t) => t.result ?? "").filter(Boolean).join(" · ") || (read.status === "signed" ? `Signed · ${read.note ?? ""}` : "Assigned.");
+  return { ...base, state: read.status === "signed" ? "human" : "running", at: start, ms: signedAt && start ? signedAt - start : null, line };
 }
 
 /** "9.4 s · 3,180 tok" */

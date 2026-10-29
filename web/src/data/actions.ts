@@ -72,7 +72,7 @@ export async function saveReport(studyId: string, current: ClinicianSummary, val
   await updateDoc(doc(db, "studies", studyId), { clinicianSummary: { ...current, ...value, editedByClinician: true }, updatedAt: serverTimestamp() });
 }
 
-export type SignNeed = "decide_every_finding" | "close_radiologist_read" | "write_impression" | "write_recommendation" | "refresh_summary" | "confirm_impression";
+export type SignNeed = "decide_every_finding" | "request_radiologist_read" | "close_radiologist_read" | "write_impression" | "write_recommendation" | "refresh_summary" | "confirm_impression";
 
 export type SignOutcome = { ok: true; reportHash: string; signedAt: string } | { ok: false; needs: SignNeed[]; message: string };
 
@@ -92,6 +92,25 @@ export async function signStudy(studyId: string, confirmImpression: boolean): Pr
       const needs = (error as FirebaseError & { details?: { needs?: SignNeed[] } }).details?.needs;
       if (needs?.length) return { ok: false, needs, message: error.message };
     }
+    throw error;
+  }
+}
+
+/** B14: sends the case to a simulated radiologist; the read then appears on the study document. */
+export async function requestRadiologistRead(studyId: string): Promise<void> {
+  await httpsCallable<{ studyId: string }, { assigned: true }>(functions, "requestRadiologistRead")({ studyId });
+}
+
+/** B18: the hosted transcriber failed; the clinician types instead. */
+export class DictationUnavailable extends Error {}
+
+/** B18: a dictated clip (base64 WAV) to text, for the clinician to place and save. Nothing is stored. */
+export async function dictate(studyId: string, wav: string): Promise<string> {
+  try {
+    const { data } = await httpsCallable<{ studyId: string; audio: string }, { transcript: string }>(functions, "dictate")({ studyId, audio: wav });
+    return data.transcript;
+  } catch (error) {
+    if (error instanceof FirebaseError && (error as FirebaseError & { details?: { error?: string } }).details?.error === "dictation_unavailable") throw new DictationUnavailable(error.message);
     throw error;
   }
 }

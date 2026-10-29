@@ -83,6 +83,7 @@ export async function signStudyCore(
 
 const NEED_TEXT: Record<SignNeed, string> = {
   decide_every_finding: "Accept, edit or reject every finding.",
+  request_radiologist_read: "Request a radiologist read.",
   close_radiologist_read: "Wait for the radiologist's read.",
   write_impression: "Write the impression.",
   write_recommendation: "Write the recommendation.",

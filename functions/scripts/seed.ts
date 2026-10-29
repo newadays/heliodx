@@ -158,6 +158,7 @@ async function main(): Promise<void> {
       { profile: "slow", name: "T. Bello" },
       { profile: "silent", name: "H. Danjuma" },
     ];
+    const radiologists: { id: string; name: string; profile: SimProfile; simulated: true }[] = [];
     for (const r of roster) {
       const member = await createMember(
         db,
@@ -170,7 +171,10 @@ async function main(): Promise<void> {
       // in as a radiologist on the emulators.
       if (providedPassword) await auth.updateUser(member.uid, { password: providedPassword });
       console.log(`Simulated radiologist (${r.profile}): ${member.email}${member.created ? "" : " (existing)"}`);
+      radiologists.push({ id: member.uid, name: `Dr. ${r.name}`, profile: r.profile, simulated: true });
     }
+    // B14: the roster the read timers assign from (radiology/roster.ts).
+    await db.collection("organizations").doc(orgId).update({ radiologists, updatedAt: FieldValue.serverTimestamp() });
   }
 
   console.log("Done.");

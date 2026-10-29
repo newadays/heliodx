@@ -2,17 +2,19 @@
  * B15 · Sign gates and the report hash. Pure: no Firebase.
  *
  * A study may be signed only when the clinician has decided every finding,
- * no radiologist read is open, the impression and recommendation exist, the
+ * any radiologist read the gate requires (B14) is signed, the impression and recommendation exist, the
  * summary matches the review decisions (or the clinician wrote it), and the
  * impression is the clinician's own: edited, or explicitly confirmed.
  */
 import { createHash } from "node:crypto";
 
+import { readNeed, type GateStudy } from "../radiology/gate";
 import { reviewHash, type ReviewableFinding } from "./reviewHash";
 
 export interface SignableFinding extends ReviewableFinding {
   title: string;
   description: string;
+  strength?: "strong" | "moderate" | "weak";
 }
 
 export interface SignableStudy {
@@ -26,11 +28,14 @@ export interface SignableStudy {
     generatedFromReviewHash?: string | null;
     editedByClinician?: boolean;
   } | null;
-  radiologistRead?: { required?: boolean; status?: string } | null;
+  priority?: string | null;
+  flags?: GateStudy["flags"];
+  radiologistRead?: { required?: boolean; status?: string; requestedBy?: string } | null;
 }
 
 export type SignNeed =
   | "decide_every_finding"
+  | "request_radiologist_read"
   | "close_radiologist_read"
   | "write_impression"
   | "write_recommendation"
@@ -41,8 +46,10 @@ export function signNeeds(study: SignableStudy, opts: { confirmImpression?: bool
   const needs: SignNeed[] = [];
   const findings = study.findings ?? [];
   if (findings.some((f) => f.status === "pending")) needs.push("decide_every_finding");
-  const read = study.radiologistRead;
-  if (read?.required && read.status !== "signed") needs.push("close_radiologist_read");
+  // B14: the gate rule (radiology/gate.ts) — a required read must exist and be signed.
+  const read = readNeed(study);
+  if (read === "request") needs.push("request_radiologist_read");
+  if (read === "close") needs.push("close_radiologist_read");
   const s = study.clinicianSummary;
   const impression = (s?.impression ?? []).map((x) => x.trim()).filter(Boolean);
   if (!impression.length) needs.push("write_impression");

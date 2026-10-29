@@ -35,6 +35,7 @@ export interface CoordinatorStudy {
   flags?: { needsRetake?: boolean; degraded?: boolean; needsHuman?: boolean } | null;
   pipeline?: { stepTimestamps?: Record<string, { toMillis(): number } | undefined>; error?: { code?: string } | null } | null;
   coordinator?: { plannedAt?: unknown; fromPriority?: string | null; requeues?: number; escalation?: unknown } | null;
+  radiologistRead?: { status?: string; assignedAt?: { toMillis(): number } | null; reassignedFrom?: string } | null;
 }
 
 /** Studies the coordinator watches: not yet signed and not deleted. */
@@ -60,10 +61,15 @@ function lastAction(s: CoordinatorStudy, now: number): string {
 
 export function queueItem(s: CoordinatorStudy, now: number): QueueItem {
   const priority = asLane(s.priority);
-  const start = ms(s.pipeline?.stepTimestamps?.detecting) || ms(s.createdAt);
+  const read = s.radiologistRead;
+  // B14: an open read owns the clock. Its own timers nudge and reassign a silent
+  // reader, so the SLA runs again only after a reassignment (from then); once the
+  // read is signed the clinician has it, and the clock stops.
+  const start = read?.status ? ms(read.assignedAt) : ms(s.pipeline?.stepTimestamps?.detecting) || ms(s.createdAt);
+  const readPaused = read?.status === "signed" || (read?.status === "assigned" && !read.reassignedFrom);
   // The clock pauses while a clinician has the case open (clinician_review), and
   // runs at the priority the study had before the coordinator planned it.
-  const budget = s.status === "clinician_review" ? null : slaBudgetMs(asLane(s.coordinator?.fromPriority) ?? priority);
+  const budget = s.status === "clinician_review" || readPaused ? null : slaBudgetMs(asLane(s.coordinator?.fromPriority) ?? priority);
   return {
     studyId: s.id,
     stage: s.status,

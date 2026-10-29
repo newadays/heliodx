@@ -24,6 +24,8 @@ export { onStudyImageUploaded } from "./triggers/onStudyImageUploaded";
 export { requeueStudies } from "./scheduled/requeueStudies";
 export { coordinatorTick } from "./scheduled/coordinatorTick";
 export { signStudy } from "./callables/signStudy";
+export { requestRadiologistRead } from "./callables/radiologistRead";
+export { dictate } from "./callables/dictate";
 export { generatePatientSummary } from "./callables/generatePatientSummary";
 export { shareStudy } from "./callables/shareStudy";
 export { createDemoStudy } from "./callables/createDemoStudy";

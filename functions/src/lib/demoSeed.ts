@@ -4,7 +4,7 @@
  * review, Sample Patient 4 signed and shared by PDF. Seeded once for the demo
  * organization and shared by every demo account (anyone may reset them). Every case runs the real
  * pipeline; the autopilot (triggers/demoAutopilot.ts) walks the "shared" one
- * through review, signing, the patient note and a PDF share once drafted,
+ * through review, a simulated radiologist read when the gate needs one, signing, the patient note and a PDF share once drafted,
  * with the same server code a clinician's clicks go through.
  */
 import { Timestamp, type Firestore } from "firebase-admin/firestore";
@@ -14,6 +14,9 @@ import { createDemoStudyCore } from "../callables/createDemoStudy";
 import { generatePatientSummaryCore, type Rewriter } from "../callables/generatePatientSummary";
 import { shareStudyCore, type ShareDeps } from "../callables/shareStudy";
 import { signStudyCore } from "../callables/signStudy";
+import { readNeed } from "../radiology/gate";
+import { assignRead, stepRead } from "../radiology/reads";
+import { DEFAULT_ROSTER } from "../radiology/roster";
 import { SAMPLE_OWNER } from "./access";
 import { DEMO_ORG, DEMO_ROLE } from "./demo";
 import { reviewHash } from "./reviewHash";
@@ -88,6 +91,11 @@ export async function runAutopilot(
     reviewHash: hash,
     ...(study.clinicianSummary ? { "clinicianSummary.generatedFromReviewHash": hash } : {}),
   });
+  // B14: a read the gate requires is assigned and signed straight away for the seeded case.
+  if (readNeed((await ref.get()).data() ?? {})) {
+    await assignRead(db, ref, { actor: "coordinator", now: Date.now(), requestedBy: uid, reader: DEFAULT_ROSTER[0] });
+    await stepRead(db, ref, Date.now(), "sign");
+  }
   await signStudyCore(db, uid, { studyId, confirmImpression: true, device: "demo autopilot" });
   await generatePatientSummaryCore(db, uid, { studyId }, deps.rewrite);
   const after = (await ref.get()).data() as AutopilotStudy;

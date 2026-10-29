@@ -12,6 +12,7 @@ them. This page is the contract every new code path is held to.
 | Cloud Storage `studies/{org}/{uid}/{studyId}/*` | originals, thumbnails, overlays, note PDFs | `storage.rules`: owner read, owner write of the original only; samples readable in their org |
 | Clinical model calls (our private Cloud GPU: Muse Glimmer, SAM 3.1) | the model needs the image and clinical context to draft | server-side only, route `clinical` in `functions/src/models/routes.ts`; prompts never include names; no fallback to any hosted API |
 | The patient note PDF | the patient receives their own note | written from the signed report only and checked against it (`functions/src/lib/shareRules.ts`, `sharePdf.ts`); never findings or the image |
+| Dictation calls (Meta Model API: Muse Voice Transcribe) | the clinician chooses to dictate an edit to the impression or recommendation | route `dictation` carries audio only (no image, no context); the clip is passed straight through, never written to disk, Storage or logs; the transcript returns only to the caller and is saved only if the clinician saves it; the audit and trace record the duration, never the words; the recording notice says not to say the patient's name |
 | The clipboard ("Copy report") | the clinician pastes into a record system | `utils/reportText.ts` omits patient identifiers |
 
 ## Must never hold PHI
