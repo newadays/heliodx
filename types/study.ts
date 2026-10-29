@@ -265,7 +265,10 @@ export interface PipelineQuality {
   ok: boolean;
   /** 0–100 */
   score: number;
+  /** Why the study stopped (too low resolution, blurred, not a medical image). */
   issues: string[];
+  /** Noticed but not blocking (glare, exposure, contrast, a model "retake"); shown in Review. Absent on older studies. */
+  warnings?: string[];
 }
 
 export interface StudyPipeline {
@@ -344,7 +347,16 @@ export interface Study {
   findings: Finding[];
   clinicianSummary: ClinicianSummary | null;
   /** B23 background draft: `forHash` is claimed while drafting and cleared with `failedAt` when the model didn't answer. */
-  reportDraft?: { forHash?: string | null; startedAt?: unknown; doneAt?: unknown; failedAt?: unknown } | null;
+  reportDraft?: {
+    forHash?: string | null;
+    startedAt?: unknown;
+    doneAt?: unknown;
+    failedAt?: unknown;
+    /** The drafter is waiting for the private GPU to start (cold start, ~5 min). */
+    warming?: boolean;
+    reason?: string | null;
+    requestedAt?: unknown;
+  } | null;
   patientSummary: PatientSummary | null;
   /** Hash of the reviewed findings; see `utils/reviewHash.ts` (card 2.7). */
   reviewHash: string | null;

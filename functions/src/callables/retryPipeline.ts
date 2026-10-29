@@ -30,7 +30,7 @@ export function canRetry(
  * that has gone quiet for STALE_AFTER_MS. Runs synchronously within the
  * callable so the client sees status updates on its existing listener.
  */
-export const retryPipeline = onCall<{ studyId: string }, Promise<{ started: boolean }>>(
+export const retryPipeline = onCall<{ studyId: string; analyzeAnyway?: boolean }, Promise<{ started: boolean }>>(
   { enforceAppCheck: false, timeoutSeconds: 300, memory: "1GiB" },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first.");
@@ -43,7 +43,13 @@ export const retryPipeline = onCall<{ studyId: string }, Promise<{ started: bool
     const caller = callerOf(request.auth);
     if (!canAct(snap.data() ?? {}, caller.uid, caller.orgId)) throw new HttpsError("permission-denied", "Not your study.");
 
-    const study = snap.data() as StudyForPipeline & { pipeline?: { stepTimestamps?: Record<string, { toMillis(): number }> } };
+    const study = snap.data() as StudyForPipeline & { pipeline?: { stepTimestamps?: Record<string, { toMillis(): number }>; error?: { code?: string } | null } };
+    // "Analyze anyway": only after a quality rejection, and recorded as the clinician's decision.
+    const analyzeAnyway = request.data?.analyzeAnyway === true;
+    if (analyzeAnyway && !(study.status === "failed" && study.pipeline?.error?.code === "quality_rejected")) {
+      throw new HttpsError("failed-precondition", "Only a study stopped by the image quality check can be analyzed anyway.");
+    }
+    const override = analyzeAnyway ? { by: request.auth.uid, at: new Date() } : null;
     const stamps = Object.values(study.pipeline?.stepTimestamps ?? {}).map((t) => t.toMillis());
     const lastStepAt = stamps.length ? Math.max(...stamps) : null;
     const decision = canRetry(study.status, lastStepAt);
@@ -64,13 +70,18 @@ export const retryPipeline = onCall<{ studyId: string }, Promise<{ started: bool
     // claims the study, so its late writes are refused.
     if (study.status !== "queued") {
       try {
-        await new StudyWriter(ref, { uid: request.auth.uid }).requeue({ action: "retry_requested", resetAttempts: true });
+        await new StudyWriter(ref, { uid: request.auth.uid }).requeue({
+          action: analyzeAnyway ? "analyze_anyway" : "retry_requested",
+          resetAttempts: true,
+          ...(override ? { fields: { "pipeline.qualityOverride": override } } : {}),
+        });
       } catch (error) {
         if (error instanceof WrongStateError) throw wrongState(error, "This study can't be retried right now.");
         throw error;
       }
     }
-    await runPipeline(ref, { ...study, status: "queued" }, eventId, { bucket: getStorage().bucket().name });
+    const pipeline = override ? { ...study.pipeline, qualityOverride: override } : study.pipeline;
+    await runPipeline(ref, { ...study, status: "queued", pipeline }, eventId, { bucket: getStorage().bucket().name });
     return { started: true };
   },
 );

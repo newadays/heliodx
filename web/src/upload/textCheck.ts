@@ -81,25 +81,47 @@ export async function findText(canvas: HTMLCanvasElement): Promise<TextHit[]> {
     const words = (data.blocks ?? []).flatMap((b) => b.paragraphs.flatMap((p) => p.lines.flatMap((l) => l.words)));
     const real = words.filter((wd) => wd.confidence >= 70 && /[A-Za-z0-9]{2,}/.test(wd.text) && !IGNORE.test(wd.text.replace(/[^A-Za-z]/g, "")) && wd.bbox.y1 - wd.bbox.y0 >= 0.006 * H);
     if (!real.length) continue;
-    const x0 = Math.min(...real.map((r) => r.bbox.x0));
-    const y0 = Math.min(...real.map((r) => r.bbox.y0));
-    const x1 = Math.max(...real.map((r) => r.bbox.x1));
-    const y1 = Math.max(...real.map((r) => r.bbox.y1));
-    // Generous padding: OCR often misses a word's first or last letters
-    // (e.g. reads "OHN" for "JOHN"), and a redaction must cover all of it.
-    const lineH = (y1 - y0) / crop.height * band.h;
-    const padX = Math.max(0.03, lineH * 1.5);
-    const padY = Math.max(0.015, lineH * 0.5);
-    const bx = band.x + (x0 / crop.width) * band.w - padX;
-    const by = band.y + (y0 / crop.height) * band.h - padY;
-    const bw = ((x1 - x0) / crop.width) * band.w + 2 * padX;
-    const bh = ((y1 - y0) / crop.height) * band.h + 2 * padY;
-    hits.push({
-      box: { x: Math.max(0, bx), y: Math.max(0, by), w: Math.min(1 - Math.max(0, bx), bw), h: Math.min(1 - Math.max(0, by), bh) },
-      words: real.map((r) => r.text),
-    });
+    hits.push({ box: redactionBox(real, words, { width: crop.width, height: crop.height }, band), words: real.map((r) => r.text) });
   }
   return hits;
+}
+
+type OcrWord = { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } };
+
+/**
+ * The 0–1 box to fill for a band's hits. It grows to every OCR word (any
+ * confidence, positioning words included) on the lines touching the hits,
+ * because labels stack ("AP / ERECT" over a name) and OCR boxes sit off the
+ * glyphs: on 29 Oct a hit just below "AP ERECT" left half of "ERECT" showing.
+ * Then padded by most of a line height vertically and generously sideways
+ * (OCR often drops a word's first or last letters, "OHN" for "JOHN").
+ */
+export function redactionBox(hits: OcrWord[], all: OcrWord[], crop: { width: number; height: number }, band: { x: number; y: number; w: number; h: number }): Box {
+  const span = (ws: OcrWord[]) => ({
+    x0: Math.min(...ws.map((w) => w.bbox.x0)),
+    y0: Math.min(...ws.map((w) => w.bbox.y0)),
+    x1: Math.max(...ws.map((w) => w.bbox.x1)),
+    y1: Math.max(...ws.map((w) => w.bbox.y1)),
+  });
+  const lineOf = (ws: OcrWord[]) => Math.max(...ws.map((w) => w.bbox.y1 - w.bbox.y0));
+  let group = [...hits];
+  let s = span(group);
+  // Pull in words whose line touches the group (within one line height), until nothing changes.
+  for (let grew = true; grew; ) {
+    const line = lineOf(group);
+    const near = all.filter((w) => !group.includes(w) && w.bbox.y1 >= s.y0 - line && w.bbox.y0 <= s.y1 + line && w.bbox.x1 >= s.x0 - 4 * line && w.bbox.x0 <= s.x1 + 4 * line);
+    grew = near.length > 0;
+    group = [...group, ...near];
+    s = span(group);
+  }
+  const lineH = (lineOf(group) / crop.height) * band.h;
+  const padX = Math.max(0.03, lineH * 1.5);
+  const padY = Math.max(0.02, lineH * 0.8);
+  const bx = Math.max(0, band.x + (s.x0 / crop.width) * band.w - padX);
+  const by = Math.max(0, band.y + (s.y0 / crop.height) * band.h - padY);
+  const bw = ((s.x1 - s.x0) / crop.width) * band.w + 2 * padX;
+  const bh = ((s.y1 - s.y0) / crop.height) * band.h + 2 * padY;
+  return { x: bx, y: by, w: Math.min(1 - bx, bw), h: Math.min(1 - by, bh) };
 }
 
 /** "top-right corner" for the banner. */

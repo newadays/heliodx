@@ -250,7 +250,23 @@ export default function WorklistPage() {
           { label: "Open in console", icon: "panel" as const, onSelect: () => navigate(consolePath(s)) },
         ];
     return (
-      <div key={s.id} role="row" className={`wl-row ${sel ? "sel" : ""}`} aria-selected={consoleOpen ? sel : undefined}>
+      <div
+        key={s.id}
+        role="row"
+        className={`wl-row ${sel ? "sel" : ""} ${consoleOpen ? "wl-row--pick" : ""}`}
+        aria-selected={consoleOpen ? sel : undefined}
+        // With the console open, a click anywhere on the row shows that study
+        // in it; the row's own buttons, links and menu keep their actions.
+        // (Keyboard: the name button does the same.)
+        onClick={
+          consoleOpen
+            ? (e) => {
+                if ((e.target as Element).closest("button, a, input, [role='menu'], [role='group']")) return;
+                setParam("case", s.id);
+              }
+            : undefined
+        }
+      >
         <span role="cell">
           <Thumb study={s} />
         </span>

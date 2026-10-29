@@ -33,8 +33,8 @@ export async function createDemoStudy(sampleId: string): Promise<string> {
   return data.studyId;
 }
 
-export async function retryAnalysis(studyId: string): Promise<boolean> {
-  const { data } = await httpsCallable<{ studyId: string }, { started: boolean }>(functions, "retryPipeline")({ studyId });
+export async function retryAnalysis(studyId: string, opts: { analyzeAnyway?: boolean } = {}): Promise<boolean> {
+  const { data } = await httpsCallable<{ studyId: string; analyzeAnyway?: boolean }, { started: boolean }>(functions, "retryPipeline")({ studyId, ...opts });
   return data.started;
 }
 
@@ -57,8 +57,11 @@ export async function saveFindings(studyId: string, findings: Finding[]): Promis
   return hash;
 }
 
-export async function regenerateReport(studyId: string): Promise<{ reviewHash: string; clinicianSummary: ClinicianSummary | null }> {
-  const { data } = await httpsCallable<{ studyId: string; which: "clinician" }, { reviewHash: string; clinicianSummary: ClinicianSummary | null }>(
+export type RegenerateResult = { reviewHash: string; clinicianSummary: ClinicianSummary | null; queued?: "gpu_starting" };
+
+/** Redrafts the report now; on a cold GPU the backend queues it (`queued`) and the background drafter writes it once the GPU is up. */
+export async function regenerateReport(studyId: string): Promise<RegenerateResult> {
+  const { data } = await httpsCallable<{ studyId: string; which: "clinician" }, RegenerateResult>(
     functions,
     "regenerateSummaries",
   )({ studyId, which: "clinician" });

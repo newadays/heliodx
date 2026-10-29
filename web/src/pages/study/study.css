@@ -59,7 +59,8 @@
 .tick.todo{border:1.5px solid var(--hx-line-strong);background:#FFFFFF}
 .tick.failed{background:var(--hx-red-tint);color:var(--hx-red)}
 .an-failed{padding:14px 16px;display:flex;flex-direction:column;gap:10px;border-color:var(--hx-red)}
-.an-failed .actions{display:flex;gap:10px;flex-wrap:wrap}
+.an-failed .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.an-issues{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .an-found{display:flex;flex-direction:column;gap:10px}
 .an-found__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .an-found__head .muted{font-size:12.5px}
@@ -72,6 +73,8 @@
 .an-context{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 
 /* Review (W5) */
+.rv-quality{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--hx-ink);background:var(--hx-surface-tint);border:1px solid var(--hx-line-strong);border-radius:var(--hx-radius);padding:8px 10px;margin-top:12px}
+.rv-quality svg{flex:none;margin-top:2px}
 .rv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .rv-head__text{display:flex;flex-direction:column;gap:6px}
 .rv-verdict{display:flex;align-items:center;gap:8px;flex-wrap:wrap}

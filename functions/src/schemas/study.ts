@@ -14,7 +14,7 @@ export const IntakeSchema = z.object({
   // The score is computed in code from the measured quality (tools/quality.ts).
   quality: z.object({
     ok: z.boolean().describe("True when the image is sharp, well lit and complete enough to read."),
-    issues: z.array(z.string().max(80)).max(6).describe("Short problems, e.g. 'motion blur', 'glare on film'. Empty when ok."),
+    issues: z.array(z.string().max(160)).max(6).describe("One short sentence each, e.g. 'motion blur', 'lung apices cropped'. Empty when ok."),
   }),
   looksMedical: z.boolean().describe("True when the image is a medical image or report of any kind."),
   modality: ModalitySchema.describe("The modality the image actually shows."),

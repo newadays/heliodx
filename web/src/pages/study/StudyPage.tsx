@@ -10,6 +10,8 @@ import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import type { Study } from "@/types/study";
 import { AppShell } from "~/components/AppShell";
 import { warmModels } from "~/data/actions";
+
+const WARM_HEARTBEAT_MS = 4 * 60 * 1000;
 import type { RailStep } from "~/components/StepRail";
 import { StepRail } from "~/components/StepRail";
 import { useNow, useStudies, useStudy } from "~/data/hooks";
@@ -104,11 +106,24 @@ export default function StudyPage() {
 
   const go = useCallback((next: Step) => setParams({ step: next }, { replace: false }), [setParams]);
 
-  // A case still analyzing: make sure the private GPU is starting.
-  const analyzing = !!study && !allowed(study, "sign") && study.status !== "failed";
+  // Keep the private GPU warm while this case may still need it (analysis,
+  // then the report redraft before signing): it scales to zero after ~8 min
+  // idle and a cold start takes ~5 min. Pings every 4 min while the tab is
+  // visible; stops once signed. No patient data is sent.
+  const needsGpu = !!study && !isSigned(study) && study.status !== "failed";
   useEffect(() => {
-    if (analyzing) void warmModels();
-  }, [analyzing]);
+    if (!needsGpu) return;
+    const ping = () => {
+      if (document.visibilityState === "visible") void warmModels();
+    };
+    ping();
+    const timer = setInterval(ping, WARM_HEARTBEAT_MS);
+    document.addEventListener("visibilitychange", ping);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", ping);
+    };
+  }, [needsGpu]);
 
   // Analyzing → Review on its own when the draft lands while the clinician
   // is watching; never when they opened a finished study's Analyze step.

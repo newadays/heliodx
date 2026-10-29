@@ -42,6 +42,43 @@ function fakeDraft(text: string) {
 }
 
 describe("draftReport", () => {
+  it("waits for a cold GPU, saying so on the study, then drafts", async () => {
+    const ref = await study([{ id: "a", status: "accepted" }]);
+    const states = ["down", "loading", "ok"] as const;
+    let calls = 0;
+    let warmingSeen = false;
+    const health = async () => {
+      if (calls > 0) warmingSeen ||= (await ref.get()).get("reportDraft.warming") === true;
+      return { glimmer: states[Math.min(calls++, states.length - 1)] };
+    };
+    let t = 0;
+    const out = await draftReport(db, ref, { sleep: noSleep, now: () => (t += 1000), health, draft: fakeDraft("warm") as never });
+    expect(out).toBe("drafted");
+    expect(warmingSeen).toBe(true);
+    const snap = await ref.get();
+    expect(snap.get("clinicianSummary.findings")).toBe("warm");
+    expect(snap.get("reportDraft.warming")).toBe(false);
+  });
+
+  it("gives up after the wait budget and releases the claim for a retry", async () => {
+    const ref = await study([{ id: "a", status: "accepted" }]);
+    let t = 0;
+    const out = await draftReport(db, ref, { sleep: noSleep, now: () => (t += 60_000), health: async () => ({ glimmer: "down" as const }), draft: fakeDraft("never") as never });
+    expect(out).toBe("gpu_unavailable");
+    const snap = await ref.get();
+    expect(snap.get("reportDraft.forHash")).toBeNull();
+    expect(snap.get("reportDraft.reason")).toBe("gpu_starting");
+    expect(snap.get("clinicianSummary.findings")).toBe("old");
+  });
+
+  it("an explicit request drafts a stale report even with findings undecided", () => {
+    const base = { status: "ready", findings: [{ id: "a", status: "pending" }], reviewHash: "r1-x", clinicianSummary: { generatedFromReviewHash: "r1-old", editedByClinician: false } };
+    expect(needsDraft(base as never, { ...base, reportDraft: { requestedAt: new Date(1) } } as never)).toBe(true);
+    expect(needsDraft(base as never, base as never)).toBe(false);
+    const current = { ...base, clinicianSummary: { generatedFromReviewHash: "r1-x", editedByClinician: false } };
+    expect(needsDraft(current as never, { ...current, reportDraft: { requestedAt: new Date(2) } } as never)).toBe(false);
+  });
+
   it("drafts once for the current decisions and stamps their hash", async () => {
     const ref = await study([{ id: "f1", status: "accepted" }]);
     expect(await draftReport(db, ref, { sleep: noSleep, draft: fakeDraft("new") as never })).toBe("drafted");

@@ -13,7 +13,9 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 import { gpuHealth } from "../models/gpu";
 
-export const WARM_INTERVAL_MS = 5 * 60 * 1000;
+// Below the web's 4-minute heartbeat (StudyPage), so each heartbeat gets
+// through and the GPU never reaches Cloud Run's ~8-minute idle shutdown.
+export const WARM_INTERVAL_MS = 3 * 60 * 1000;
 
 /** Pure: should this sign-in ping the GPU? */
 export function shouldWarm(lastWarmMs: number | null, nowMs: number): boolean {

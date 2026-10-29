@@ -182,10 +182,11 @@ export class StudyWriter {
    * count so the sweeper may try again; an automatic requeue goes through
    * `retryLater`, which counts.
    */
-  async requeue(reason: { action: string; resetAttempts?: boolean }): Promise<void> {
-    const fields: Record<string, unknown> = reason.resetAttempts
-      ? { "pipeline.attempts": 0, "pipeline.lastError": FieldValue.delete() }
-      : {};
+  async requeue(reason: { action: string; resetAttempts?: boolean; fields?: Record<string, unknown> }): Promise<void> {
+    const fields: Record<string, unknown> = {
+      ...(reason.resetAttempts ? { "pipeline.attempts": 0, "pipeline.lastError": FieldValue.delete() } : {}),
+      ...reason.fields,
+    };
     await this.advance("queued", fields, { action: reason.action });
   }
 

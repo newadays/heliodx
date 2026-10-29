@@ -6,7 +6,7 @@ import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { REGION } from "../config";
 import { draftReport, needsDraft } from "../lib/reportDraft";
 
-export const draftReportOnReview = onDocumentUpdated({ document: "studies/{studyId}", region: REGION, timeoutSeconds: 120, memory: "512MiB" }, async (event) => {
+export const draftReportOnReview = onDocumentUpdated({ document: "studies/{studyId}", region: REGION, timeoutSeconds: 540, memory: "512MiB" }, async (event) => {
   const before = event.data?.before.data();
   const after = event.data?.after.data();
   if (!event.data || !needsDraft(before as never, after as never)) return;
