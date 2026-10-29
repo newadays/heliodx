@@ -20,7 +20,7 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
-import { addDemoUser, clearDemoStudies, clearWorkspaceSamples, removeDemoUser } from "../src/lib/demoAccounts";
+import { addDemoUser, clearDemoStudies, clearWorkspaceSamples, ensureDemoOrganization, removeDemoUser } from "../src/lib/demoAccounts";
 import { seedWorkspaceSamples } from "../src/lib/demoSeed";
 
 const PROJECT_ID = process.env.GCLOUD_PROJECT ?? "heliodx";
@@ -47,6 +47,7 @@ async function main(): Promise<void> {
   const db = getFirestore();
 
   if (command === "seed-samples") {
+    await ensureDemoOrganization(db);
     const replace = process.argv.includes("--reset");
     const cleared = replace ? await clearWorkspaceSamples(db, getStorage().bucket()) : 0;
     const ids = await seedWorkspaceSamples(db, getStorage().bucket(), { force: replace });

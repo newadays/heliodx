@@ -93,9 +93,11 @@ a.step.done:hover{text-decoration:underline}
 .stat{padding:10px 12px;background:var(--hx-ground);border-radius:var(--hx-radius);display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat b{font-family:var(--hx-font-mono);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
 .stat span{font-size:var(--hx-text-xs);color:var(--hx-muted)}
-.stats-page{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px}
+.stat--good b{color:var(--hx-green)}
+.stat--bad b{color:var(--hx-red)}
+.stats-page{grid-template-columns:repeat(auto-fit,minmax(min(128px,100%),1fr));gap:10px}
 .stats-page .stat{background:#FFFFFF;border:1px solid var(--hx-line);border-radius:10px;padding:12px 14px}
-.stats-page .stat b{font-size:18px}
+.stats-page .stat b{font-size:20px;line-height:1.1}
 .stats-page .stat span{font-size:12px}
 
 /* Toast */

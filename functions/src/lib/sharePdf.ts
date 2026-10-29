@@ -17,9 +17,10 @@ export interface SharePdfInput {
   body: string;
   steps: string[];
   attribution: string;
-  /** Who the attribution names, after the dot (default: the organization). */
-  attributionOrg?: string;
-  /** §4.11 · Case line, e.g. "Case U-7K2P · uploaded by Dr. … · HelioDX research prototype". */
+  /**
+   * §4.11 · Case line, e.g. "Case U-7K2P · uploaded by Dr. … · HelioDX research prototype".
+   * When present it carries the provenance, so the attribution line names no organization.
+   */
   footer?: string;
 }
 
@@ -32,7 +33,6 @@ const RULE = "#E2E8F0";
 
 export const PROTOTYPE = "HelioDX research prototype";
 
-/** §4.11 · The case line under the disclaimer, by source; null for studies from the phone app. */
 /**
  * The "Prepared for" name. An upload's name is the uploader's pseudonym label,
  * which could be a real name typed by mistake, so its PDF says "Prepared for
@@ -42,11 +42,17 @@ export function pdfPatientName(study: { source?: string; patient?: { name?: stri
   return study.source === "upload" ? "" : (study.patient?.name ?? "");
 }
 
+/** §4.11 · The case line under the disclaimer, by source; null for studies without one. */
 export function caseFooter(study: { caseId?: string; source?: string; clinicianName?: string }): string | null {
   const id = study.caseId ? `Case ${study.caseId}` : null;
   if (study.source === "sample") return [id, "sample study, synthetic patient", PROTOTYPE].filter(Boolean).join(" · ");
   if (study.source === "upload") return [id, `uploaded by ${study.clinicianName || "the clinician"}`, "de-identified in browser", PROTOTYPE].filter(Boolean).join(" · ");
   return null;
+}
+
+/** "Reviewed and approved by Dr. X", plus the organization only when no case line follows (it would repeat). */
+export function attributionLine(i: Pick<SharePdfInput, "attribution" | "orgName" | "footer">): string {
+  return i.footer ? i.attribution : `${i.attribution} · ${i.orgName}`;
 }
 
 export function formatShareDate(d: Date): string {
@@ -92,7 +98,7 @@ export function buildSharePdf(i: SharePdfInput): Promise<Buffer> {
     doc.moveDown(2);
     doc.moveTo(left, doc.y).lineTo(left + width, doc.y).strokeColor(RULE).lineWidth(1).stroke();
     doc.moveDown(0.8);
-    doc.font("Helvetica").fontSize(9.5).fillColor(MUTED).text(`${i.attribution} · ${i.attributionOrg ?? i.orgName}`, left, doc.y, { width });
+    doc.font("Helvetica").fontSize(9.5).fillColor(MUTED).text(attributionLine(i), left, doc.y, { width });
     doc.moveDown(0.3);
     doc.text(DISCLAIMER, { width });
     if (i.footer) {

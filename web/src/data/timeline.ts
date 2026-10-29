@@ -1,46 +1,34 @@
 /**
- * The console's stage timeline and totals (SPEC §4.8, §4.9, §5.7), built on
- * `buildTimeline` (utils/caseTimeline.ts), shared with the Done screen.
+ * The console's run model (design/agent-console SPEC §2–§4), from
+ * utils/consoleRun.ts: one set of steps and statistics for both surfaces,
+ * plus the export both "Export" buttons download.
  */
-import type { Study, TraceEntry } from "@/types/study";
-import { buildTimeline, type TimelineRow } from "@/utils/caseTimeline";
-import { tsToMillis } from "@/utils/millis";
+import type { Study } from "@/types/study";
+import { callsByTool, CONSOLE_AGENTS, CONSOLE_TOOLS, consoleSteps, runIdOf, runStats, type ConsoleStep, type RunStats } from "@/utils/consoleRun";
 
-export type { TimelineRow };
+import { caseIdOf, patientOf, studyLabel } from "./model";
 
-const DISPLAY: Record<string, string> = { summary: "Patient note" };
+export type StageRow = ConsoleStep;
+export const stageRows = consoleSteps;
+export { runStats };
+export type { RunStats };
 
-export interface StageRow extends TimelineRow {
-  title: string;
-  kind: "system" | "model" | "clinician";
-}
-
-export function stageRows(study: Study, trace: TraceEntry[], now = Date.now()): StageRow[] {
-  return buildTimeline(study, trace, now).map((r) => ({
-    ...r,
-    title: DISPLAY[r.key] ?? r.label,
-    kind: r.state === "human" ? "clinician" : r.key === "received" ? "system" : "model",
-  }));
-}
-
-export interface TraceTotals {
-  agentTimeMs: number;
-  tokens: number;
-  modelSteps: number;
-  clinicianSteps: number;
-  arrivalToSharedMs: number | null;
-}
-
-export function traceTotals(study: Study, rows: StageRow[]): TraceTotals {
-  const reached = rows.filter((r) => r.state !== "pending");
-  const model = reached.filter((r) => r.kind === "model");
-  const shared = tsToMillis(study.shares?.[0]?.sentAt);
-  const arrived = tsToMillis(study.createdAt);
+/** `HelioDX-<caseId>-trace.json`: the manifest, the statistics and every step with its calls. */
+export function runExport(study: Study, steps: ConsoleStep[], stats: RunStats): Record<string, unknown> {
+  const counts = callsByTool(steps);
   return {
-    agentTimeMs: model.reduce((n, r) => n + (r.ms ?? 0), 0),
-    tokens: reached.reduce((n, r) => n + r.tokens, 0),
-    modelSteps: model.filter((r) => r.state !== "running").length,
-    clinicianSteps: reached.filter((r) => r.kind === "clinician").length,
-    arrivalToSharedMs: shared && arrived ? shared - arrived : null,
+    runId: runIdOf(study),
+    caseId: caseIdOf(study),
+    // §4.11: the export carries the source; an upload's original file name is never stored or exported.
+    source: study.source,
+    patient: patientOf(study).displayName,
+    study: studyLabel(study),
+    status: stats.status,
+    manifest: {
+      agents: CONSOLE_AGENTS.map(({ stages: _stages, ...a }) => a),
+      tools: CONSOLE_TOOLS.map((t) => ({ ...t, callsInRun: counts[t.name] ?? 0 })),
+    },
+    stats,
+    trace: steps.map(({ trace: entries, calls: _calls, ...s }) => ({ ...s, entries })),
   };
 }

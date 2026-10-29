@@ -75,17 +75,60 @@ export function useStudy(studyId: string | null): Live<Study | null> {
 }
 
 export function useTrace(studyId: string | null): TraceEntry[] {
+  return useLiveTrace(studyId).trace;
+}
+
+/**
+ * The case's trace, live, plus the stream's state (agent console §5):
+ * "connecting" until the first server answer, "live" while current, and
+ * "reconnecting" when offline or after an error. A Firestore listener ends
+ * on an error, so it resubscribes with backoff; what is already shown is
+ * never cleared meanwhile.
+ */
+export type StreamState = "connecting" | "live" | "reconnecting";
+
+export function useLiveTrace(studyId: string | null): { trace: TraceEntry[]; live: StreamState } {
   const [trace, setTrace] = useState<TraceEntry[]>([]);
+  const [state, setState] = useState<StreamState>("connecting");
+  const [attempt, setAttempt] = useState(0);
+  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    return () => {
+      window.removeEventListener("online", up);
+      window.removeEventListener("offline", down);
+    };
+  }, []);
+  // A new case starts from nothing.
+  useEffect(() => {
+    setTrace([]);
+    setState("connecting");
+    setAttempt(0);
+  }, [studyId]);
   useEffect(() => {
     if (!studyId) return;
-    setTrace([]);
-    return onSnapshot(
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const stop = onSnapshot(
       query(collection(db, "studies", studyId, "trace"), orderBy("seq"), limit(400)),
-      (snap) => setTrace(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<TraceEntry, "id">) }))),
-      () => setTrace([]),
+      { includeMetadataChanges: true },
+      (snap) => {
+        if (!snap.metadata.fromCache) setState("live");
+        setTrace(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<TraceEntry, "id">) })));
+      },
+      () => {
+        setState("reconnecting");
+        retry = setTimeout(() => setAttempt((a) => a + 1), Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5)));
+      },
     );
-  }, [studyId]);
-  return trace;
+    return () => {
+      stop();
+      if (retry) clearTimeout(retry);
+    };
+  }, [studyId, attempt]);
+  return { trace, live: !online && state === "live" ? "reconnecting" : state };
 }
 
 export function useAudit(studyId: string | null): AuditEntry[] {

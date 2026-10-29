@@ -20,7 +20,7 @@ import { logger } from "firebase-functions/v2";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 import { wrongState } from "../lib/callableErrors";
-import { buildSharePdf, caseFooter, formatShareDate, pdfPatientName, PROTOTYPE } from "../lib/sharePdf";
+import { buildSharePdf, caseFooter, formatShareDate, pdfPatientName } from "../lib/sharePdf";
 import {
   isShareChannel,
   SENDING_CHANNELS_ENABLED,
@@ -156,7 +156,6 @@ async function shareChecked(
     body: ps.body ?? "",
     steps: stepsText(study),
     attribution: ps.attribution?.trim() || `Reviewed by ${ps.reviewedBy ?? "your clinician"}`,
-    ...((study as { source?: string }).source === "upload" ? { attributionOrg: PROTOTYPE } : {}),
     footer: caseFooter(study as { caseId?: string; source?: string; clinicianName?: string }) ?? undefined,
   });
   const shareId = randomUUID().replace(/-/g, "").slice(0, 16);

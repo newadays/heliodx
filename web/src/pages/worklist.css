@@ -79,6 +79,7 @@ button.wl-name[aria-pressed="true"]{color:var(--hx-ink);text-decoration:underlin
 .cpanel__head{display:flex;align-items:center;gap:10px;padding:12px 16px 12px 20px;border-bottom:1px solid var(--hx-line);flex-wrap:wrap}
 .cpanel__head h2{font-size:15px;font-weight:700}
 .cpanel__close{border:none}
+.cpanel__reconnect{padding:6px 20px;border-bottom:1px solid var(--hx-line);font-size:12.5px;background:var(--hx-surface-2)}
 .cpanel__body{padding:16px 20px;display:flex;flex-direction:column;gap:16px;flex:1 1 auto}
 .cpanel__running{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--hx-green-line);background:var(--hx-green-tint-2);border-radius:var(--hx-radius);text-decoration:none;color:var(--hx-ink);font-size:13px;min-height:44px}
 .cpanel__follow{color:var(--hx-green);font-weight:600}

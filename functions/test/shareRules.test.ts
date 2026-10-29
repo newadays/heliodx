@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { buildSharePdf, formatShareDate, pdfPatientName } from "../src/lib/sharePdf";
+import { attributionLine, buildSharePdf, caseFooter, formatShareDate, pdfPatientName, PROTOTYPE } from "../src/lib/sharePdf";
+import { DEMO_ORGANIZATION } from "../src/lib/demo";
 import { DEFAULT_SHARE_POLICY, isShareChannel, shareDecisions, shareNeeds, sharePolicyOf, type ShareableStudy, SENDING_CHANNELS_ENABLED } from "../src/lib/shareRules";
 
 const study = (over: Partial<NonNullable<ShareableStudy["patientSummary"]>> = {}, top: Partial<ShareableStudy> = {}): ShareableStudy => ({
@@ -88,6 +89,19 @@ describe("shareDecisions", () => {
 });
 
 describe("sharePdf", () => {
+  it("names the prototype once: the case line carries it, so the attribution names no organization", () => {
+    const footer = caseFooter({ caseId: "U-YPW2", source: "upload", clinicianName: "Dr. Demo Clinician" })!;
+    const line = attributionLine({ attribution: "Reviewed and approved by Dr. Demo Clinician", orgName: "HelioDX", footer });
+    expect([line, footer].join(" ").split(PROTOTYPE).length - 1).toBe(1);
+    expect(line).toBe("Reviewed and approved by Dr. Demo Clinician");
+    expect(attributionLine({ attribution: "Reviewed and approved by Dr. A", orgName: "Kubi Medical" })).toBe("Reviewed and approved by Dr. A · Kubi Medical");
+  });
+
+  it("the demo organization's header reads HelioDX", () => {
+    expect(DEMO_ORGANIZATION.legalName).toBe("HelioDX");
+    expect(DEMO_ORGANIZATION.name).toBe("HelioDX");
+  });
+
   it("never prints an upload's pseudonym label as the patient's name", () => {
     expect(pdfPatientName({ source: "upload", patient: { name: "Upload 1 · 28 Oct" } })).toBe("");
     expect(pdfPatientName({ source: "sample", patient: { name: "Sample Patient 1" } })).toBe("Sample Patient 1");
