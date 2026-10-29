@@ -215,7 +215,8 @@ export function slaLabel(study: Study, now: number): { text: string; level: "cri
   if (!p || p === "routine" || rank(study.status) >= rank("signed")) return null;
   const start = stepAt(study, "detecting") || tsToMillis(study.createdAt);
   if (!start) return null;
-  const budget = slaBudgetMs(p) ?? 0;
+  // The coordinator's budget (B13): the priority before it planned the study.
+  const budget = slaBudgetMs(study.coordinator?.fromPriority ?? p) ?? 0;
   const left = start + budget - now;
   const abs = Math.abs(left);
   const mm = Math.floor(abs / 60_000);

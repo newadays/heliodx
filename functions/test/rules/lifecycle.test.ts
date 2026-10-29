@@ -80,6 +80,9 @@ describe("resetSampleCore", () => {
       shares: [{ id: "s" }],
       demo: { sampleId: "s4", autopilot: "done" },
       pipeline: { stepTimestamps: { ready: Timestamp.now(), signed: Timestamp.now(), shared: Timestamp.now() } },
+      priority: "urgent",
+      flags: { needsHuman: true, degraded: true },
+      coordinator: { plannedAt: Timestamp.now(), fromPriority: "routine", lane: "urgent", escalation: { reason: "x", at: Timestamp.now(), by: "rules" } },
     });
     await resetSampleCore(db, { uid: "judge-2", orgId: "demo" }, { studyId: ref.id });
     const s = (await ref.get()).data()!;
@@ -93,6 +96,10 @@ describe("resetSampleCore", () => {
     expect(s.report).toBeUndefined();
     expect(s.demo.autopilot).toBeUndefined();
     expect(Object.keys(s.pipeline.stepTimestamps)).toEqual(["ready"]);
+    // B13: the coordinator's plan, escalation and raised lane are undone.
+    expect(s.coordinator).toBeUndefined();
+    expect(s.flags).toEqual({ needsHuman: false, degraded: true });
+    expect(s.priority).toBe("routine");
     const audit = (await ref.collection("audit").get()).docs.map((d) => d.data());
     expect(audit).toMatchObject([{ actor: "judge-2", action: "sample_reset", from: "shared", to: "ready" }]);
     const trace = (await ref.collection("trace").get()).docs.map((d) => d.data());

@@ -5,6 +5,7 @@ import { needsDecision, queueItem, queueSnapshot, type CoordinatorStudy } from "
 import { generateJson } from "../src/models/client";
 import { assertPayloadAllowed } from "../src/models/routes";
 import { CoordinatorPlanSchema } from "../src/coordinator/plan";
+import { safeReason } from "../src/coordinator/apply";
 
 const NOW = 1_800_000_000_000;
 const t = (ms: number) => ({ toMillis: () => ms });
@@ -29,6 +30,14 @@ describe("queue snapshot", () => {
     expect(queueItem(s("st", { status: "detecting", updatedAt: t(NOW - 25 * min) }), NOW).lastAction).toBe("stalled");
     expect(queueItem(s("f", { status: "failed", pipeline: { error: { code: "timeout" } } }), NOW).lastAction).toBe("failed:timeout");
     expect(queueItem(s("f2", { status: "failed", pipeline: { error: { code: "timeout" } }, coordinator: { requeues: 1 } }), NOW).lastAction).toBe("failed:exhausted");
+  });
+
+  it("pauses the SLA while a clinician reviews, and keeps the budget of the priority before planning", () => {
+    const at = { pipeline: { stepTimestamps: { detecting: t(NOW - 20 * min) } } };
+    expect(queueItem(s("rv", { status: "clinician_review", priority: "critical", ...at }), NOW).slaMinutesLeft).toBeNull();
+    expect(queueItem(s("rd", { priority: "critical", ...at }), NOW).slaMinutesLeft).toBe(-15);
+    // Wonder raised routine → urgent: the clock still runs on routine (none), not 30 min from detecting.
+    expect(queueItem(s("up", { priority: "urgent", coordinator: { plannedAt: new Date(), fromPriority: "routine" }, ...at }), NOW).slaMinutesLeft).toBeNull();
   });
 
   it("asks for a decision only when there is one to make", () => {
@@ -109,5 +118,18 @@ describe("Wonder call", () => {
     } finally {
       fetchSpy.mockRestore();
     }
+  });
+});
+
+describe("coordinator reasons", () => {
+  it("replaces a free-text reason that names a condition with a fixed one", () => {
+    expect(safeReason({ action: "escalate_to_human", studyId: "a", reason: "Likely pneumonia, read now." })).toBe("Needs a clinician's attention.");
+    expect(safeReason({ action: "escalate_to_human", studyId: "a", reason: "Urgent read is 4 min past its SLA." })).toBe("Urgent read is 4 min past its SLA.");
+  });
+
+  it("does not let Wonder escalate a case under review unless it needs a retake", () => {
+    const queue = queueSnapshot([s("rv", { status: "clinician_review" }), s("rt", { status: "clinician_review", flags: { needsRetake: true } })], NOW).queue;
+    const out = validatePlan({ actions: ["rv", "rt"].map((id) => ({ action: "escalate_to_human" as const, studyId: id, reason: "x" })) }, queue);
+    expect(out.map((a) => a.studyId)).toEqual(["rt"]);
   });
 });

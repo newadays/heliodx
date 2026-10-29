@@ -346,11 +346,12 @@ export interface Study {
   demo?: { sampleId: string; sampleIndex?: number; age: number | null; sex: "F" | "M" | null; indication: string | null };
   findings: Finding[];
   clinicianSummary: ClinicianSummary | null;
-  /** B23 background draft: `forHash` is claimed while drafting and cleared with `failedAt` when the model didn't answer. */
   /** B13 · The coordinator's decisions (Muse Wonder, or the rules fallback when `by` is "rules"). */
   coordinator?: {
     plannedAt?: unknown;
     lane?: StudyPriority;
+    /** The priority before planning: the SLA budget stays at it, so a raised lane never shortens the clock retroactively. */
+    fromPriority?: StudyPriority | null;
     /** Recommended, not enforced until radiologist reads exist (B14). */
     radiologistReadSuggested?: boolean;
     reason?: string;
@@ -358,6 +359,7 @@ export interface Study {
     requeues?: number;
     escalation?: { reason: string; at: unknown; by: string };
   } | null;
+  /** B23 background draft: `forHash` is claimed while drafting and cleared with `failedAt` when the model didn't answer. */
   reportDraft?: {
     forHash?: string | null;
     startedAt?: unknown;

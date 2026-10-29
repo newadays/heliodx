@@ -10,6 +10,7 @@ import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 
 import { MODELS } from "../config";
+import { assertsCondition } from "../lib/vocabulary";
 import { traceEvent, traceScope } from "../lib/trace";
 import { WrongStateError, type StudyStatus } from "../study/stateMachine";
 import { StudyWriter } from "../study/writer";
@@ -28,10 +29,19 @@ export interface ApplyResult {
   skipped: { action: CoordinatorAction["action"]; studyId: string; reason: string }[];
 }
 
+/** Wonder's reason is free text: one naming a condition is replaced by a fixed one (it only sees queue state, so this is insurance). */
+const FIXED_REASON: Record<CoordinatorAction["action"], string> = {
+  plan_study: "Planned from the queue state.",
+  requeue_study: "The model service failed; one more try.",
+  escalate_to_human: "Needs a clinician's attention.",
+};
+export const safeReason = (a: CoordinatorAction): string => (assertsCondition(a.reason) ? FIXED_REASON[a.action] : a.reason);
+
 export async function applyActions(db: Firestore, actions: CoordinatorAction[], source: PlanSource): Promise<ApplyResult> {
   const result: ApplyResult = { applied: [], skipped: [] };
   const by = source === "wonder" ? MODELS.coordinator : "rules";
-  for (const a of actions) {
+  for (const action of actions) {
+    const a = { ...action, reason: safeReason(action) };
     const ref = db.collection("studies").doc(a.studyId);
     const writer = new StudyWriter(ref, "coordinator");
     try {
@@ -43,7 +53,7 @@ export async function applyActions(db: Firestore, actions: CoordinatorAction[], 
               if (data.coordinator?.plannedAt) throw new AlreadyDone();
               const priority = higher(data.priority, lane);
               return {
-                fields: { priority, coordinator: { ...(data.coordinator ?? {}), plannedAt: new Date(), lane: priority, radiologistReadSuggested: !!a.radiologistRead, reason: a.reason, by } },
+                fields: { priority, coordinator: { ...(data.coordinator ?? {}), plannedAt: new Date(), fromPriority: data.priority ?? null, lane: priority, radiologistReadSuggested: !!a.radiologistRead, reason: a.reason, by } },
                 detail: { lane: priority, radiologistReadSuggested: !!a.radiologistRead, source },
               };
             },

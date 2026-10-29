@@ -196,6 +196,11 @@ cd functions && npm run test:rules                 # security rules, inside the 
 - Highlighted regions are approximate. Clinicians review the image, not the
   box.
 - Compressed DICOM is not supported. Export as uncompressed DICOM, JPEG or PNG.
+- A study whose model call fails transiently can get up to six attempts: three
+  from the retry policy, then one coordinator requeue that starts three more,
+  before it is escalated to a clinician.
+- The coordinator's reading SLA (critical 5 min, urgent 30) pauses while a
+  clinician has the case in review.
 - See [`docs/known-risks.md`](docs/known-risks.md) for the full list.
 
 ## Repo layout

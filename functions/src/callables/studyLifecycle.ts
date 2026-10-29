@@ -29,6 +29,8 @@ interface LifecycleStudy {
   image?: { storagePath?: string | null } | null;
   findings?: Record<string, unknown>[];
   clinicianSummary?: { editedByClinician?: boolean } | null;
+  priority?: string | null;
+  coordinator?: { plannedAt?: unknown; fromPriority?: string | null } | null;
 }
 
 async function load(db: Firestore, studyId: unknown) {
@@ -53,7 +55,7 @@ export async function deleteUploadCore(deps: { db: Firestore; bucket: Bucket }, 
   return { deleted: true };
 }
 
-/** Returns a sample to its fresh draft: decisions, signature, note and shares cleared. */
+/** Returns a sample to its fresh draft: decisions, signature, note, shares and the coordinator's marks cleared. */
 export async function resetSampleCore(db: Firestore, caller: Caller, req: { studyId?: unknown }): Promise<{ reset: true }> {
   const { uid, orgId } = asCaller(caller);
   const { ref } = await load(db, req.studyId);
@@ -79,6 +81,10 @@ export async function resetSampleCore(db: Firestore, caller: Caller, req: { stud
       shares: [],
       deletedAt: null,
       "demo.autopilot": FieldValue.delete(),
+      // B13: the coordinator's plan, escalation and any lane it raised.
+      coordinator: FieldValue.delete(),
+      "flags.needsHuman": false,
+      ...(study.coordinator?.plannedAt ? { priority: study.coordinator.fromPriority ?? study.priority ?? null } : {}),
       ...Object.fromEntries(AFTER_DRAFT_STEPS.map((s) => [`pipeline.stepTimestamps.${s}`, FieldValue.delete()])),
       updatedAt: FieldValue.serverTimestamp(),
     });
