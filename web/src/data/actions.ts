@@ -96,6 +96,20 @@ export async function signStudy(studyId: string, confirmImpression: boolean): Pr
   }
 }
 
+/** B18: the hosted transcriber failed; the clinician types instead. */
+export class DictationUnavailable extends Error {}
+
+/** B18: a dictated clip (base64 WAV) to text, for the clinician to place and save. Nothing is stored. */
+export async function dictate(studyId: string, wav: string): Promise<string> {
+  try {
+    const { data } = await httpsCallable<{ studyId: string; audio: string }, { transcript: string }>(functions, "dictate")({ studyId, audio: wav });
+    return data.transcript;
+  } catch (error) {
+    if (error instanceof FirebaseError && (error as FirebaseError & { details?: { error?: string } }).details?.error === "dictation_unavailable") throw new DictationUnavailable(error.message);
+    throw error;
+  }
+}
+
 export async function generatePatientNote(studyId: string): Promise<void> {
   await httpsCallable(functions, "generatePatientSummary")({ studyId });
 }

@@ -31,7 +31,7 @@ export interface TimelineRow {
   trace: TraceEntry[];
 }
 
-const MODEL_LABEL: Record<string, string> = { glimmer: "Glimmer", "sam-3.1": "SAM 3.1", "muse-wonder-1.0": "Muse Wonder", mock: "Mock" };
+const MODEL_LABEL: Record<string, string> = { glimmer: "Glimmer", "sam-3.1": "SAM 3.1", "muse-wonder-1.0": "Muse Wonder", "muse-voice-transcribe-1.0": "Muse Voice Transcribe", mock: "Mock" };
 
 export function modelLabel(model: string): string {
   return MODEL_LABEL[model] ?? model;
@@ -74,7 +74,7 @@ const STAGES: StageDef[] = [
   { key: "triage", label: "Triage", agent: "Triage", traceStages: ["classifying"], enters: "classifying", exits: "detecting", pending: "Waits for intake." },
   { key: "prep", label: "Prep", agent: "Prep", traceStages: ["detecting", "summarizing"], enters: "detecting", exits: "ready", pending: "Waits for triage." },
   { key: "coordinator", label: "Coordinator", agent: "Coordinator", traceStages: ["coordination"], enters: "queued", exits: null, pending: "Plans the case once its draft is ready, and escalates it if it stalls or runs past its SLA." },
-  { key: "signed", label: "Signed", agent: "Clinician", traceStages: ["reset", "signed"], enters: "signed", exits: null, human: true, pending: "Waiting for the clinician to review and sign." },
+  { key: "signed", label: "Signed", agent: "Clinician", traceStages: ["reset", "dictation", "signed"], enters: "signed", exits: null, human: true, pending: "Waiting for the clinician to review and sign." },
   { key: "summary", label: "Patient summary", agent: "Summary", traceStages: ["patient_summary"], enters: "patient_summary_ready", exits: null, pending: "Written after signing, from the signed report." },
   { key: "shared", label: "Shared", agent: "Clinician", traceStages: ["sharing"], enters: "shared", exits: null, human: true, pending: "Shared only after every next step is confirmed and the patient consents." },
 ];

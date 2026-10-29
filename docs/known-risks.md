@@ -29,7 +29,12 @@ today, and what remains open.
 - **Hosted model ids and format.** Verified 2026-10-27 against the Meta Model
   API: `muse-wonder-1.0` and `muse-voice-transcribe-1.0` exist, and
   `json_schema` output works. Reasoning tokens count against `max_tokens`,
-  so the client adds 4,000 tokens of headroom to every call.
+  so the client adds 4,000 tokens of headroom to every call. Dictation
+  (verified 2026-10-29): `POST /v1/asr/transcribe`, multipart with a JSON
+  `request` part (`model`, `audioEncoding: "WAV"`) and an `audio` part (mono
+  PCM16 WAV); about 1 s for a short clip. Medical terms can be misheard
+  ("pleural" came back as "plural"), so the clinician edits the text before
+  saving.
 - **Latency and cost.** Muse Glimmer is a dense 30B model. On one RTX PRO
   6000 at full precision it is expected to generate roughly 20 to 30 tokens
   a second, so upload to draft is estimated at 60 to 100 s with low reasoning.

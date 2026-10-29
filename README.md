@@ -50,8 +50,12 @@ describe most often. Nigeria (pop. - 242 million) has a doctor per 1,000 populat
 | Muse Glimmer (open weights) | Agents that check quality, set priority, draft findings, and write both summaries | Our Private Cloud GPU | Image measurements, clinical context, findings, reports |
 | SAM 3.1 | Segments anatomy so every finding points at the region it rests on | Our Private Cloud GPU | The image |
 | Muse Wonder 1.0 | Coordinator: plans each study and steps in when something goes wrong | Meta Model API | Queue state only: study IDs, stages, priorities, ages |
+| Muse Voice Transcribe 1.0 | Turns the clinician's dictated edits on the Sign step into text | Meta Model API | The audio of one dictated edit, not kept |
 
-Images and clinical text go only to our own GPU. The routing is enforced in
+Images and clinical text go only to our own GPU. The one exception is
+dictation: a clinician who chooses to dictate an edit sends that clip to
+Muse Voice Transcribe. The clip is passed straight through and never stored
+or logged, and the app asks the clinician not to say the patient's name. The routing is enforced in
 code (`functions/src/models/routes.ts`): a call to the hosted API that
 carries an image or any field outside the de-identified queue allowlist is
 refused before it is sent, and clinical calls never fall back to the hosted
@@ -201,6 +205,8 @@ cd functions && npm run test:rules                 # security rules, inside the 
   before it is escalated to a clinician.
 - The coordinator's reading SLA (critical 5 min, urgent 30) pauses while a
   clinician has the case in review.
+- Dictation is limited to 60 seconds a clip, on the Sign step only. If the
+  hosted transcriber is unavailable, the clinician types the edit instead.
 - See [`docs/known-risks.md`](docs/known-risks.md) for the full list.
 
 ## Repo layout
