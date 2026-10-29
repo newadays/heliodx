@@ -18,7 +18,7 @@ Theme 1: Build for Your World.
 In much of Nigeria a clinic can take an X-ray but has no radiologist to read
 it. The film waits days for a report, or the patient leaves without one. While
 building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/id6757157686) for Nigerian clinicians, and this is the gap they
-describe most often. Nigeria (pop - 242 million) has a doctor per 1,000 population ratio of 0.17, which is one of the lowest on the African continent compared to 2.6 per 1,000 people in the US [Idowu & Okedere, Journal of Global Radiology · BMJ Open 2026](https://publishing.escholarship.umassmed.edu/jgr/article/id/576/). HelioDX gives the clinician in the room a structured draft in under a minute, then gets out of the way so they can make the call and share with appropriate personnel in a private and compliant way.
+describe most often. Nigeria (pop - 242 million) has a doctor per 1,000 population ratio of 0.17, which is one of the lowest on the African continent compared to 2.6 per 1,000 people in the US. ([Idowu & Okedere, Journal of Global Radiology · BMJ Open 2026](https://publishing.escholarship.umassmed.edu/jgr/article/id/576/)). HelioDX gives the clinician in the room a structured draft in under a minute, then gets out of the way so they can make the call and share with appropriate personnel in a private and compliant way.
 
 ## What it does
 
