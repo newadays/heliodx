@@ -5,13 +5,9 @@ run the radiology workflow for clinics with no radiologist. Meta SAM 3.1
 preps every scan. Glimmer and SAM run on our own GPU, so patient
 images and reports stay in the project.
 
-Built for the **Meta Global AI Developer Hackathon** (Oct 26 to Nov 4, 2026),
-
-Theme 1: Build for Your World.
-
-> **Drafting assistance, never diagnosis.** Every AI finding starts as a
-> draft. A licensed clinician must accept, edit, or reject each one before
-> anything reaches the patient.
+**Drafting assistance, never diagnosis.** Every AI finding starts as a
+draft. A licensed clinician must accept, edit, or reject each one before
+anything reaches the patient.
 
 ## Why
 
