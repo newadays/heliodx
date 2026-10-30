@@ -31,7 +31,7 @@ building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/
 5. They sign the report. The patient note is then written from the signed
    text only, and code checks it: no instruction, test, urgency, or condition
    the signed report does not contain. They save it as a PDF for the patient
-   (sending by WhatsApp or email will be supported later).
+   (sending by WhatsApp or email to be supported later).
 
 ## Status
 
