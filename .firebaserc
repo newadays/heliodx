@@ -1,7 +1,0 @@
-{
-  "projects": {
-    "default": "heliodx",
-    "dev": "heliodx",
-    "prod": "heliodx"
-  }
-}
