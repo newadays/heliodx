@@ -56,3 +56,5 @@ functions/.e2e-*.ts
 
 # Demo sample images and manifest (data/fetch_demo_samples.py)
 data/out/
+
+.firebaserc
