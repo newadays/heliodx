@@ -410,7 +410,7 @@ export function SignPanel({
                     </button>
                   ) : null}
                   {n === "decide_every_finding" ? (
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={onBack}>
+                    <button type="button" className="btn btn-ghost btn-sm sg-back" onClick={onBack}>
                       Back to findings
                     </button>
                   ) : null}
@@ -442,7 +442,7 @@ export function SignPanel({
             </label>
             <div className="sg-sign">
               <div className="actions">
-                <button type="button" className="btn btn-ghost" onClick={onBack}>
+                <button type="button" className="btn btn-ghost sg-back" onClick={onBack}>
                   Back to findings
                 </button>
                 <button type="button" className="btn btn-primary" disabled={!attested || signing || editing || readOpen} aria-describedby="sg-sign-hint" onClick={() => void sign()}>

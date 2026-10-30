@@ -224,3 +224,7 @@
 .sh-consent__head h2{font-size:15px;font-weight:700}
 .sh-n{width:24px;height:24px;border-radius:50%;background:var(--hx-primary);color:#FFFFFF;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
 .sh-send .actions{display:flex;align-items:center;gap:10px}
+
+/* "Back to findings": a grey fill so it reads as a button next to Sign; black on hover. */
+.btn-ghost.sg-back{background:var(--hx-chip-neutral-bg);color:var(--hx-ink)}
+.btn-ghost.sg-back:hover,.btn-ghost.sg-back:focus-visible{background:var(--hx-primary-hover);color:#FFFFFF}
