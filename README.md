@@ -1,6 +1,6 @@
 # HelioDX
 
-HelioDX: Meta Muse Wonder coordinating a team of Muse Glimmer agents that
+HelioDX: Meta Muse Wonder coordinates a team of Muse Glimmer agents that
 run the radiology workflow for clinics with no radiologist. Meta SAM 3.1
 preps every scan. Glimmer and SAM run on our own GPU in the EU, so patient
 images and reports stay in the project.
@@ -10,27 +10,26 @@ Built for the **Meta Global AI Developer Hackathon** (Oct 26 to Nov 4, 2026),
 Theme 1: Build for Your World.
 
 > **Drafting assistance, never diagnosis.** Every AI finding starts as a
-> draft. A licensed clinician must accept, edit or reject each one before
+> draft. A licensed clinician must accept, edit, or reject each one before
 > anything reaches the patient.
 
 ## Why
 
-In much of Nigeria, a clinic can take an X-ray but has no radiologist to read
-it. The film waits days for a report, or the patient leaves without one. While
-building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/id6757157686) for Nigerian clinicians, this is the gap they
-describe most often. Nigeria (pop. - 242 million) has a doctor per 1,000 population, which is one of the lowest on the African continent compared to 2.6 per 1,000 people in the US (*[Idowu & Okedere, Journal of Global Radiology · BMJ Open 2026](https://publishing.escholarship.umassmed.edu/jgr/article/id/576/)*). HelioDX gives the clinician in the room a structured draft in under a minute, then gets out of the way so they can make the call and share with appropriate personnel in a private and compliant way.
+Tuberculosis is a top 5 killer disease in Nigeria. A clinic can take an X-ray but has no radiologist to read
+it to detect the disease. The film waits days for a report, or the patient leaves without one. While
+building a mobile app for Nigerian clinicians, this is the gap they describe most often. Nigeria (pop. - 242 million) has a doctor per 1,000 population, which is one of the lowest on the African continent compared to 2.6 per 1,000 people in the US (Idowu & Okedere, Journal of Global Radiology · BMJ Open 2026)[https://publishing.escholarship.umassmed.edu/jgr/article/id/576/]. HelioDX gives the clinician in the room a structured draft in under a minute, then gets out of the way so they can make the call and share with appropriate personnel in a private and compliant way.
 
 ## What it does
 
 1. A clinician signs in to the web app with an account an admin created.
-2. They upload a chest X-ray (DICOM, JPEG or PNG), de-identified in the
+2. They upload a chest X-ray (DICOM, JPEG, or PNG), de-identified in the
    browser, or pick a sample, and add the indication.
-3. The pipeline checks image quality, identifies the study type and drafts
+3. The pipeline checks image quality, identifies the study type, and drafts
    findings with highlighted regions and measurements.
 4. The clinician reviews each finding (accept, edit or reject); the report
    redrafts from their decisions.
 5. They sign the report. The patient note is then written from the signed
-   text only, and code checks it: no instruction, test, urgency or condition
+   text only, and code checks it: no instruction, test, urgency, or condition
    the signed report does not contain. They save it as a PDF for the patient
    (sending by WhatsApp or email is switched off for now).
 
