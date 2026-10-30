@@ -2,7 +2,7 @@
 
 HelioDX: Meta Muse Wonder coordinates a team of Muse Glimmer agents that
 run the radiology workflow for clinics with no radiologist. Meta SAM 3.1
-preps every scan. Glimmer and SAM run on our own GPU in the EU, so patient
+preps every scan. Glimmer and SAM run on our own GPU, so patient
 images and reports stay in the project.
 
 Built for the **Meta Global AI Developer Hackathon** (Oct 26 to Nov 4, 2026),
