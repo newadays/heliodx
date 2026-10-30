@@ -190,7 +190,7 @@ cd functions && npm run test:rules                 # security rules, inside the 
 
 ## Limitations
 
-- HelioDX is a hackathon project, not a medical device. It is not cleared for
+- HelioDX is a beta project, not a medical device. It is not cleared for
   clinical use.
 - Highlighted regions are approximate. Clinicians review the image, not the
   box.
