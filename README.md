@@ -17,7 +17,7 @@ Theme 1: Build for Your World.
 
 Tuberculosis is a top 5 killer disease in Nigeria. A clinic can take an X-ray but has no radiologist to read
 it to detect the disease. The film waits days for a report, or the patient leaves without one. While
-building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/id6757157686) for Nigerian clinicians, this is the gap they describe most often. Nigeria (pop. - 242 million) has a doctor per 1,000 population, which is one of the lowest on the African continent compared to 2.6 per 1,000 people in the US ([Idowu & Okedere, Journal of Global Radiology · BMJ Open 2026](https://publishing.escholarship.umassmed.edu/jgr/article/id/576/)). HelioDX gives the clinician in the room a structured draft in under a minute, then steps aside so they can make the call and share it with the right people privately and compliantly.
+building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/id6757157686) for Nigerian clinicians, this is the gap they describe most often. Nigeria (pop. - 242 million) has a doctor per 1,000 population, which is one of the lowest on the African continent compared to 2.6 per 1,000 people in the US ([Idowu & Okedere, Journal of Global Radiology · BMJ Open 2026](https://publishing.escholarship.umassmed.edu/jgr/article/id/576/)). HelioDX gives the clinician in the room a structured draft in under 5 minute, then steps aside so they can make the call and share it with the right people privately and compliantly.
 
 ## What it does
 
