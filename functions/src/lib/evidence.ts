@@ -61,8 +61,9 @@ export function evidenceLine(measurementIds: readonly string[], measurements: re
   return parts.join("; ");
 }
 
-/** Attention when any measurement it cites crossed its threshold (a triage flag). */
-export function polarityOf(measurementIds: readonly string[], flags: readonly EvidenceFlag[]): Polarity {
+/** Attention when the model called it abnormal (B25) or a measurement it cites crossed its threshold (a triage flag). */
+export function polarityOf(measurementIds: readonly string[], flags: readonly EvidenceFlag[], abnormal = false): Polarity {
+  if (abnormal) return "attention";
   const flagged = new Set(flags.map((f) => f.measurementId));
   return measurementIds.some((id) => flagged.has(id)) ? "attention" : "normal";
 }

@@ -89,6 +89,12 @@ export const PrepSchema = z.object({
         description: z.string().min(1).max(300).describe("One or two sentences: what is seen, where, with the measured value if one applies."),
         evidence: z.array(z.string().max(40)).min(1).max(4).describe("Ids from the evidence list this observation rests on, exactly as given."),
         region: z.string().max(40).describe("A region id from the list, or 'none'."),
+        // B25: plain string and boolean, read in code (lib/location.ts); no enums.
+        abnormal: z.boolean().describe("true when the observation describes something that is not normal for this film; pertinent normals are false."),
+        location: z
+          .string()
+          .max(40)
+          .describe("Where: 'right lung upper zone', 'left lung lower zone', 'both lungs upper zones', 'heart', or 'none'."),
       }),
     )
     .min(1)

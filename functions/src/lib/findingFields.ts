@@ -13,6 +13,9 @@ export interface FieldsFinding {
   index: number;
   region: { x: number; y: number; w: number; h: number } | null;
   evidence?: { measurementIds: string[]; maskIds: string[] };
+  /** B25: the model called it abnormal; its zone outlines, one per side. */
+  abnormal?: boolean;
+  outlines?: { side: "left" | "right" | null; zone: string | null; box: [number, number, number, number] }[];
 }
 
 export interface MaskBox {
@@ -49,9 +52,16 @@ export function findingFields(
   const cpLeft = ids.includes("cp_blunting_left") ? angleOf(left, "image-right") : null;
   if (cpRight) regions.push({ ...cpRight, label: "right costophrenic angle" });
   if (cpLeft) regions.push({ ...cpLeft, label: "left costophrenic angle" });
+  // B25: one marker per outlined zone, at its centre.
+  if (!regions.length) {
+    for (const o of f.outlines ?? []) {
+      const label = o.side ? `${o.side} lung${o.zone ? ` ${o.zone} zone` : ""}` : undefined;
+      regions.push({ x: r3((o.box[0] + o.box[2]) / 2), y: r3((o.box[1] + o.box[3]) / 2), ...(label ? { label } : {}) });
+    }
+  }
   if (!regions.length && f.region) regions.push({ x: r3(f.region.x + f.region.w / 2), y: r3(f.region.y + f.region.h / 2) });
   return {
-    polarity: polarityOf(ids, ctx.flags),
+    polarity: polarityOf(ids, ctx.flags, f.abnormal === true),
     evidenceLine: evidenceLine(ids, ctx.measurements),
     regions,
   };

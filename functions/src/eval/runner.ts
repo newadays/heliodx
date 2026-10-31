@@ -9,6 +9,7 @@
  * are not rendered, and the trace is captured in memory for latency, tokens
  * and the model's raw answer.
  */
+import { polarityOf } from "../lib/evidence";
 import { writePatientNote, rewriterWith } from "../callables/generatePatientSummary";
 import { decodeRle } from "../models/gpu";
 import type { generateJson } from "../models/client";
@@ -156,7 +157,8 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
   );
   const raw = rawAnswer(events, "detecting");
   const out: PrepOutcome = {
-    findings: prep.findings.map((f) => ({ title: f.title, description: f.description, evidence: f.evidence })),
+    // Polarity as the app stores it (lib/findingFields.ts): the model's abnormal call or a crossed threshold.
+    findings: prep.findings.map((f) => ({ title: f.title, description: f.description, evidence: f.evidence, polarity: polarityOf(f.evidence.measurementIds, triage.flags, f.abnormal) })),
     flagged,
     dropped: prep.dropped,
     proposed: Array.isArray(raw?.proposed) ? (raw.proposed as unknown[]).length : prep.findings.length + prep.dropped.conditions + prep.dropped.noEvidence,
@@ -167,7 +169,13 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
   return {
     criteria: gradePrep(task, out),
     output: {
-      findings: out.findings.map((f) => ({ title: f.title, description: f.description, evidence: [...f.evidence.measurementIds, ...f.evidence.maskIds] })),
+      findings: prep.findings.map((f) => ({
+        title: f.title,
+        description: f.description,
+        evidence: [...f.evidence.measurementIds, ...f.evidence.maskIds],
+        abnormal: f.abnormal,
+        location: f.location,
+      })),
       flagged,
       dropped: out.dropped,
       proposed: out.proposed,

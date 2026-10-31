@@ -71,7 +71,14 @@ async function prep(proposed: unknown[]) {
       heartBox: [0.4, 0.6, 0.6, 0.85], overlays: { "left-lung": "o/left-lung.png", "right-lung": "o/right-lung.png" },
       bucket: "b", studyPrefix: "studies/o/s", step: "detecting",
     },
-    { generate: vi.fn(async () => ({ proposed, clinicianSummary: summary(proposed.length) })) as never, saveOverlay },
+    {
+      generate: vi.fn(async () => ({
+        // B25 fields default to a pertinent normal.
+        proposed: proposed.map((p) => ({ abnormal: false, location: "none", ...(p as object) })),
+        clinicianSummary: summary(proposed.length),
+      })) as never,
+      saveOverlay,
+    },
   );
   return { out, saveOverlay };
 }
@@ -104,6 +111,32 @@ describe("runPrep", () => {
     expect(out.clinicianSummary.findings).not.toMatch(/pneumonia/i);
     expect(out.clinicianSummary.impression).toEqual(["Normal cardiac size."]);
     expect(out.clinicianSummary.highlights.map((h) => h.findingId)).toEqual(["f1"]);
+  });
+
+  it("B25: draws an abnormal observation on the zone it names, with its own overlay", async () => {
+    const { out, saveOverlay } = await prep([
+      { title: "Patchy opacity in the right upper zone", description: "Patchy opacity at the right apex.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right lung upper zone" },
+      { title: "Heart size within normal limits", description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none" },
+    ]);
+    const [opacity, heart] = out.findings;
+    expect(opacity.abnormal).toBe(true);
+    expect(opacity.location).toBe("right lung upper zone");
+    // Right lung box x 0.1–0.45; chest height 0.1–0.9, so the upper third is 0.1–0.367.
+    expect(opacity.outlines).toEqual([{ kind: "zone", side: "right", zone: "upper", box: [0.1, 0.1, 0.45, 0.367] }]);
+    expect(opacity.region).toEqual({ shape: "ellipse", x: 0.1, y: 0.1, w: 0.35, h: 0.267 });
+    expect(opacity.overlayPath).toBe("studies/o/s/overlays/zone-f1.png");
+    expect(heart.abnormal).toBe(false);
+    expect(heart.outlines).toEqual([]);
+    expect(saveOverlay).toHaveBeenCalledTimes(2); // the zone and the heart region
+  });
+
+  it("B25: an abnormal observation with an unreadable location keeps its cited region", async () => {
+    const { out } = await prep([
+      { title: "Hazy opacity", description: "Hazy opacity.", evidence: ["left-lung"], region: "left-lung", abnormal: true, location: "somewhere" },
+    ]);
+    expect(out.findings[0].outlines).toEqual([]);
+    expect(out.findings[0].region?.x).toBe(0.55);
+    expect(out.findings[0].overlayPath).toBe("o/left-lung.png");
   });
 
   it("fails visibly when nothing survives, rather than returning an empty draft", async () => {
