@@ -140,6 +140,9 @@ async function waitHealthy(name: string, url: string, timeoutMs = 15 * 60_000): 
   }
 }
 
+/** Errors that mean the GPU was unreachable, not that the model answered badly. */
+const INFRA_ERROR = /did not answer in time|unavailable|fetch failed|ECONNRESET|socket hang up/i;
+
 async function warmUp(system: EvalSystem): Promise<void> {
   const waits = [waitHealthy("the HelioDX GPU", process.env.GPU_URL!)];
   if (system === "medgemma") waits.push(waitHealthy("the MedGemma GPU", process.env.BASELINE_GPU_URL!));
@@ -170,7 +173,14 @@ async function run(flags: Record<string, string | true>): Promise<void> {
   const runId = `${system}${mock ? "-mock" : ""}-${startedAt.toISOString().slice(0, 19).replace(/[-:T]/g, "")}`;
   const results: EvalResult[] = [];
   for (const [i, task] of tasks.entries()) {
-    const r = await runTask(task, d);
+    let r = await runTask(task, d);
+    // A GPU instance can vanish mid-run (Cloud Run starts a new one, ~5 min).
+    // That is infrastructure, not the model: wait until healthy and run the task again.
+    for (let retry = 1; !mock && r.error && INFRA_ERROR.test(r.error) && retry <= 2; retry++) {
+      console.log(`[${i + 1}/${tasks.length}] ${task.id}: ${r.error.slice(0, 80)}; waiting for the GPU, retry ${retry}`);
+      await warmUp(system);
+      r = await runTask(task, d);
+    }
     results.push(r);
     const mark = r.error ? "error" : `${Math.round(r.score * 100)}%`;
     console.log(`[${i + 1}/${tasks.length}] ${task.id}: ${mark} · ${(r.latencyMs / 1000).toFixed(1)} s${r.error ? ` · ${r.error.slice(0, 120)}` : ""}`);
