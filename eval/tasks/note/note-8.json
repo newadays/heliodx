@@ -1,0 +1,62 @@
+{
+  "id": "note-8",
+  "title": "Patient note from signed report 8",
+  "family": "note",
+  "tags": [
+    "Faithful rewrite",
+    "NIH label: Effusion"
+  ],
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-456",
+    "nihLabel": "Effusion",
+    "rowIdx": 456,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": null,
+    "sex": null,
+    "indication": "",
+    "synthetic": true
+  },
+  "expected": {},
+  "signed": {
+    "studyType": "Chest X-ray (PA)",
+    "findings": "Bilateral increased pulmonary markings are visible with diffuse increased interstitial markings throughout both lungs, more pronounced in the mid to lower zones. The right lung shows coarse markings extending from the upper to lower zones, and the left lung shows similar increased markings with additional hazy opacity in the mid and lower zones. Left lung appears denser than right with mean brightness of the left lung higher than the right, with a density ratio of 1.56, exceeding the 1.25 threshold. The left lung field appears more opaque than the right lung field. Lung area asymmetry is present with the segmented lung areas showing a difference of 0.294 as a fraction of the larger lung, exceeding the 0.15 threshold, indicating asymmetry in lung area between the two sides. Cardiothoracic ratio within normal limits is noted with the cardiothoracic ratio measured from the lung borders at 0.447, which is below the 0.55 threshold. Costophrenic angles are sharp with both costophrenic angles appearing sharp. Left costophrenic angle blunting score is 0, within the 0.6 threshold, and right costophrenic angle blunting score is 0, within the 0.6 threshold. No pneumothorax identified on this PA view.",
+    "impression": [
+      "Bilateral increased pulmonary markings",
+      "Left lung appears denser than right",
+      "Lung area asymmetry",
+      "Cardiothoracic ratio within normal limits",
+      "Costophrenic angles are sharp"
+    ],
+    "recommendation": "Correlate with clinical history, prior imaging, and consider further evaluation with chest CT if indicated."
+  },
+  "criteria": [
+    {
+      "id": "steps",
+      "label": "One step per signed recommendation sentence",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_added",
+      "label": "No added number, timeframe, dose, medicine, test or urgency word",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_condition",
+      "label": "No condition the impression does not assert",
+      "method": "deterministic"
+    },
+    {
+      "id": "grade",
+      "label": "Reading grade 8 or lower",
+      "method": "deterministic"
+    },
+    {
+      "id": "first_try",
+      "label": "Passes every check on the first try",
+      "method": "deterministic"
+    }
+  ]
+}

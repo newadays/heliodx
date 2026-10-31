@@ -1,0 +1,62 @@
+{
+  "id": "note-2",
+  "title": "Patient note from signed report 2",
+  "family": "note",
+  "tags": [
+    "Faithful rewrite",
+    "NIH label: Cardiomegaly"
+  ],
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-8",
+    "nihLabel": "Cardiomegaly",
+    "rowIdx": 8,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": null,
+    "sex": null,
+    "indication": "",
+    "synthetic": true
+  },
+  "expected": {},
+  "signed": {
+    "studyType": "Chest X-ray (PA)",
+    "findings": "Cardiac silhouette within expected size: the cardiac silhouette between the lungs appears within expected size. Cardiothoracic ratio from the lung borders is 0.503, threshold 0.55, within. No blunting of left costophrenic angle: the left costophrenic angle is sharp. Left costophrenic angle blunting score is 0, threshold 0.6, within. No blunting of right costophrenic angle: the right costophrenic angle is sharp. Right costophrenic angle blunting score is 0, threshold 0.6, within. Lung areas are symmetric: lung area asymmetry is 0.1409 as a fraction of the larger lung, threshold 0.15, within. Lung densities are similar: mean brightness of the left lung over the right is 0.9799, threshold 1.25, within, suggesting similar lung densities.",
+    "impression": [
+      "Cardiac silhouette within expected size",
+      "No blunting of left costophrenic angle",
+      "No blunting of right costophrenic angle",
+      "Lung areas are symmetric",
+      "Lung densities are similar"
+    ],
+    "recommendation": "Correlate with clinical findings and history of fall; consider dedicated rib views or CT if focal chest wall tenderness or suspicion for occult injury."
+  },
+  "criteria": [
+    {
+      "id": "steps",
+      "label": "One step per signed recommendation sentence",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_added",
+      "label": "No added number, timeframe, dose, medicine, test or urgency word",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_condition",
+      "label": "No condition the impression does not assert",
+      "method": "deterministic"
+    },
+    {
+      "id": "grade",
+      "label": "Reading grade 8 or lower",
+      "method": "deterministic"
+    },
+    {
+      "id": "first_try",
+      "label": "Passes every check on the first try",
+      "method": "deterministic"
+    }
+  ]
+}
