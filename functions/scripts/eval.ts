@@ -28,6 +28,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { MODELS } from "../src/config";
 import { generateJson } from "../src/models/client";
 import { samSegment, type SegmentResponse } from "../src/models/gpu";
+import { gpuAudience, gpuIdToken } from "../src/models/gpuAuth";
 import type { Segmenter } from "../src/tools/segment";
 import { mockGenerate, mockSegment } from "../src/eval/mock";
 import { runTask, type RunDeps } from "../src/eval/runner";
@@ -122,6 +123,29 @@ function deps(system: EvalSystem, mock: boolean): RunDeps {
   };
 }
 
+/** Waits until a GPU service answers /health: a cold start (about 5 min) must not be graded as a model failure. */
+async function waitHealthy(name: string, url: string, timeoutMs = 15 * 60_000): Promise<void> {
+  const root = gpuAudience(url);
+  const deadline = Date.now() + timeoutMs;
+  for (let i = 0; ; i++) {
+    try {
+      const res = await fetch(`${root}/health`, { headers: { authorization: `Bearer ${await gpuIdToken(root)}` }, signal: AbortSignal.timeout(60_000) });
+      if (res.ok) return;
+    } catch {
+      // Still starting.
+    }
+    if (Date.now() > deadline) throw new Error(`${name} did not become healthy in ${timeoutMs / 60_000} min`);
+    if (i === 0) console.log(`Waiting for ${name} to start…`);
+    await new Promise((r) => setTimeout(r, 15_000));
+  }
+}
+
+async function warmUp(system: EvalSystem): Promise<void> {
+  const waits = [waitHealthy("the HelioDX GPU", process.env.GPU_URL!)];
+  if (system === "medgemma") waits.push(waitHealthy("the MedGemma GPU", process.env.BASELINE_GPU_URL!));
+  await Promise.all(waits);
+}
+
 function commit(): string {
   try {
     return execSync("git rev-parse --short HEAD", { cwd: REPO }).toString().trim();
@@ -141,6 +165,7 @@ async function run(flags: Record<string, string | true>): Promise<void> {
   if (!tasks.length) throw new Error("No tasks: run build-tasks first, or check --family/--split.");
 
   const d = deps(system, mock);
+  if (!mock) await warmUp(system);
   const startedAt = new Date();
   const runId = `${system}${mock ? "-mock" : ""}-${startedAt.toISOString().slice(0, 19).replace(/[-:T]/g, "")}`;
   const results: EvalResult[] = [];
@@ -195,6 +220,7 @@ async function buildNotes(flags: Record<string, string | true>): Promise<void> {
   const prepTasks = readTasks().filter((t) => t.family === "prep" && t.split === "held-out").slice(0, NOTE_TASKS);
   if (!prepTasks.length) throw new Error("No held-out prep tasks: run build-tasks first.");
   const d = deps("helio", mock);
+  if (!mock) await warmUp("helio");
   const dir = join(TASKS_DIR, "note");
   if (existsSync(dir)) rmSync(dir, { recursive: true });
   let n = 0;
