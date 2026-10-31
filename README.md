@@ -36,7 +36,7 @@ building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/
 | Web app (React + Vite) | Working: upload, review, sign, patient note PDF, agent console |
 | Backend pipeline (Cloud Functions) | Working end to end on Muse Glimmer and SAM 3.1 |
 | Muse Wonder coordination | Completed |
-| Accuracy eval on public chest X-rays | Built: 70 tasks on NIH ChestX-ray14, HelioDX vs MedGemma 27B on the same GPU ([`eval/README.md`](eval/README.md)). Results go on the app's public `/evals` page once a run is published |
+| Accuracy eval on public chest X-rays | Run 31 October 2026: 70 tasks on NIH ChestX-ray14, HelioDX vs MedGemma 27B on the same GPU. Results below and on the app's public `/evals` page ([`eval/README.md`](eval/README.md)) |
 
 ## Which model does what
 
@@ -81,6 +81,37 @@ Firestore, which the app watches live. Every model response is checked
 against a schema before it is saved. Patient details never go to a model,
 analytics, crash reports, or logs. See
 [`docs/phi-boundaries.md`](docs/phi-boundaries.md).
+
+## Eval results
+
+70 tasks on public NIH ChestX-ray14 films, graded by code, run on 31 October
+2026 (commit `777914c`). Both systems ran on one NVIDIA RTX PRO 6000 each and
+got the same SAM 3.1 masks and measurements, so only the language model
+differs. Method, task files and limits: [`eval/README.md`](eval/README.md).
+Every task and both outputs: the app's public `/evals` page.
+
+| Family | Tasks | HelioDX (Glimmer 30B FP8) | MedGemma 27B (bf16) | Median time, H / M | Cost per task, H / M |
+|---|---|---|---|---|---|
+| Intake | 14 | 96.4% | 92.9% | 2.3 s / 3.6 s | $0.003 / $0.005 |
+| Triage | 24 | 84.7% | 84.7% | 3.4 s / 6.5 s | $0.004 / $0.009 |
+| Prep | 24 | 91.7% | 92.5% | 24.3 s / 46.8 s | $0.033 / $0.074 |
+| Patient note | 8 | 90.0% | 60.0% | 2.4 s / 8.8 s | $0.004 / $0.011 |
+
+Cost is GPU time at $4.50 per hour. On the held-out half of the films (the
+lung cutoff was tuned on the other half), triage is 94.4% for HelioDX and
+91.7% for MedGemma, and prep is 95.0% for both.
+
+What it shows:
+
+- HelioDX is about twice as fast and half the cost per task. Its clearest
+  lead is the patient note (90% against 60%): rewriting a signed report
+  without adding words or conditions.
+- Triage and prep are level. Each system sent 2 of 4 pneumothorax films to
+  the critical lane; HelioDX over-triaged fewer normal films (37.5% against
+  50%).
+- A weakness found: Glimmer called 3 of 4 clean PA films "AP", and the
+  heart-size check runs only on PA films, so an enlarged heart can go
+  unflagged. MedGemma read all 4 as PA.
 
 ## Hardware
 
