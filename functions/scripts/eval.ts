@@ -142,7 +142,7 @@ async function run(flags: Record<string, string | true>): Promise<void> {
 
   const d = deps(system, mock);
   const startedAt = new Date();
-  const runId = `${system}${mock ? "-mock" : ""}-${startedAt.toISOString().slice(0, 16).replace(/[-:T]/g, "")}`;
+  const runId = `${system}${mock ? "-mock" : ""}-${startedAt.toISOString().slice(0, 19).replace(/[-:T]/g, "")}`;
   const results: EvalResult[] = [];
   for (const [i, task] of tasks.entries()) {
     const r = await runTask(task, d);
