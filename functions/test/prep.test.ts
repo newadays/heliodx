@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { confidenceFor, margin, strengthOf } from "../src/lib/strength";
 import { assertsCondition, stripConditionSentences } from "../src/lib/vocabulary";
+import { traceCapture, type CapturedEvent } from "../src/lib/trace";
 import { HEART_REGION, runPrep } from "../src/stages/prep";
 import type { Measurement } from "../src/tools/measure";
 import type { MaskRecord } from "../src/tools/segment";
@@ -128,6 +129,22 @@ describe("runPrep", () => {
     expect(heart.abnormal).toBe(false);
     expect(heart.outlines).toEqual([]);
     expect(saveOverlay).toHaveBeenCalledTimes(2); // the zone and the heart region
+  });
+
+  it("B25: traces a locate_zone row per abnormal observation, none for normals", async () => {
+    const events: CapturedEvent[] = [];
+    await traceCapture("prep", (e) => events.push(e), () =>
+      prep([
+        { title: "Patchy opacity", description: "Right apex.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right lung upper zone" },
+        { title: "Hazy area", description: "Somewhere.", evidence: ["left-lung"], region: "left-lung", abnormal: true, location: "somewhere" },
+        { title: "Heart size within normal limits", description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none" },
+      ]),
+    );
+    const rows = events.filter((e) => e.name === "locate_zone");
+    expect(rows.map((e) => [e.ok, e.result])).toEqual([
+      [true, "right lung upper zone · zone outline"],
+      [false, "location not readable · cited region kept"],
+    ]);
   });
 
   it("B25: an abnormal observation with an unreadable location keeps its cited region", async () => {
