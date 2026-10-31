@@ -24,7 +24,8 @@ echo "GPU_URL=<printed url>" >> ../functions/.env.heliodx
 `GLIMMER_QUANTIZATION=none ./deploy.sh` serves BF16 instead of FP8; `GLIMMER_REASONING_PARSER=muse_glimmer` turns Glimmer's reasoning parser back on (it currently stops JSON schemas being enforced) (slower,
 for the quality comparison in card B8). `MIN_INSTANCES=1` keeps one GPU warm
 for clinic hours or judging; the default 0 scales to zero and costs nothing
-when idle, with a cold start of several minutes.
+when idle, with a cold start of several minutes. `./warm.sh on|off|status`
+changes only that setting on the running service, without a rebuild.
 
 ## Versions
 
