@@ -27,6 +27,8 @@ TAG="${IMAGE_TAG:-$(git rev-parse --short HEAD 2>/dev/null || date +%Y%m%d%H%M)}
 IMAGE="${REGION}-docker.pkg.dev/${PROJECT}/${REPO}/models:${TAG}"
 step() { printf '\n== %s\n' "$*"; }
 
+SAM_ENABLED_VALUE="${SAM_ENABLED:-1}"
+
 step "APIs"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
   compute.googleapis.com storage.googleapis.com --project "$PROJECT"
@@ -80,7 +82,7 @@ gcloud beta run deploy "$SERVICE" --project "$PROJECT" --region "$REGION" \
   --network "$VPC" --subnet "$SUBNET" --vpc-egress all-traffic \
   --add-volume "name=weights,type=cloud-storage,bucket=${BUCKET},readonly=true,mount-options=enable-buffered-read=true" \
   --add-volume-mount "volume=weights,mount-path=/weights" \
-  --set-env-vars "GLIMMER_MODEL=${MODEL_PATH:-gs://${BUCKET}/glimmer},GLIMMER_QUANTIZATION=${GLIMMER_QUANTIZATION:-fp8_per_tensor},GLIMMER_REASONING_PARSER=${GLIMMER_REASONING_PARSER:-},SERVED_MODEL_NAME=${SERVED_MODEL_NAME:-glimmer},SAM_ENABLED=${SAM_ENABLED:-1},TOOL_CALL_PARSER=${TOOL_CALL_PARSER-muse_glimmer}" \
+  --set-env-vars "GLIMMER_MODEL=${MODEL_PATH:-gs://${BUCKET}/glimmer},GLIMMER_QUANTIZATION=${GLIMMER_QUANTIZATION:-fp8_per_tensor},GLIMMER_REASONING_PARSER=${GLIMMER_REASONING_PARSER:-},SERVED_MODEL_NAME=${SERVED_MODEL_NAME:-glimmer},SAM_ENABLED=${SAM_ENABLED_VALUE},TOOL_CALL_PARSER=${TOOL_CALL_PARSER-muse_glimmer}" \
   --startup-probe "httpGet.path=/health,httpGet.port=8080,initialDelaySeconds=120,failureThreshold=60,periodSeconds=15,timeoutSeconds=5"
 
 step "Only the Cloud Functions runtime may call it"
@@ -89,9 +91,19 @@ gcloud run services add-iam-policy-binding "$SERVICE" --region "$REGION" --proje
 
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT" --format 'value(status.url)')"
 step "Done: ${URL}"
-cat <<NEXT
+if [ "$SAM_ENABLED_VALUE" = 1 ]; then
+  cat <<NEXT
 Point the functions at it (not a secret; this file is gitignored by the .env* rule):
   echo "GPU_URL=${URL}" >> ../functions/.env.heliodx
-Check it:
-  curl -s -H "Authorization: Bearer \$(gcloud auth print-identity-token)" ${URL}/health
+NEXT
+else
+  # The eval baseline: never the app's GPU_URL. Only the eval runner uses it.
+  cat <<NEXT
+This is the eval baseline. Do not put it in functions/.env.*; pass it to the eval runner:
+  BASELINE_GPU_URL=${URL} npm --prefix ../functions run eval -- run --system medgemma
+NEXT
+fi
+cat <<NEXT
+Check it (expect 200 with an empty body):
+  curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer \$(gcloud auth print-identity-token)" ${URL}/health
 NEXT
