@@ -16,7 +16,8 @@ export type MeasurementId =
   | "lung_area_asymmetry"
   | "cp_blunting_left"
   | "cp_blunting_right"
-  | "density_ratio";
+  | "density_ratio"
+  | "lung_outline_ratio";
 
 export interface Measurement {
   id: MeasurementId;
@@ -263,6 +264,11 @@ export function evaluateMeasurements(measurements: Measurement[], view: "PA" | "
       case "cp_blunting_right": {
         const t = THRESHOLDS.costophrenicBlunting.flag;
         if (m.value >= t) flags.push({ measurementId: m.id, level: "flag", value: m.value, threshold: t });
+        break;
+      }
+      case "lung_outline_ratio": {
+        const t = THRESHOLDS.lungOutlineRatio.critical;
+        if (m.value < t) flags.push({ measurementId: m.id, level: "critical", value: m.value, threshold: t });
         break;
       }
       case "density_ratio": {

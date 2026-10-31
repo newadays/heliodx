@@ -57,6 +57,7 @@ export function triagePrompt(
   flags: { measurementId: string; level: string; value: number; threshold: number }[],
   floor: string,
   maskIds: string[],
+  partialLungs: string[] = [],
 ): string {
   return [
     `Study: ${studyType}, view ${view}. Set a reading priority: routine, urgent or critical.`,
@@ -65,9 +66,12 @@ export function triagePrompt(
     `Measurements (id: value): ${measurements.length ? measurements.map((m) => `${m.id}: ${m.value}`).join("; ") : "none available"}.`,
     `Thresholds crossed: ${flags.length ? flags.map((f) => `${f.measurementId} ${f.value} vs ${f.threshold} (${f.level})`).join("; ") : "none"}.`,
     `Segmented regions (mask ids): ${maskIds.length ? maskIds.join(", ") : "none"}.`,
+    partialLungs.length
+      ? `The ${partialLungs.join(" and ")} lung could not be fully outlined (lung_outline_ratio): its area, density and angle were not measured. That is seen with collapse, large effusion or dense opacity, and also with a segmentation failure; it is not evidence of normal.`
+      : "",
     "In evidence, list only ids from the measurements or mask ids above, exactly as written.",
     "Rationale: at most two sentences, observations only, no diagnosis or condition names.",
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 /**

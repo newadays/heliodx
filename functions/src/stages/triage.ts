@@ -12,6 +12,9 @@
 import { logger } from "firebase-functions/v2";
 import sharp from "sharp";
 
+import { outlineRatio, partialLungs } from "../lib/maskGuard";
+import type { Side } from "../lib/location";
+import { traceEvent } from "../lib/trace";
 import { generateJson } from "../models/client";
 import { triagePrompt } from "../models/prompts";
 import { PipelineError, type PipelineStatus } from "../pipeline/errors";
@@ -54,6 +57,8 @@ export interface TriageOutput {
   ctrLines: ChestMeasurements["ctrLines"];
   /** maskId -> Storage path of its overlay PNG. */
   overlays: Record<string, string>;
+  /** B28: lungs whose outline is too short to measure from (lib/maskGuard.ts). */
+  partialLungs: Side[];
   degraded: boolean;
   needsHuman: boolean;
 }
@@ -69,6 +74,7 @@ export async function runTriage(input: TriageInput, deps: TriageDeps = {}): Prom
   const overlays: Record<string, string> = {};
   const left = input.masks.find((m) => m.label === "left lung");
   const right = input.masks.find((m) => m.label === "right lung");
+  const partial = input.chest ? partialLungs(input.masks) : [];
 
   if (input.chest && left && right) {
     const [lm, rm] = await Promise.all([load(input.bucket, left), load(input.bucket, right)]);
@@ -87,9 +93,22 @@ export async function runTriage(input: TriageInput, deps: TriageDeps = {}): Prom
       leftMaskId: left.maskId,
       rightMaskId: right.maskId,
     });
-    measurements = chest.measurements;
-    heartBox = chest.heartBox;
-    ctrLines = chest.ctrLines;
+    // B28: nothing measured from a partial outline (a both-lung measurement, or that side's blunting).
+    const partialIds = new Set(partial.map((s) => (s === "left" ? left.maskId : right.maskId)));
+    measurements = chest.measurements.filter((m) => !m.maskIds.some((id) => partialIds.has(id)));
+    if (partial.length) measurements.push({ id: "lung_outline_ratio", value: outlineRatio(input.masks)!, maskIds: [...partialIds] });
+    const ctrKept = measurements.some((m) => m.id === "cardiothoracic_ratio");
+    heartBox = ctrKept ? chest.heartBox : null;
+    ctrLines = ctrKept ? chest.ctrLines : null;
+    if (partial.length) {
+      traceEvent({
+        kind: "check",
+        name: "mask_plausibility",
+        args: { partial },
+        ok: false,
+        result: `${partial.join(" and ")} lung outline incomplete · skipped ${chest.measurements.length - (measurements.length - 1)} measurements`,
+      });
+    }
     for (const [rec, mask] of [[left, lm], [right, rm]] as const) {
       overlays[rec.maskId] = await overlay(input.bucket, input.studyPrefix, rec, mask, ANATOMY[rec.label].color);
     }
@@ -105,13 +124,13 @@ export async function runTriage(input: TriageInput, deps: TriageDeps = {}): Prom
     const draft = await generate({
       route: "clinical",
       schema: TriageSchema,
-      prompt: triagePrompt(input.studyType, input.view, measurements, flags, floor, input.masks.map((m) => m.maskId)),
+      prompt: triagePrompt(input.studyType, input.view, measurements, flags, floor, input.masks.map((m) => m.maskId), partial),
       step: input.step,
       answerTokens: 512,
     });
     const priority = maxPriority(floor, draft.priority);
     // Confidence from what was measured, not from the model.
-    const confidence = degraded || measurements.length === 0 ? "low" : flags.length ? "medium" : "high";
+    const confidence = degraded || partial.length || measurements.length === 0 ? "low" : flags.length ? "medium" : "high";
     return {
       priority,
       floor,
@@ -123,6 +142,7 @@ export async function runTriage(input: TriageInput, deps: TriageDeps = {}): Prom
       heartBox,
       ctrLines,
       overlays,
+      partialLungs: partial,
       degraded,
       needsHuman: false,
     };
@@ -143,6 +163,7 @@ export async function runTriage(input: TriageInput, deps: TriageDeps = {}): Prom
       heartBox,
       ctrLines,
       overlays,
+      partialLungs: partial,
       degraded,
       needsHuman: true,
     };

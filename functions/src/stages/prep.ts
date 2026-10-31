@@ -36,6 +36,7 @@ const ABOUT: Record<Measurement["id"], string> = {
   cp_blunting_left: "left costophrenic angle blunting, 0 sharp to 1 blunted",
   cp_blunting_right: "right costophrenic angle blunting, 0 sharp to 1 blunted",
   density_ratio: "mean brightness of the left lung over the right",
+  lung_outline_ratio: "the shorter lung outline's height over the taller one's; under the threshold one lung could not be fully outlined (collapse, large effusion, dense opacity, or a segmentation failure)",
 };
 
 export interface EvidencedFinding extends DraftFinding {
@@ -57,6 +58,8 @@ export interface PrepInput {
   flags: MeasurementFlag[];
   heartBox: [number, number, number, number] | null;
   overlays: Record<string, string>;
+  /** B28: lungs whose outline is incomplete; their masks are flagged in the evidence list. */
+  partialLungs?: ("left" | "right")[];
   bucket: string;
   studyPrefix: string;
   step: PipelineStatus;
@@ -84,7 +87,12 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
       id: m.id,
       about: `${ABOUT[m.id]} = ${m.value} (threshold ${thresholdFor(m.id)}${flagged.has(m.id) ? ", crossed" : ", within"})`,
     })),
-    ...input.masks.map((m) => ({ id: m.maskId, about: `${m.label} outline from segmentation (score ${m.score})` })),
+    ...input.masks.map((m) => ({
+      id: m.maskId,
+      about: `${m.label} outline from segmentation (score ${m.score})${
+        input.partialLungs?.some((s) => `${s} lung` === m.label) ? "; incomplete, it misses part of the lung, so read that side from the image" : ""
+      }`,
+    })),
   ];
   const regions = [
     ...input.masks.map((m) => ({ id: m.maskId, about: m.label })),

@@ -12,6 +12,13 @@ export const THRESHOLDS = {
   costophrenicBlunting: { flag: 0.6 },
   /** Mean lung brightness ratio (left / right); outside [1/flag, flag] is flagged. */
   densityRatio: { flag: 1.25 },
+  /**
+   * B28: shorter lung outline's height over the taller one's. Eval films are
+   * either >= 0.80 (a real pair) or <= 0.25 (a sliver); below this the outline
+   * is incomplete: collapse, large effusion, dense opacity or a SAM failure.
+   * Critical, like the area asymmetry it replaces (pneumothorax films land here).
+   */
+  lungOutlineRatio: { critical: 0.7 },
 } as const;
 
 /** Image quality limits, measured on a copy scaled to QUALITY_PX on the long edge. */
