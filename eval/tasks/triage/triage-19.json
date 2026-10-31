@@ -1,0 +1,42 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-392",
+    "nihLabel": "Effusion",
+    "rowIdx": 392,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 60,
+    "sex": "M",
+    "indication": "Pre-operative check.",
+    "synthetic": true
+  },
+  "id": "triage-19",
+  "title": "Reading lane for film 19",
+  "family": "triage",
+  "tags": [
+    "Expected urgent",
+    "NIH label: Effusion"
+  ],
+  "expected": {
+    "lane": "urgent"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Lane urgent or higher",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

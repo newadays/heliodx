@@ -1,0 +1,38 @@
+{
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-8",
+    "nihLabel": "Cardiomegaly",
+    "rowIdx": 8,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 64,
+    "sex": "F",
+    "indication": "Chest pain after a fall.",
+    "synthetic": true
+  },
+  "id": "intake-lowres-4",
+  "title": "Down-sampled copy of film 4",
+  "family": "intake",
+  "tags": [
+    "Retake",
+    "NIH label: Cardiomegaly"
+  ],
+  "variant": "lowres",
+  "expected": {
+    "retake": true
+  },
+  "criteria": [
+    {
+      "id": "retake",
+      "label": "Sent back for a retake",
+      "method": "deterministic"
+    },
+    {
+      "id": "reason",
+      "label": "Names the low resolution as the reason",
+      "method": "deterministic"
+    }
+  ]
+}

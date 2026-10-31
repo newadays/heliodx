@@ -1,0 +1,51 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-6",
+    "nihLabel": "Pneumothorax",
+    "rowIdx": 6,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 73,
+    "sex": "M",
+    "indication": "Pre-operative check.",
+    "synthetic": true
+  },
+  "id": "intake-clean-3",
+  "title": "Clean copy of film 3",
+  "family": "intake",
+  "tags": [
+    "Accept",
+    "NIH label: Pneumothorax"
+  ],
+  "variant": "clean",
+  "expected": {
+    "retake": false,
+    "modality": "xray",
+    "view": "PA",
+    "chest": true
+  },
+  "criteria": [
+    {
+      "id": "no_retake",
+      "label": "Not sent back for a retake",
+      "method": "deterministic"
+    },
+    {
+      "id": "modality",
+      "label": "Recognised as an X-ray",
+      "method": "deterministic"
+    },
+    {
+      "id": "view",
+      "label": "View read as PA",
+      "method": "deterministic"
+    },
+    {
+      "id": "chest",
+      "label": "Both lungs found",
+      "method": "deterministic"
+    }
+  ]
+}

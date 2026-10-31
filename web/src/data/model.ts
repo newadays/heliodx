@@ -9,6 +9,7 @@ import { confidenceBand, evidenceLine } from "@/functions/src/lib/evidence";
 import { readNeed, readRequirement, READ_REASON_TEXT } from "@/functions/src/radiology/gate";
 import type { Finding, FindingStatus, ShareChannel, Study, StudyStatus } from "@/types/study";
 import { caseId as derivedCaseId } from "@/utils/caseTimeline";
+import { findingPolarity } from "@/functions/src/lib/polarity";
 import { tsToMillis } from "@/utils/millis";
 
 export type ViewStatus = "analyzing" | "draft_ready" | "in_review" | "signed" | "shared" | "failed";
@@ -141,7 +142,7 @@ export function findingView(f: Finding, study: Pick<Study, "measurements" | "tri
     sentence: f.status === "edited" && f.editedText ? f.editedText : f.description,
     confidence,
     band: confidenceBand(confidence),
-    polarity: f.polarity ?? (measurementIds.some((id) => flagged.has(id)) ? "attention" : "normal"),
+    polarity: findingPolarity(f, flagged),
     regions,
     spot: f.region ? { x: f.region.x * 100, y: f.region.y * 100, w: f.region.w * 100, h: f.region.h * 100 } : null,
     decision: f.status,

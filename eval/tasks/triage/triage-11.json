@@ -1,0 +1,42 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-47",
+    "nihLabel": "Mass",
+    "rowIdx": 47,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 31,
+    "sex": "F",
+    "indication": "Pre-operative check.",
+    "synthetic": true
+  },
+  "id": "triage-11",
+  "title": "Reading lane for film 11",
+  "family": "triage",
+  "tags": [
+    "Expected urgent",
+    "NIH label: Mass"
+  ],
+  "expected": {
+    "lane": "urgent"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Lane urgent or higher",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

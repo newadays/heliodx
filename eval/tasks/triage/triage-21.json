@@ -1,0 +1,42 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-496",
+    "nihLabel": "Effusion",
+    "rowIdx": 496,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 65,
+    "sex": "M",
+    "indication": "Fever and cough for three days.",
+    "synthetic": true
+  },
+  "id": "triage-21",
+  "title": "Reading lane for film 21",
+  "family": "triage",
+  "tags": [
+    "Expected urgent",
+    "NIH label: Effusion"
+  ],
+  "expected": {
+    "lane": "urgent"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Lane urgent or higher",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

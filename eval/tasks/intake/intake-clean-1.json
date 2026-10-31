@@ -1,0 +1,51 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-4",
+    "nihLabel": "No Finding",
+    "rowIdx": 4,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 34,
+    "sex": "M",
+    "indication": "Cough for two weeks.",
+    "synthetic": true
+  },
+  "id": "intake-clean-1",
+  "title": "Clean copy of film 1",
+  "family": "intake",
+  "tags": [
+    "Accept",
+    "NIH label: No Finding"
+  ],
+  "variant": "clean",
+  "expected": {
+    "retake": false,
+    "modality": "xray",
+    "view": "PA",
+    "chest": true
+  },
+  "criteria": [
+    {
+      "id": "no_retake",
+      "label": "Not sent back for a retake",
+      "method": "deterministic"
+    },
+    {
+      "id": "modality",
+      "label": "Recognised as an X-ray",
+      "method": "deterministic"
+    },
+    {
+      "id": "view",
+      "label": "View read as PA",
+      "method": "deterministic"
+    },
+    {
+      "id": "chest",
+      "label": "Both lungs found",
+      "method": "deterministic"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-5",
+    "nihLabel": "No Finding",
+    "rowIdx": 5,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 47,
+    "sex": "F",
+    "indication": "Shortness of breath on exertion.",
+    "synthetic": true
+  },
+  "id": "intake-lowres-2",
+  "title": "Down-sampled copy of film 2",
+  "family": "intake",
+  "tags": [
+    "Retake",
+    "NIH label: No Finding"
+  ],
+  "variant": "lowres",
+  "expected": {
+    "retake": true
+  },
+  "criteria": [
+    {
+      "id": "retake",
+      "label": "Sent back for a retake",
+      "method": "deterministic"
+    },
+    {
+      "id": "reason",
+      "label": "Names the low resolution as the reason",
+      "method": "deterministic"
+    }
+  ]
+}

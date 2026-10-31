@@ -1,0 +1,34 @@
+{
+  "id": "intake-nonmedical-2",
+  "title": "Non-medical image 2",
+  "family": "intake",
+  "tags": [
+    "Retake",
+    "Synthetic image"
+  ],
+  "split": "tuning",
+  "film": null,
+  "variant": "nonmedical",
+  "context": {
+    "age": null,
+    "sex": null,
+    "indication": "Routine check.",
+    "synthetic": true
+  },
+  "expected": {
+    "retake": true,
+    "notMedical": true
+  },
+  "criteria": [
+    {
+      "id": "retake",
+      "label": "Sent back for a retake",
+      "method": "deterministic"
+    },
+    {
+      "id": "not_medical",
+      "label": "Says it is not a medical image",
+      "method": "deterministic"
+    }
+  ]
+}

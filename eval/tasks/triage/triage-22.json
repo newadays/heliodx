@@ -1,0 +1,42 @@
+{
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-1000",
+    "nihLabel": "Cardiomegaly",
+    "rowIdx": 1000,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 48,
+    "sex": "F",
+    "indication": "Follow-up film.",
+    "synthetic": true
+  },
+  "id": "triage-22",
+  "title": "Reading lane for film 22",
+  "family": "triage",
+  "tags": [
+    "Expected urgent",
+    "NIH label: Cardiomegaly"
+  ],
+  "expected": {
+    "lane": "urgent"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Lane urgent or higher",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

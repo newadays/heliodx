@@ -7,6 +7,10 @@
 #   2. vLLM serving Muse Glimmer (127.0.0.1:8001), weights streamed from
 #      Cloud Storage.
 #   3. Caddy on :8080, the only port Cloud Run sees.
+#
+# The eval baseline (card E14) runs the same image with another model and
+# no SAM: SAM_ENABLED=0 SERVED_MODEL_NAME=medgemma TOOL_CALL_PARSER= and
+# GLIMMER_MODEL pointing at its weights. /health then comes from vLLM.
 set -euo pipefail
 
 : "${GLIMMER_MODEL:?set GLIMMER_MODEL, e.g. gs://<weights-bucket>/glimmer}"
@@ -17,24 +21,40 @@ set -euo pipefail
 # "muse_glimmer" to retest (card B8).
 : "${GLIMMER_REASONING_PARSER:=}"
 : "${GLIMMER_MAX_MODEL_LEN:=32768}"
-: "${GLIMMER_GPU_MEM_UTIL:=0.80}"         # leaves room for SAM 3.1
 : "${GLIMMER_MAX_NUM_SEQS:=8}"
+: "${SAM_ENABLED:=1}"
+: "${SERVED_MODEL_NAME:=glimmer}"
+# Unset means Glimmer's parser; set it empty for a model without one.
+: "${TOOL_CALL_PARSER=muse_glimmer}"
+if [ "$SAM_ENABLED" = 1 ]; then
+  : "${GLIMMER_GPU_MEM_UTIL:=0.80}"       # leaves room for SAM 3.1
+  export HEALTH_UPSTREAM=127.0.0.1:8002   # SAM's /health checks both models
+else
+  : "${GLIMMER_GPU_MEM_UTIL:=0.90}"
+  export HEALTH_UPSTREAM=127.0.0.1:8001   # vLLM's own /health
+fi
 
 cd /app
-python3 -m uvicorn sam_server:app --host 127.0.0.1 --port 8002 --log-level warning &
+if [ "$SAM_ENABLED" = 1 ]; then
+  python3 -m uvicorn sam_server:app --host 127.0.0.1 --port 8002 --log-level warning &
 
-echo "start: waiting for SAM 3.1"
-for _ in $(seq 1 180); do
-  if python3 -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8002/sam/ready', timeout=2)" 2>/dev/null; then
-    echo "start: SAM 3.1 ready"
-    break
-  fi
-  sleep 2
-done
+  echo "start: waiting for SAM 3.1"
+  for _ in $(seq 1 180); do
+    if python3 -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8002/sam/ready', timeout=2)" 2>/dev/null; then
+      echo "start: SAM 3.1 ready"
+      break
+    fi
+    sleep 2
+  done
+fi
 
 QUANT_ARGS=()
 if [ "$GLIMMER_QUANTIZATION" != "none" ]; then
   QUANT_ARGS=(--quantization "$GLIMMER_QUANTIZATION")
+fi
+TOOL_ARGS=()
+if [ -n "$TOOL_CALL_PARSER" ]; then
+  TOOL_ARGS=(--enable-auto-tool-choice --tool-call-parser "$TOOL_CALL_PARSER")
 fi
 REASONING_ARGS=()
 if [ -n "$GLIMMER_REASONING_PARSER" ]; then
@@ -42,7 +62,7 @@ if [ -n "$GLIMMER_REASONING_PARSER" ]; then
 fi
 
 vllm serve "$GLIMMER_MODEL" \
-  --served-model-name glimmer \
+  --served-model-name "$SERVED_MODEL_NAME" \
   --load-format runai_streamer \
   --dtype bfloat16 \
   "${QUANT_ARGS[@]}" \
@@ -51,8 +71,7 @@ vllm serve "$GLIMMER_MODEL" \
   --gpu-memory-utilization "$GLIMMER_GPU_MEM_UTIL" \
   --limit-mm-per-prompt '{"image": 1}' \
   --enable-prefix-caching \
-  --enable-auto-tool-choice \
-  --tool-call-parser muse_glimmer \
+  "${TOOL_ARGS[@]}" \
   "${REASONING_ARGS[@]}" \
   --host 127.0.0.1 --port 8001 &
 

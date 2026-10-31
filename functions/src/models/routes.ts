@@ -7,6 +7,9 @@
  *  - `coordination` → hosted Meta Model API (Muse Wonder). De-identified queue
  *                     state only: no image, and context keys from an allowlist.
  *  - `dictation`    → hosted Meta Model API (Muse Voice Transcribe). Audio only.
+ *  - `clinical_baseline` → the eval baseline (MedGemma 27B) on its own GPU
+ *                     service in the EU. Same data rules as `clinical`. Only
+ *                     the eval runner selects it; app code never does.
  *
  * Clinical calls never fall back to the hosted API. This is enforced here, in
  * code, before any network request is made.
@@ -14,7 +17,7 @@
 import { MODELS } from "../config";
 import { PipelineError, type PipelineStatus } from "../pipeline/errors";
 
-export type Route = "clinical" | "coordination" | "dictation";
+export type Route = "clinical" | "clinical_baseline" | "coordination" | "dictation";
 
 export interface RouteTarget {
   route: Route;
@@ -27,15 +30,16 @@ export interface RouteTarget {
 
 export function resolveRoute(
   route: Route,
-  env: { gpuUrl: string; hostedBase: string },
+  env: { gpuUrl: string; hostedBase: string; baselineUrl?: string },
   step: PipelineStatus,
 ): RouteTarget {
-  if (route === "clinical") {
-    const gpu = env.gpuUrl.trim().replace(/\/+$/, "");
+  if (route === "clinical" || route === "clinical_baseline") {
+    const gpu = (route === "clinical" ? env.gpuUrl : env.baselineUrl ?? "").trim().replace(/\/+$/, "");
     if (!gpu) {
-      throw new PipelineError("model_unavailable", "The private model service is not configured.", step);
+      throw new PipelineError("model_unavailable", `The ${route === "clinical" ? "private model" : "baseline model"} service is not configured.`, step);
     }
-    return { route, baseUrl: `${gpu}/v1`, model: MODELS.clinical, auth: "gpu-id-token", hosted: false };
+    const model = route === "clinical" ? MODELS.clinical : MODELS.baseline;
+    return { route, baseUrl: `${gpu}/v1`, model, auth: "gpu-id-token", hosted: false };
   }
   const model = route === "coordination" ? MODELS.coordinator : MODELS.dictation;
   return { route, baseUrl: env.hostedBase, model, auth: "meta-api-key", hosted: true };
@@ -88,7 +92,7 @@ export interface OutboundCall {
 
 /** Throws RouteViolation when a call would carry data its route may not. */
 export function assertPayloadAllowed(route: Route, call: OutboundCall): void {
-  if (route === "clinical") return;
+  if (route === "clinical" || route === "clinical_baseline") return;
   if (call.image !== undefined) throw new RouteViolation(`Images may not be sent on the ${route} route.`);
   if (route === "dictation") {
     if (call.context !== undefined) throw new RouteViolation("The dictation route carries audio only.");

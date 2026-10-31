@@ -4,7 +4,7 @@
  * for the app's lists. The thumbnail is written next to the original.
  */
 import { getStorage } from "firebase-admin/storage";
-import sharp from "sharp";
+import sharp, { type OutputInfo, type Sharp } from "sharp";
 
 import { LIMITS } from "../config";
 
@@ -15,6 +15,14 @@ export interface PreparedImages {
   thumbPath: string;
 }
 
+/** The copy every model and SAM sees: at most 2048 px, JPEG. The eval runner uses it too. */
+export function modelCopy(image: Sharp): Promise<{ data: Buffer; info: OutputInfo }> {
+  return image
+    .resize({ width: LIMITS.modelImageMaxPx, height: LIMITS.modelImageMaxPx, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 85 })
+    .toBuffer({ resolveWithObject: true });
+}
+
 export async function prepareImages(bucketName: string, objectPath: string): Promise<PreparedImages> {
   const bucket = getStorage().bucket(bucketName);
   const [buffer] = await bucket.file(objectPath).download();
@@ -23,11 +31,7 @@ export async function prepareImages(bucketName: string, objectPath: string): Pro
   const meta = await base.metadata();
   const original = { width: meta.width ?? 0, height: meta.height ?? 0, bytes: buffer.length };
 
-  const modelBuf = await base
-    .clone()
-    .resize({ width: LIMITS.modelImageMaxPx, height: LIMITS.modelImageMaxPx, fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 85 })
-    .toBuffer({ resolveWithObject: true });
+  const modelBuf = await modelCopy(base.clone());
 
   const thumbBuf = await base
     .clone()

@@ -19,7 +19,7 @@ import type { PipelineStatus } from "../pipeline/errors";
 import { IntakeSchema } from "../schemas/study";
 import { CHEST_LABELS } from "../tools/anatomy";
 import { measureQuality, qualityIssues, qualityScore, type QualityMetrics } from "../tools/quality";
-import { confirmStudyType, segmentRegions, type MaskRecord, type Segmenter } from "../tools/segment";
+import { confirmStudyType, segmentRegions, type MaskRecord, type MaskSaver, type Segmenter } from "../tools/segment";
 
 export interface IntakeInput {
   /** The model copy of the image (what SAM and Glimmer see). */
@@ -34,6 +34,7 @@ export interface IntakeInput {
 export interface IntakeDeps {
   generate?: typeof generateJson;
   segment?: Segmenter;
+  saveMask?: MaskSaver;
 }
 
 export interface IntakeOutput {
@@ -82,7 +83,7 @@ export async function runIntake(input: IntakeInput, deps: IntakeDeps = {}): Prom
   if (draft.looksMedical && draft.modality === "xray") {
     try {
       const seg = await segmentRegions(
-        { bucket: input.bucket, studyPrefix: input.studyPrefix, image: input.image, step: input.step },
+        { bucket: input.bucket, studyPrefix: input.studyPrefix, image: input.image, step: input.step, saveMask: deps.saveMask },
         CHEST_LABELS,
         deps.segment,
       );

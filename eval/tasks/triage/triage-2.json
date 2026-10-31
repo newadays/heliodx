@@ -1,0 +1,42 @@
+{
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-5",
+    "nihLabel": "No Finding",
+    "rowIdx": 5,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 47,
+    "sex": "F",
+    "indication": "Shortness of breath on exertion.",
+    "synthetic": true
+  },
+  "id": "triage-2",
+  "title": "Reading lane for film 2",
+  "family": "triage",
+  "tags": [
+    "Expected routine",
+    "NIH label: No Finding"
+  ],
+  "expected": {
+    "lane": "routine"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Stays routine (not over-triaged)",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

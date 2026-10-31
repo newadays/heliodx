@@ -1,0 +1,42 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-163",
+    "nihLabel": "Pneumothorax",
+    "rowIdx": 163,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 63,
+    "sex": "F",
+    "indication": "Sudden breathlessness.",
+    "synthetic": true
+  },
+  "id": "triage-15",
+  "title": "Reading lane for film 15",
+  "family": "triage",
+  "tags": [
+    "Expected critical",
+    "NIH label: Pneumothorax"
+  ],
+  "expected": {
+    "lane": "critical"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Lane critical or higher",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

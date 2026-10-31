@@ -20,3 +20,4 @@ INVOKER_SA="${INVOKER_SA:-${PROJECT_NUMBER}-compute@developer.gserviceaccount.co
 CB_MACHINE="${CB_MACHINE:-}"
 GLIMMER_REPO="meta-models/Muse-Glimmer-30B"
 SAM_REPO="facebook/sam3.1"
+MEDGEMMA_REPO="${MEDGEMMA_REPO:-google/medgemma-27b-it}"   # eval baseline only (card E14)

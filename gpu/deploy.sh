@@ -9,6 +9,11 @@
 #   SKIP_BUILD=1 ./deploy.sh  # redeploy the last image with new settings
 #   IMAGE_TAG=280f997 SKIP_BUILD=1 ./deploy.sh  # deploy a specific built image
 #   BUILD_ONLY=1 ./deploy.sh  # infra + image build, no deploy (e.g. while weights stage)
+#
+# The eval baseline (card E14): the same image, MedGemma 27B in bf16, no SAM.
+#   SERVICE=heliodx-baseline MODEL_PATH=gs://<bucket>/medgemma-27b SERVED_MODEL_NAME=medgemma \
+#     SAM_ENABLED=0 TOOL_CALL_PARSER= GLIMMER_QUANTIZATION=none IMAGE_TAG=<tag> SKIP_BUILD=1 ./deploy.sh
+# The defaults below reproduce the Glimmer service exactly.
 set -euo pipefail
 cd "$(dirname "$0")"
 if [ ! -f ./env.sh ]; then
@@ -75,7 +80,7 @@ gcloud beta run deploy "$SERVICE" --project "$PROJECT" --region "$REGION" \
   --network "$VPC" --subnet "$SUBNET" --vpc-egress all-traffic \
   --add-volume "name=weights,type=cloud-storage,bucket=${BUCKET},readonly=true,mount-options=enable-buffered-read=true" \
   --add-volume-mount "volume=weights,mount-path=/weights" \
-  --set-env-vars "GLIMMER_MODEL=gs://${BUCKET}/glimmer,GLIMMER_QUANTIZATION=${GLIMMER_QUANTIZATION:-fp8_per_tensor},GLIMMER_REASONING_PARSER=${GLIMMER_REASONING_PARSER:-}" \
+  --set-env-vars "GLIMMER_MODEL=${MODEL_PATH:-gs://${BUCKET}/glimmer},GLIMMER_QUANTIZATION=${GLIMMER_QUANTIZATION:-fp8_per_tensor},GLIMMER_REASONING_PARSER=${GLIMMER_REASONING_PARSER:-},SERVED_MODEL_NAME=${SERVED_MODEL_NAME:-glimmer},SAM_ENABLED=${SAM_ENABLED:-1},TOOL_CALL_PARSER=${TOOL_CALL_PARSER-muse_glimmer}" \
   --startup-probe "httpGet.path=/health,httpGet.port=8080,initialDelaySeconds=120,failureThreshold=60,periodSeconds=15,timeoutSeconds=5"
 
 step "Only the Cloud Functions runtime may call it"

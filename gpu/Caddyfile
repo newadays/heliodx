@@ -1,5 +1,6 @@
 # Single port for Cloud Run. /v1/* is Muse Glimmer (vLLM, OpenAI-compatible);
-# everything else is the SAM server (/sam/segment, /health).
+# everything else is the SAM server (/sam/segment, /health). Without SAM (the
+# eval baseline) start.sh sets HEALTH_UPSTREAM to vLLM, which serves /health.
 {
 	admin off
 	auto_https off
@@ -15,7 +16,7 @@
 		}
 	}
 	handle {
-		reverse_proxy 127.0.0.1:8002 {
+		reverse_proxy {$HEALTH_UPSTREAM:127.0.0.1:8002} {
 			transport http {
 				read_timeout 120s
 			}
