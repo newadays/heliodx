@@ -94,6 +94,7 @@ export const CONSOLE_TOOLS: ConsoleTool[] = [
   { name: "compare_density", params: ["image", "masks"], description: "Left/right mean density ratio of the lungs, against its threshold.", kind: "check", owner: "triage" },
   { name: "render_overlay", params: ["kind", "masks"], description: "Mask and measurement overlays for the viewer.", kind: "tool", owner: "triage" },
   { name: "set_priority", params: ["measurements", "context"], description: "Routine, urgent or critical; never below the floor the measurements set.", kind: "check", owner: "triage" },
+  { name: "locate_zone", params: ["location"], description: "Draws an abnormal observation on the lung zone the model names (side and upper, middle or lower third).", kind: "check", owner: "prep" },
   { name: "propose_observations", params: ["measurements"], description: "Observations with evidence and a region; drops any that name a condition or cite no evidence.", kind: "check", owner: "prep" },
   { name: "freeze_report", params: ["decisions"], description: "Freezes the signed report and records its hash.", kind: "check", owner: "clinician" },
   { name: "check_patient_summary", params: ["note", "signed_report"], description: "Fails when a sentence adds an instruction, test, urgency or condition the signed report lacks, or reads above grade 8.", kind: "check", owner: "summary" },
