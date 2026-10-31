@@ -90,6 +90,7 @@ export function prepPrompt(
     "Mark each observation `abnormal` (true when it is not normal for this film, such as upper-zone patchy or",
     "nodular opacity, a cavity, apical fibrotic streaks or miliary nodules; false for a pertinent normal) and give",
     "its `location` (side and zone, e.g. 'right lung upper zone'); every abnormal observation needs a location.",
+    "Support devices (lines, catheters, tubes, wires, pacemakers) are not abnormal by themselves: mark them false.",
     "Evidence list:",
     ...evidence.map((e) => `- ${e.id}: ${e.about}`),
     "Region ids for marking the image (or 'none'):",
