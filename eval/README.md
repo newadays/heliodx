@@ -22,7 +22,7 @@ the share of its criteria passed.
 | Intake | 14 | Clean films accepted and read as a PA chest X-ray; blurred and down-sampled copies sent back for a retake with the right reason; two synthetic non-medical images refused. Ground truth comes from how each variant was built. |
 | Triage | 24 | The reading lane against the NIH label (pneumothorax → critical; cardiomegaly, effusion, mass, consolidation → urgent; no finding must stay routine), the model answered, and every cited measurement exists. |
 | Prep | 24 | What the model proposed before the app's filters: no observation names a condition, none lacks evidence, the impression survives the filter, and the observations flag attention exactly when the label is abnormal. |
-| Patient note | 10 | The rewrite of a signed report: one step per signed sentence, nothing added (number, timeframe, dose, medicine, test or urgency word), no condition the impression does not assert, reading grade 8 or lower, all on the first try. |
+| Patient note | 8 | The rewrite of a signed report: one step per signed sentence, nothing added (number, timeframe, dose, medicine, test or urgency word), no condition the impression does not assert, reading grade 8 or lower, all on the first try. |
 
 Limits, stated plainly:
 
@@ -38,7 +38,16 @@ Limits, stated plainly:
   them together; the model-dependent intake criteria are view, modality and
   the non-medical images.
 - Patient-note tasks are rewrites of HelioDX drafts (signed as drafted by a
-  simulated signer), and both systems rewrite the same text.
+  simulated signer), and both systems rewrite the same text. Two of ten
+  held-out films gave no draft, so there are 8. Four drafts were corrected by
+  hand before signing, as a radiologist would: a heart size called "within"
+  on an AP film (note-1), a crossed threshold called "within" (note-6), and
+  two cut-off sentences (note-5, note-8).
+- The lung cutoff (0.2, `tools/anatomy.ts`) was chosen after a probe on these
+  same films; the held-out half is reported separately for that reason.
+- The heart-size floor applies only to PA films, and the model decides the
+  view. So the "floor from measurements" triage column depends on the model
+  even though both systems get identical measurements.
 
 ## Run it
 

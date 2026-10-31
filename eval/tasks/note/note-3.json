@@ -1,0 +1,62 @@
+{
+  "id": "note-3",
+  "title": "Patient note from signed report 3",
+  "family": "note",
+  "tags": [
+    "Faithful rewrite",
+    "NIH label: No Finding"
+  ],
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-11",
+    "nihLabel": "No Finding",
+    "rowIdx": 11,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": null,
+    "sex": null,
+    "indication": "",
+    "synthetic": true
+  },
+  "expected": {},
+  "signed": {
+    "studyType": "Chest X-ray (AP)",
+    "findings": "Cardiothoracic ratio within normal limits: the cardiothoracic ratio measured from the lung borders is 0.4131, which is below the 0.55 threshold, indicating the cardiac silhouette is within expected proportions relative to the thoracic width. No blunting of left costophrenic angle: the left costophrenic angle appears sharp with a blunting score of 0, below the 0.6 threshold, consistent with no visible blunting. No blunting of right costophrenic angle: the right costophrenic angle appears sharp with a blunting score of 0, below the 0.6 threshold, consistent with no visible blunting. Lung areas are symmetric: the difference in lung area as a fraction of the larger lung is 0.088, within the 0.15 threshold, indicating symmetric lung areas between left and right. Lung densities are symmetric: mean brightness of the left lung over the right is 1.0107, within the 1.25 threshold, indicating similar radiographic density between the two lungs.",
+    "impression": [
+      "Cardiothoracic ratio within normal limits",
+      "No blunting of left costophrenic angle",
+      "No blunting of right costophrenic angle",
+      "Lung areas are symmetric",
+      "Lung densities are symmetric"
+    ],
+    "recommendation": "Correlate with clinical findings and prior imaging; no acute radiographic abnormality identified on this follow-up AP chest radiograph."
+  },
+  "criteria": [
+    {
+      "id": "steps",
+      "label": "One step per signed recommendation sentence",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_added",
+      "label": "No added number, timeframe, dose, medicine, test or urgency word",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_condition",
+      "label": "No condition the impression does not assert",
+      "method": "deterministic"
+    },
+    {
+      "id": "grade",
+      "label": "Reading grade 8 or lower",
+      "method": "deterministic"
+    },
+    {
+      "id": "first_try",
+      "label": "Passes every check on the first try",
+      "method": "deterministic"
+    }
+  ]
+}

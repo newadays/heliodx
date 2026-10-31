@@ -72,7 +72,7 @@ export function markdownTable(runs: EvalRun[]): string {
   }
   const triaged = runs.filter((r) => r.triage);
   if (triaged.length) {
-    lines.push("", "| Triage | Critical sent critical | Abnormal sent urgent or higher | Normal over-triaged | Measurements alone: abnormal recall |", "|---|---|---|---|---|");
+    lines.push("", "| Triage | Critical sent critical | Abnormal sent urgent or higher | Normal over-triaged | Floor from measurements (view by model): abnormal recall |", "|---|---|---|---|---|");
     for (const r of triaged) {
       lines.push(`| ${r.label} | ${pct(r.triage!.criticalRecall)} | ${pct(r.triage!.abnormalRecall)} | ${pct(r.triage!.overTriage)} | ${pct(r.triage!.floorAbnormalRecall)} |`);
     }
