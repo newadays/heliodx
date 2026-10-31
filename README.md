@@ -36,7 +36,7 @@ building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/
 | Web app (React + Vite) | Working: upload, review, sign, patient note PDF, agent console |
 | Backend pipeline (Cloud Functions) | Working end to end on Muse Glimmer and SAM 3.1 |
 | Muse Wonder coordination | Completed |
-| Accuracy eval on public chest X-rays | Planned. Results will be posted here |
+| Accuracy eval on public chest X-rays | Built: 72 tasks on NIH ChestX-ray14, HelioDX vs MedGemma 27B on the same GPU ([`eval/README.md`](eval/README.md)). Results go on the app's public `/evals` page once a run is published |
 
 ## Which model does what
 
@@ -232,7 +232,8 @@ cd functions && npm run test:rules                 # security rules, inside the 
 
 | Path | What's there |
 |---|---|
-| `web/` | The web app (React + Vite): worklist, study workspace, agent console |
+| `web/` | The web app (React + Vite): worklist, study workspace, agent console, public `/evals` page |
+| `eval/` | The evaluation task library and how to run it |
 | `design/` | Design spec, tokens and mockups for the web app |
 | `functions/` | Cloud Functions: pipeline, callables, admin scripts, tests |
 | `gpu/` | Private model service: Muse Glimmer on vLLM and SAM 3.1 on Cloud Run GPU, with deploy scripts |

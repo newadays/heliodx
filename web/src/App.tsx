@@ -9,6 +9,7 @@ const WelcomePage = lazy(() => import("~/pages/Welcome"));
 const WorklistPage = lazy(() => import("~/pages/Worklist"));
 const StudyPage = lazy(() => import("~/pages/study/StudyPage"));
 const ConsolePage = lazy(() => import("~/pages/console/ConsolePage"));
+const EvalsPage = lazy(() => import("~/pages/evals/EvalsPage"));
 
 /** Signed-in routes: sign in first, and only accounts bound to an organization get in. */
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -38,6 +39,8 @@ export function App() {
             <Routes>
               <Route path="/" element={<WelcomePage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/evals" element={<EvalsPage />} />
+              <Route path="/evals/:taskId" element={<EvalsPage />} />
               <Route path="/worklist" element={<RequireAuth><WorklistPage /></RequireAuth>} />
               <Route path="/study/:caseId" element={<RequireAuth><StudyPage /></RequireAuth>} />
               <Route path="/console" element={<RequireAuth><ConsolePage /></RequireAuth>} />

@@ -161,6 +161,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Evaluation runs (E2/E15): public, for the /evals page. Public NIH films
+    // and synthetic context only, no identifiers; written by scripts/eval.ts
+    // through the Admin SDK, never by a client.
+    match /evalRuns/{runId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /results/{taskId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
     // Anything not matched above is closed.
   }
 }

@@ -1,0 +1,69 @@
+/* E15 · Public evaluation page. Light app theme; tokens only. */
+.ev-nav{display:flex;align-items:center;gap:18px}
+.ev-nav a{color:var(--hx-ink-2);font-weight:500;font-size:14px;text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.ev-nav a:hover{color:var(--hx-ink);text-decoration:underline}
+
+.ev-main{width:100%;max-width:var(--hx-page-max);margin:0 auto;padding:32px 24px 40px;display:flex;flex-direction:column;gap:22px;flex:1 1 auto}
+.ev-title{display:flex;flex-direction:column;gap:8px;max-width:820px}
+.ev-title h1{font-size:var(--hx-text-3xl);font-weight:700;letter-spacing:var(--hx-tracking-tighter);line-height:1.2}
+.ev-title p{font-size:15px;text-wrap:pretty}
+.ev-eyebrow{font-size:var(--hx-text-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--hx-muted)}
+
+.ev-systems{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:14px}
+.ev-system{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.ev-system__head{display:flex;flex-direction:column;gap:4px}
+.ev-system__head h2{font-size:16px;font-weight:700}
+.ev-system__head p,.ev-system__triage{font-size:13px}
+
+.ev-filters{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--hx-line)}
+.ev-tabs{display:flex;gap:22px;flex-wrap:wrap}
+.ev-search{flex:0 1 320px;padding-bottom:6px;min-width:min(260px,100%)}
+.ev-gridhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px}
+
+.ev-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ev-card{padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.ev-card h3{font-size:16px;font-weight:600;line-height:1.35}
+.ev-card h3 a{color:var(--hx-ink);text-decoration:none}
+.ev-card h3 a:hover{text-decoration:underline}
+.ev-tags{display:flex;gap:6px;flex-wrap:wrap}
+.ev-scores{list-style:none;padding:0;border-top:1px solid var(--hx-line);margin-top:2px}
+.ev-scores li{display:grid;grid-template-columns:1fr auto 44px;align-items:center;gap:10px;border-bottom:1px solid var(--hx-line);font-size:14px}
+.ev-scores li:last-child{border-bottom:0}
+.ev-score{font-weight:600;font-size:15px}
+.ev-arrow{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;color:var(--hx-ink-2)}
+.ev-arrow:hover{color:var(--hx-ink)}
+
+.ev-back{display:inline-flex;align-items:center;gap:6px;color:var(--hx-ink-2);text-decoration:none;font-weight:500;font-size:14px;min-height:44px;align-self:flex-start}
+.ev-back svg{transform:rotate(180deg)}
+.ev-back:hover{color:var(--hx-ink);text-decoration:underline}
+
+.ev-table-wrap{overflow-x:auto}
+.ev-table{display:grid;min-width:620px}
+.ev-th{background:var(--hx-surface-2);padding:10px 16px;font-size:var(--hx-text-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--hx-muted)}
+.ev-td{padding:12px 16px;border-top:1px solid var(--hx-line);display:flex;flex-direction:column;align-items:flex-start;gap:6px;font-size:14px;min-width:0}
+.ev-detail{font-size:13px;overflow-wrap:anywhere}
+
+.ev-outputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:14px}
+.ev-output{padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ev-output h2{font-size:15px;font-weight:700}
+.ev-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(110px,100%),1fr));gap:10px;margin:0}
+.ev-meta div{display:flex;flex-direction:column;gap:2px}
+.ev-meta dt{font-size:12px;color:var(--hx-muted)}
+.ev-meta dd{margin:0;font-weight:600}
+.ev-kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:0;font-size:14px}
+.ev-kv dt{color:var(--hx-muted)}
+.ev-kv dd{margin:0;overflow-wrap:anywhere}
+.ev-kv dd.mono{font-size:13px}
+.ev-findings{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.ev-note{font-size:14px}
+.ev-error{color:var(--hx-red);font-size:14px}
+
+.ev-state{padding:22px 24px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;max-width:560px}
+.ev-footer{width:100%;max-width:var(--hx-page-max);margin:0 auto;padding:0 24px 32px;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+
+@media (max-width: 760px){
+  .ev-grid{grid-template-columns:minmax(0,1fr)}
+  .ev-main{padding:24px 16px 32px}
+  .ev-footer{padding:0 16px 28px}
+  .ev-kv{grid-template-columns:1fr}
+}
