@@ -126,6 +126,11 @@ a.step.done:hover{text-decoration:underline}
 .seg button{min-height:36px;padding:0 12px;display:inline-flex;align-items:center;font:inherit;font-size:13px;font-weight:500;color:var(--hx-ink-2);background:transparent;border:0;border-right:1px solid var(--hx-line-strong);cursor:pointer}
 .seg button:last-child{border-right:0}
 .seg button.cur{background:var(--hx-ink);color:#FFFFFF;font-weight:600}
+/* Underlined tabs with a count (worklist, sign step, evals) */
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border:none;border-bottom:2px solid transparent;background:none;font:inherit;font-weight:500;color:var(--hx-muted);font-size:14px;cursor:pointer;margin-bottom:-1px}
+.tab.cur{color:var(--hx-ink);border-color:var(--hx-ink);font-weight:600}
+.count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--hx-chip-neutral-bg);color:var(--hx-ink-2);font-size:12px;font-weight:600}
+.tab.cur .count{background:var(--hx-ink);color:#FFFFFF}
 .rmenu{position:relative;display:inline-flex}
 .rmenu__btn{width:36px;height:36px}
 .rmenu__list{position:absolute;right:0;top:calc(100% + 4px);z-index:20;min-width:236px;background:#FFFFFF;border:1px solid var(--hx-line);border-radius:var(--hx-radius);box-shadow:0 8px 24px rgba(15,23,42,.12);padding:4px;display:flex;flex-direction:column}

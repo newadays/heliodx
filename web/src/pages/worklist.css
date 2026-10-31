@@ -14,10 +14,6 @@
 .wl-filters{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--hx-line)}
 .wl-filters__right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:6px}
 .wl-tabs{display:flex;gap:22px;flex-wrap:wrap}
-.tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border:none;border-bottom:2px solid transparent;background:none;font:inherit;font-weight:500;color:var(--hx-muted);font-size:14px;cursor:pointer;margin-bottom:-1px}
-.tab.cur{color:var(--hx-ink);border-color:var(--hx-ink);font-weight:600}
-.count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--hx-chip-neutral-bg);color:var(--hx-ink-2);font-size:12px;font-weight:600}
-.tab.cur .count{background:var(--hx-ink);color:#FFFFFF}
 .wl-sort{display:flex;align-items:center;gap:8px;color:var(--hx-muted);font-size:13px}
 .wl-sort select{min-height:36px;width:auto;padding:0 10px}
 .wl-scroll{overflow-x:auto;position:relative}
