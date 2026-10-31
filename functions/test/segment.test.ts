@@ -10,11 +10,11 @@ const det = (prompt: string, score: number, box = [0, 0, 0.5, 0.5]) => ({ prompt
 describe("pickBest", () => {
   it("keeps the highest-scoring detection per label above its threshold", () => {
     const best = pickBest(
-      [det("left lung", 0.6), det("left lung", 0.8), det("right lung", 0.4), det("lung", 0.9)],
+      [det("left lung", 0.6), det("left lung", 0.8), det("right lung", 0.15), det("lung", 0.9)],
       ["left lung", "right lung"],
     );
     expect(best.get("left lung")?.score).toBe(0.8);
-    expect(best.has("right lung")).toBe(false); // 0.4 < 0.5
+    expect(best.has("right lung")).toBe(false); // 0.15 < 0.2
     expect(best.size).toBe(1); // a prompt we did not ask for is ignored
   });
 });
@@ -41,7 +41,7 @@ describe("confirmStudyType", () => {
   it("refuses missing lungs, swapped sides, low scores and the same region twice", () => {
     expect(confirmStudyType([left]).reason).toBe("lungs_not_found");
     expect(confirmStudyType([{ ...left, box: right.box }, { ...right, box: left.box }]).reason).toBe("sides_swapped");
-    expect(confirmStudyType([{ ...left, score: 0.2 }, right]).reason).toBe("low_score");
+    expect(confirmStudyType([{ ...left, score: 0.15 }, right]).reason).toBe("low_score");
     expect(confirmStudyType([left, { ...right, box: [0.5, 0.07, 0.9, 0.96] }]).reason).toBe("same_region");
   });
 });
