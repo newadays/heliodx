@@ -1,0 +1,62 @@
+{
+  "id": "note-6",
+  "title": "Patient note from signed report 6",
+  "family": "note",
+  "tags": [
+    "Faithful rewrite",
+    "NIH label: Effusion"
+  ],
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-95",
+    "nihLabel": "Effusion",
+    "rowIdx": 95,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": null,
+    "sex": null,
+    "indication": "",
+    "synthetic": true
+  },
+  "expected": {},
+  "signed": {
+    "studyType": "Chest X-ray (AP)",
+    "findings": "Cardiac silhouette appears enlarged: the cardiac silhouette between the lungs appears enlarged with cardiothoracic ratio from the lung borders 0.6289 (threshold 0.55, crossed). Lung area asymmetry noted: difference in lung area, as a fraction of the larger lung, is 0.1649 (threshold 0.15, crossed). No costophrenic angle blunting on the left: left costophrenic angle is sharp with left costophrenic angle blunting score 0 (threshold 0.6, within). No costophrenic angle blunting on the right: right costophrenic angle is sharp with right costophrenic angle blunting score 0 (threshold 0.6, within). Lung density appears symmetric: mean brightness of the left lung over the right is 1.0369 (threshold 1.25, within).",
+    "impression": [
+      "Cardiac silhouette appears enlarged",
+      "Lung area asymmetry noted",
+      "No costophrenic angle blunting on the left",
+      "No costophrenic angle blunting on the right",
+      "Lung density appears symmetric"
+    ],
+    "recommendation": "Correlate clinically and consider prior imaging for comparison; further evaluation as indicated by history and exam."
+  },
+  "criteria": [
+    {
+      "id": "steps",
+      "label": "One step per signed recommendation sentence",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_added",
+      "label": "No added number, timeframe, dose, medicine, test or urgency word",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_condition",
+      "label": "No condition the impression does not assert",
+      "method": "deterministic"
+    },
+    {
+      "id": "grade",
+      "label": "Reading grade 8 or lower",
+      "method": "deterministic"
+    },
+    {
+      "id": "first_try",
+      "label": "Passes every check on the first try",
+      "method": "deterministic"
+    }
+  ]
+}

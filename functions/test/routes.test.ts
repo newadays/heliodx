@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
@@ -26,6 +29,21 @@ describe("model routes", () => {
       expect(e).toBeInstanceOf(PipelineError);
       expect((e as PipelineError).code).toBe("model_unavailable");
     }
+  });
+
+  it("sends the eval baseline to its own GPU service, and only when it is configured", () => {
+    const t = resolveRoute("clinical_baseline", { gpuUrl: "https://heliodx-models.run.app", hostedBase, baselineUrl: "https://heliodx-baseline.run.app/" }, "detecting");
+    expect(t).toMatchObject({ baseUrl: "https://heliodx-baseline.run.app/v1", hosted: false, auth: "gpu-id-token", model: MODELS.baseline });
+    expect(() => resolveRoute("clinical_baseline", { gpuUrl: "https://heliodx-models.run.app", hostedBase }, "detecting")).toThrow(PipelineError);
+    expect(() => assertPayloadAllowed("clinical_baseline", { image, context: { clinicalContext: "cough" } })).not.toThrow();
+  });
+
+  it("no app code selects the baseline route; only the eval runner (scripts/eval.ts) does", () => {
+    const src = join(__dirname, "../src");
+    const files = (dir: string): string[] =>
+      readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? files(join(dir, f)) : [join(dir, f)]));
+    const naming = files(src).filter((f) => f.endsWith(".ts") && readFileSync(f, "utf8").includes("clinical_baseline"));
+    expect(naming.map((f) => f.slice(src.length + 1))).toEqual(["models/routes.ts"]);
   });
 
   it("uses Muse Wonder and Voice Transcribe on the hosted API", () => {

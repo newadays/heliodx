@@ -36,7 +36,11 @@ export interface SegmentContext {
   step: PipelineStatus;
   /** Masks already on the study; their labels are not segmented again. */
   cached?: MaskRecord[];
+  /** Where the mask JSON goes; default Cloud Storage. The eval runner keeps masks in memory. */
+  saveMask?: MaskSaver;
 }
+
+export type MaskSaver = (path: string, json: string) => Promise<void>;
 
 export interface SegmentResult {
   masks: MaskRecord[];
@@ -93,7 +97,15 @@ export async function segmentRegions(
         result: d ? describeBox(d.box as [number, number, number, number], d.score) : `not found above score ${ANATOMY[label].threshold}`,
       });
     });
-    const bucket = getStorage().bucket(ctx.bucket);
+    const save: MaskSaver =
+      ctx.saveMask ??
+      (async (path, json) => {
+        await getStorage().bucket(ctx.bucket).file(path).save(json, {
+          contentType: "application/json",
+          resumable: false,
+          metadata: { cacheControl: "private, max-age=0" },
+        });
+      });
     for (const label of todo) {
       const d = best.get(label);
       if (!d) {
@@ -112,11 +124,7 @@ export async function segmentRegions(
         height: res.height,
         path,
       };
-      await bucket.file(path).save(JSON.stringify({ ...record, rle: d.rle }), {
-        contentType: "application/json",
-        resumable: false,
-        metadata: { cacheControl: "private, max-age=0" },
-      });
+      await save(path, JSON.stringify({ ...record, rle: d.rle }));
       masks.push(record);
     }
   }

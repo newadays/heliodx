@@ -37,6 +37,13 @@ export const PROJECT_ID =
  */
 export const GPU_URL = { value: (): string => process.env.GPU_URL ?? "" };
 
+/**
+ * E14 · The eval baseline service (MedGemma 27B on its own GPU). Set only
+ * when the eval runner runs (`scripts/eval.ts`); never in a deploy, so the
+ * app cannot reach it.
+ */
+export const BASELINE_GPU_URL = { value: (): string => process.env.BASELINE_GPU_URL ?? "" };
+
 /** The hosted Meta Model API key, from Secret Manager (`META_API_KEY`). */
 export const META_API_KEY = defineSecret("META_API_KEY");
 export const MODEL_API_BASE = process.env.MODEL_API_BASE ?? "https://api.meta.ai/v1";
@@ -49,9 +56,10 @@ export const MODEL_TIMEOUT_MS = Number(process.env.MODEL_TIMEOUT_MS ?? 90_000);
  */
 export const REASONING_HEADROOM_TOKENS = 4_000;
 
-/** Model id per route. `glimmer` is the vLLM served-model-name on the GPU. */
+/** Model id per route. `glimmer` and `medgemma` are vLLM served-model-names. */
 export const MODELS = {
   clinical: process.env.MODEL_CLINICAL ?? "glimmer",
+  baseline: process.env.MODEL_BASELINE ?? "medgemma",
   coordinator: process.env.MODEL_COORDINATOR ?? "muse-wonder-1.0",
   dictation: process.env.MODEL_DICTATION ?? "muse-voice-transcribe-1.0",
 } as const;

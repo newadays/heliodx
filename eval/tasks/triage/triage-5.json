@@ -1,0 +1,42 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-9",
+    "nihLabel": "No Finding",
+    "rowIdx": 9,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 38,
+    "sex": "M",
+    "indication": "Fever and cough for three days.",
+    "synthetic": true
+  },
+  "id": "triage-5",
+  "title": "Reading lane for film 5",
+  "family": "triage",
+  "tags": [
+    "Expected routine",
+    "NIH label: No Finding"
+  ],
+  "expected": {
+    "lane": "routine"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Stays routine (not over-triaged)",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

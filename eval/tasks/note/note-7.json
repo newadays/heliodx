@@ -1,0 +1,62 @@
+{
+  "id": "note-7",
+  "title": "Patient note from signed report 7",
+  "family": "note",
+  "tags": [
+    "Faithful rewrite",
+    "NIH label: Consolidation"
+  ],
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-374",
+    "nihLabel": "Consolidation",
+    "rowIdx": 374,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": null,
+    "sex": null,
+    "indication": "",
+    "synthetic": true
+  },
+  "expected": {},
+  "signed": {
+    "studyType": "Chest X-ray (AP)",
+    "findings": "Cardiac silhouette within expected size limits: The cardiac silhouette appears within expected size limits on this AP projection. Cardiothoracic ratio from the lung borders is 0.4978, below the 0.55 threshold. No blunting of costophrenic angles: Both costophrenic angles are sharp. Left costophrenic angle blunting score is 0 (threshold 0.6) and right costophrenic angle blunting score is 0 (threshold 0.6). Lung fields appear clear without focal consolidation: The left and right lung fields show no focal opacity suggestive of consolidation. Lung area asymmetry is 0.0711 (threshold 0.15) and density ratio left over right is 1.051 (threshold 1.25). No pneumothorax identified: No pneumothorax is identified. Lung outlines are visible bilaterally with left lung segmentation score 0.7266 and right lung segmentation score 0.5195. Sternal wires present: Multiple metallic sternal wires are visible in the midline overlying the sternum, consistent with prior median sternotomy.",
+    "impression": [
+      "Cardiac silhouette within expected size limits",
+      "No blunting of costophrenic angles",
+      "Lung fields appear clear without focal consolidation",
+      "No pneumothorax identified",
+      "Sternal wires present"
+    ],
+    "recommendation": "Correlate clinically with history of exertional shortness of breath; consider further evaluation if symptoms persist."
+  },
+  "criteria": [
+    {
+      "id": "steps",
+      "label": "One step per signed recommendation sentence",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_added",
+      "label": "No added number, timeframe, dose, medicine, test or urgency word",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_condition",
+      "label": "No condition the impression does not assert",
+      "method": "deterministic"
+    },
+    {
+      "id": "grade",
+      "label": "Reading grade 8 or lower",
+      "method": "deterministic"
+    },
+    {
+      "id": "first_try",
+      "label": "Passes every check on the first try",
+      "method": "deterministic"
+    }
+  ]
+}

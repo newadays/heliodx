@@ -27,6 +27,24 @@ for clinic hours or judging; the default 0 scales to zero and costs nothing
 when idle, with a cold start of several minutes. `./warm.sh on|off|status`
 changes only that setting on the running service, without a rebuild.
 
+## Eval baseline (MedGemma 27B)
+
+For the evaluation (`eval/README.md`), a second service runs the same image
+with MedGemma 27B in bf16 and no SAM, on the same GPU type and vLLM. Both
+systems get the SAM masks and measurements from the main service, so only
+the language model differs. It is warmed only while an eval runs.
+
+```sh
+./stage-weights.sh medgemma   # gated: accept the terms on Hugging Face first
+SERVICE=heliodx-baseline MODEL_PATH=gs://<bucket>/medgemma-27b SERVED_MODEL_NAME=medgemma \
+  SAM_ENABLED=0 TOOL_CALL_PARSER= GLIMMER_QUANTIZATION=none IMAGE_TAG=<tag> SKIP_BUILD=1 ./deploy.sh
+SERVICE=heliodx-baseline ./warm.sh on    # before a run; off after
+```
+
+`IMAGE_TAG` is an image already built by `./deploy.sh` (or `BUILD_ONLY=1`)
+from a commit that has the `SAM_ENABLED` switch. MedGemma is used under the
+Health AI Developer Foundations terms and is not for clinical use.
+
 ## Versions
 
 | Part | Version |

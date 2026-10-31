@@ -10,7 +10,7 @@
 import { logger } from "firebase-functions/v2";
 import type { z } from "zod";
 
-import { GPU_URL, META_API_KEY, MODEL_API_BASE, MODEL_TIMEOUT_MS, REASONING_HEADROOM_TOKENS } from "../config";
+import { BASELINE_GPU_URL, GPU_URL, META_API_KEY, MODEL_API_BASE, MODEL_TIMEOUT_MS, REASONING_HEADROOM_TOKENS } from "../config";
 import { PipelineError, type PipelineStatus } from "../pipeline/errors";
 import { toResponseJsonSchema } from "../schemas/study";
 import { SYSTEM_INSTRUCTION } from "./prompts";
@@ -65,7 +65,7 @@ export async function generateJson<S extends z.ZodType>(input: GenerateJsonInput
     }
     throw error;
   }
-  const target = resolveRoute(input.route, { gpuUrl: GPU_URL.value(), hostedBase: MODEL_API_BASE }, input.step);
+  const target = resolveRoute(input.route, { gpuUrl: GPU_URL.value(), hostedBase: MODEL_API_BASE, baselineUrl: BASELINE_GPU_URL.value() }, input.step);
 
   const schema = toResponseJsonSchema(input.schema);
   const imagePart = input.image

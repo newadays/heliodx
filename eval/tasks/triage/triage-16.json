@@ -1,0 +1,42 @@
+{
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-174",
+    "nihLabel": "Pneumothorax",
+    "rowIdx": 174,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 65,
+    "sex": "M",
+    "indication": "Routine check.",
+    "synthetic": true
+  },
+  "id": "triage-16",
+  "title": "Reading lane for film 16",
+  "family": "triage",
+  "tags": [
+    "Expected critical",
+    "NIH label: Pneumothorax"
+  ],
+  "expected": {
+    "lane": "critical"
+  },
+  "criteria": [
+    {
+      "id": "lane",
+      "label": "Lane critical or higher",
+      "method": "deterministic"
+    },
+    {
+      "id": "answered",
+      "label": "Model answered (no fallback to a human)",
+      "method": "deterministic"
+    },
+    {
+      "id": "evidence",
+      "label": "Every cited measurement or outline exists",
+      "method": "deterministic"
+    }
+  ]
+}

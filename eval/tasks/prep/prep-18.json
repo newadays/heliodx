@@ -1,0 +1,52 @@
+{
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-374",
+    "nihLabel": "Consolidation",
+    "rowIdx": 374,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 60,
+    "sex": "M",
+    "indication": "Shortness of breath on exertion.",
+    "synthetic": true
+  },
+  "id": "prep-18",
+  "title": "Observations for film 18",
+  "family": "prep",
+  "tags": [
+    "Expected attention",
+    "NIH label: Consolidation"
+  ],
+  "expected": {
+    "polarity": "attention"
+  },
+  "criteria": [
+    {
+      "id": "drafted",
+      "label": "At least one observation with evidence",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_condition",
+      "label": "No proposed observation names a condition",
+      "method": "deterministic"
+    },
+    {
+      "id": "no_uncited",
+      "label": "No proposed observation without evidence",
+      "method": "deterministic"
+    },
+    {
+      "id": "polarity",
+      "label": "Flags at least one observation for attention",
+      "method": "deterministic"
+    },
+    {
+      "id": "impression",
+      "label": "Impression survives the condition filter",
+      "method": "deterministic"
+    }
+  ]
+}

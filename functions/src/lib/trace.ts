@@ -53,7 +53,9 @@ export const DETAIL_ORG = "demo";
 const DETAIL_MAX = 8000;
 
 interface Scope {
-  ref: DocumentReference;
+  ref: DocumentReference | null;
+  /** Set by `traceCapture`: events go here, nothing is written. */
+  sink?: (event: CapturedEvent) => void;
   stage: string;
   seq: number;
   writes: Promise<unknown>[];
@@ -66,13 +68,24 @@ const als = new AsyncLocalStorage<Scope>();
 /** Runs `fn` with a trace scope for this study; waits for pending trace writes before returning. */
 export async function traceScope<T>(ref: DocumentReference, stage: string, fn: () => Promise<T>): Promise<T> {
   const parent = als.getStore();
-  const scope: Scope = { ref, stage, seq: parent?.ref.path === ref.path ? parent.seq : 0, writes: [] };
+  const scope: Scope = { ref, stage, seq: parent?.ref?.path === ref.path ? parent.seq : 0, writes: [] };
   try {
     return await als.run(scope, fn);
   } finally {
     await Promise.allSettled(scope.writes);
-    if (parent && parent.ref.path === ref.path) parent.seq = scope.seq;
+    if (parent && parent.ref?.path === ref.path) parent.seq = scope.seq;
   }
+}
+
+export type CapturedEvent = EventInput & { stage: string };
+
+/**
+ * Runs `fn` with a trace scope that hands every event to `sink` and writes
+ * nothing. The eval runner (scripts/eval.ts) uses it to read each model call's
+ * latency, tokens and raw answer.
+ */
+export async function traceCapture<T>(stage: string, sink: (event: CapturedEvent) => void, fn: () => Promise<T>): Promise<T> {
+  return als.run({ ref: null, sink, stage, seq: 0, writes: [] }, fn);
 }
 
 /** The current stage changes as the pipeline advances. */
@@ -91,10 +104,15 @@ type EventInput = Omit<TraceEntry, "at" | "seq" | "stage"> & { stage?: string };
 export function traceEvent(input: EventInput): void {
   const scope = als.getStore();
   if (!scope) return;
+  if (scope.sink) {
+    scope.sink({ ...input, stage: input.stage ?? scope.stage });
+    return;
+  }
+  const ref = scope.ref!;
   const { detail, ...rest } = input;
   const entry = clean({ ...rest, stage: input.stage ?? scope.stage, at: Timestamp.now(), seq: ++scope.seq });
   if (detail) {
-    scope.detailAllowed ??= scope.ref.get().then((s) => s.get("orgId") === DETAIL_ORG).catch(() => false);
+    scope.detailAllowed ??= ref.get().then((s) => s.get("orgId") === DETAIL_ORG).catch(() => false);
   }
   const withDetail = detail
     ? scope.detailAllowed!.then((ok) =>
@@ -102,9 +120,9 @@ export function traceEvent(input: EventInput): void {
       )
     : Promise.resolve(entry);
   const write = withDetail
-    .then((e) => scope.ref.collection("trace").add(e))
+    .then((e) => ref.collection("trace").add(e))
     .catch((error: unknown) => {
-      logger.warn("trace write failed", { study: scope.ref.id, name: input.name, message: error instanceof Error ? error.message : String(error) });
+      logger.warn("trace write failed", { study: ref.id, name: input.name, message: error instanceof Error ? error.message : String(error) });
     });
   scope.writes.push(write);
 }

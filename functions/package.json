@@ -19,7 +19,8 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "invite": "tsx scripts/invite.ts",
-    "demo-user": "tsx scripts/demo-user.ts"
+    "demo-user": "tsx scripts/demo-user.ts",
+    "eval": "tsx scripts/eval.ts"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0",

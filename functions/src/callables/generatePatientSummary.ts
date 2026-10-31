@@ -55,15 +55,20 @@ export const mockRewriter: Rewriter = async (signed, sentences) => ({
   nextSteps: sentences.map((s) => s),
 });
 
-export const modelRewriter: Rewriter = async (signed, sentences, feedback) =>
-  generateJson({
-    route: "clinical",
-    schema: PatientSummaryRewriteSchema,
-    prompt: patientSummaryFromSignedPrompt(signed, sentences, feedback),
-    step: "summarizing",
-    temperature: 0.3,
-    answerTokens: 1024,
-  });
+/** The model rewriter; the eval runner passes its own `generate` to target the baseline. */
+export const rewriterWith =
+  (generate: typeof generateJson = generateJson): Rewriter =>
+  async (signed, sentences, feedback) =>
+    generate({
+      route: "clinical",
+      schema: PatientSummaryRewriteSchema,
+      prompt: patientSummaryFromSignedPrompt(signed, sentences, feedback),
+      step: "summarizing",
+      temperature: 0.3,
+      answerTokens: 1024,
+    });
+
+export const modelRewriter: Rewriter = rewriterWith();
 
 export async function generatePatientSummaryCore(
   db: Firestore,
@@ -102,28 +107,46 @@ export async function generatePatientSummaryCore(
     source === "sample" ? true : source === "upload" ? false : signature.by ? (await db.collection("users").doc(signature.by).get()).get("simulated") === true : false;
 
   return traceScope(ref, "patient_summary", async () => {
-    const candidates: PatientRewrite[] = [await rewrite(signed, sentences, "")];
-    const first = checkRewrite(candidates[0], sentences, signed.impression);
-    traceEvent({
-      kind: "check",
-      name: "check_patient_summary",
-      args: { attempt: 1, steps: sentences.length },
-      ok: first.ok,
-      result: first.ok ? `pass · grade ${first.grade}` : `retry · ${first.steps.filter((x) => x.added.length).length} step(s) add terms · ${first.bodyViolations.length} condition name(s) · grade ${first.grade}`,
-    });
-    if (!first.ok) candidates.push(await rewrite(signed, sentences, retryFeedback(first)));
-
-    const { summary, flagged } = assemble({ signed, sentences, candidates, signer, simulated, reportHash });
-    traceEvent({
-      kind: "check",
-      name: "map_next_steps",
-      args: { steps: summary.nextSteps.length },
-      ok: true,
-      result: `${summary.nextSteps.length} step(s) mapped to signed sentences · ${flagged} from signed text · grade ${summary.readingGrade}`,
-    });
+    const { summary, flagged, attempts } = await writePatientNote({ signed, sentences, rewrite, signer, simulated, reportHash });
     await save(db, uid, req.studyId, summary);
-    return { steps: summary.nextSteps.length, flagged, readingGrade: summary.readingGrade, attempts: candidates.length };
+    return { steps: summary.nextSteps.length, flagged, readingGrade: summary.readingGrade, attempts };
   });
+}
+
+/**
+ * The patient note from signed text: one rewrite, the checks, one retry with
+ * feedback when they fail, then assembly. No I/O beyond the rewriter, so the
+ * eval runner (scripts/eval.ts) grades exactly what the app produces.
+ */
+export async function writePatientNote(args: {
+  signed: SignedText;
+  sentences: string[];
+  rewrite: Rewriter;
+  signer: string;
+  simulated: boolean;
+  reportHash: string;
+}): Promise<{ summary: PatientSummary; flagged: number; attempts: number; firstCheck: ReturnType<typeof checkRewrite> }> {
+  const { signed, sentences, rewrite, signer, simulated, reportHash } = args;
+  const candidates: PatientRewrite[] = [await rewrite(signed, sentences, "")];
+  const first = checkRewrite(candidates[0], sentences, signed.impression);
+  traceEvent({
+    kind: "check",
+    name: "check_patient_summary",
+    args: { attempt: 1, steps: sentences.length },
+    ok: first.ok,
+    result: first.ok ? `pass · grade ${first.grade}` : `retry · ${first.steps.filter((x) => x.added.length).length} step(s) add terms · ${first.bodyViolations.length} condition name(s) · grade ${first.grade}`,
+  });
+  if (!first.ok) candidates.push(await rewrite(signed, sentences, retryFeedback(first)));
+
+  const { summary, flagged } = assemble({ signed, sentences, candidates, signer, simulated, reportHash });
+  traceEvent({
+    kind: "check",
+    name: "map_next_steps",
+    args: { steps: summary.nextSteps.length },
+    ok: true,
+    result: `${summary.nextSteps.length} step(s) mapped to signed sentences · ${flagged} from signed text · grade ${summary.readingGrade}`,
+  });
+  return { summary, flagged, attempts: candidates.length, firstCheck: first };
 }
 
 /** First summary advances to patient_summary_ready; later ones replace it. */

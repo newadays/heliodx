@@ -1,0 +1,51 @@
+{
+  "split": "held-out",
+  "film": {
+    "id": "nih-test-8",
+    "nihLabel": "Cardiomegaly",
+    "rowIdx": 8,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 64,
+    "sex": "F",
+    "indication": "Chest pain after a fall.",
+    "synthetic": true
+  },
+  "id": "intake-clean-4",
+  "title": "Clean copy of film 4",
+  "family": "intake",
+  "tags": [
+    "Accept",
+    "NIH label: Cardiomegaly"
+  ],
+  "variant": "clean",
+  "expected": {
+    "retake": false,
+    "modality": "xray",
+    "view": "PA",
+    "chest": true
+  },
+  "criteria": [
+    {
+      "id": "no_retake",
+      "label": "Not sent back for a retake",
+      "method": "deterministic"
+    },
+    {
+      "id": "modality",
+      "label": "Recognised as an X-ray",
+      "method": "deterministic"
+    },
+    {
+      "id": "view",
+      "label": "View read as PA",
+      "method": "deterministic"
+    },
+    {
+      "id": "chest",
+      "label": "Both lungs found",
+      "method": "deterministic"
+    }
+  ]
+}

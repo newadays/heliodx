@@ -1,0 +1,38 @@
+{
+  "split": "tuning",
+  "film": {
+    "id": "nih-test-6",
+    "nihLabel": "Pneumothorax",
+    "rowIdx": 6,
+    "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+  },
+  "context": {
+    "age": 73,
+    "sex": "M",
+    "indication": "Pre-operative check.",
+    "synthetic": true
+  },
+  "id": "intake-blur-3",
+  "title": "Blurred copy of film 3",
+  "family": "intake",
+  "tags": [
+    "Retake",
+    "NIH label: Pneumothorax"
+  ],
+  "variant": "blur",
+  "expected": {
+    "retake": true
+  },
+  "criteria": [
+    {
+      "id": "retake",
+      "label": "Sent back for a retake",
+      "method": "deterministic"
+    },
+    {
+      "id": "reason",
+      "label": "Names the blur as the reason",
+      "method": "deterministic"
+    }
+  ]
+}
