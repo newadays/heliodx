@@ -82,6 +82,21 @@ against a schema before it is saved. Patient details never go to a model,
 analytics, crash reports, or logs. See
 [`docs/phi-boundaries.md`](docs/phi-boundaries.md).
 
+## Hardware
+
+Muse Glimmer and SAM 3.1 share one private Cloud Run GPU service in the EU.
+Figures measured on the live service, 29 to 31 October 2026.
+
+| | |
+|---|---|
+| GPU | 1× NVIDIA RTX PRO 6000 (96 GB), 24 vCPU, 80 GiB memory; at most one instance |
+| Muse Glimmer | 30B dense, FP8 (per tensor), served by vLLM 0.32.0 (`vllm/vllm-openai:v0.32.0`) |
+| SAM 3.1 | `facebookresearch/sam3@f1647e8`, checkpoint `sam3.1_multiplex.pt`, on the same GPU |
+| Cold start | 5.0 to 5.8 min from a new instance to both models loaded (SAM is ready in about 30 s; the rest is Glimmer) |
+| Warm, per call (median) | Quality check 2.4 s · study type 1.9 s · findings 21.4 s · report 11.5 s · patient note 2.4 s · one SAM segmentation 1.2 s |
+| Warm, upload to draft | Median 29 s (23 to 86 s over 9 studies) |
+| Scaling | Scales to zero when idle. One instance is kept warm for judging week (4 to 9 November) with `gpu/warm.sh on`, and turned off after |
+
 ## Run it yourself
 
 You need Node 22 and Java 21 or newer for the Firebase emulators. No keys
