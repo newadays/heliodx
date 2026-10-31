@@ -36,7 +36,7 @@ building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/
 | Web app (React + Vite) | Working: upload, review, sign, patient note PDF, agent console |
 | Backend pipeline (Cloud Functions) | Working end to end on Muse Glimmer and SAM 3.1 |
 | Muse Wonder coordination | Completed |
-| Accuracy eval on public chest X-rays | Built: 72 tasks on NIH ChestX-ray14, HelioDX vs MedGemma 27B on the same GPU ([`eval/README.md`](eval/README.md)). Results go on the app's public `/evals` page once a run is published |
+| Accuracy eval on public chest X-rays | Built: 70 tasks on NIH ChestX-ray14, HelioDX vs MedGemma 27B on the same GPU ([`eval/README.md`](eval/README.md)). Results go on the app's public `/evals` page once a run is published |
 
 ## Which model does what
 
