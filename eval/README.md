@@ -23,6 +23,7 @@ the share of its criteria passed.
 | Triage | 24 | The reading lane against the NIH label (pneumothorax → critical; cardiomegaly, effusion, mass, consolidation → urgent; no finding must stay routine), the model answered, and every cited measurement exists. |
 | Prep | 24 | What the model proposed before the app's filters: no observation names a condition, none lacks evidence, the impression survives the filter, and the observations flag attention exactly when the label is abnormal. |
 | Patient note | 8 | The rewrite of a signed report: one step per signed sentence, nothing added (number, timeframe, dose, medicine, test or urgency word), no condition the impression does not assert, reading grade 8 or lower, all on the first try. |
+| TB screening | 120 | Whether the agents surface a TB-suggestive pattern for the clinician on public TB screening films, and stay quiet on normal ones. See [TB screening](#tb-screening). |
 
 Limits, stated plainly:
 
@@ -48,6 +49,115 @@ Limits, stated plainly:
 - The heart-size floor applies only to PA films, and the model decides the
   view. So the "floor from measurements" triage column depends on the model
   even though both systems get identical measurements.
+
+## TB screening
+
+Card E16. Film-level TB labels from two public screening sets, run through
+intake, triage and prep exactly like the Prep family, then graded on the
+TB-suggestive pattern (B26) and the zone outlines (B25).
+
+**Sets.** Shenzhen (Shenzhen No. 3 People's Hospital: 336 TB, 326 normal,
+about 3000 px) and Montgomery County (Montgomery County TB screening
+programme: 58 TB, 80 normal, 4020 × 4892 px), both from the U.S. National
+Library of Medicine. Each film has a clinical reading (sex, age and a short
+text such as "right upper PTB with fibrous changes" or "inactive TB scars
+LUL"); 68 Shenzhen and 55 Montgomery TB films also have consensus ROI boxes.
+
+**Sample.** Fixed (`pick` in `data/fetch_tb_sets.py` and
+`functions/src/eval/tasks.ts`: the ids with the smallest
+sha256 of seed and id, so the same ids every time):
+
+| Split | TB | Normal | Shenzhen | Montgomery |
+|---|---|---|---|---|
+| Held-out | 40 | 40 | 30 + 30 | 10 + 10 |
+| Tuning | 20 | 20 | 15 + 15 | 5 + 5 |
+
+21 of the 60 sampled TB films have ROI boxes. Every task has the same
+synthetic indication ("Adult with a cough for several weeks."); age and sex
+come from the dataset. Titles are "TB screening · film N" and task numbers
+are in a seeded order, so neither gives the label away.
+
+**Criteria** (all code, `gradeTb` in `functions/src/eval/grade.ts`):
+
+| Criterion | Films | Passes when |
+|---|---|---|
+| `tb_flag` | all | The TB pattern is raised (an abnormal observation tagged `tb_suggestive`, or a kept consideration naming TB) on TB films, and not raised on normal films. |
+| `priority_floor` | TB | The lane after the B26 lift (a tagged pattern raises routine to urgent) is urgent or critical. |
+| `attention` | all | TB films: at least one observation is attention (`polarityOf`: abnormal, or cites a crossed threshold). Normal films: none is. |
+| `no_leak` | all | The model's titles, descriptions, findings paragraph, impression and recommendation, before the app's filters, never assert TB. Considerations may, by design. |
+| `outline` | all | Every abnormal observation has at least one zone outline. |
+| `zone_match` | TB with a read side or an ROI (57 of 60) | An abnormal outline is on a side the reading names (and its zone, when the reading names one), or its box overlaps an ROI box. |
+| `read_gate` | TB | `readRequirement` asks for a radiologist read (critical, or pattern of concern) with every observation accepted. |
+
+Sensitivity is TB films whose `tb_flag` passed over TB films; specificity is
+normal films whose `tb_flag` passed over normal films. Both are reported with
+95% Wilson intervals over the films that ran without error; the run record
+also carries the floor, zone-match and no-leak rates (`tbSummary`).
+
+Limits, stated plainly:
+
+- These are screening sets from two sites, not the clinic's own population,
+  equipment or TB prevalence. A sensitivity here does not transfer.
+- The language model is a general model, not a trained TB detector. The
+  number says whether the agents surface the pattern for a clinician to
+  consider, not how well a film is diagnosed.
+- Labels are film-level (TB yes/no). The zone check is coarse: thirds of the
+  chest from the lung masks, matched to a side and zone parsed from a free-text
+  reading (Montgomery shorthand such as RUL, LUL, rt, lt is spelled out first),
+  or any overlap with an ROI box. No lesion-level accuracy is claimed.
+- ROI frame: the consensus ROI files give boxes in a 1024 × 1024 display
+  frame, whatever the film's aspect. Against the pixel-level Shenzhen
+  annotations (Yang et al., Data 2022) on the 67 films that have both, the
+  ROI union scaled by width/1024 and height/1024 centres on the polygon union
+  (median ratio 1.01 in x, 0.99 in y; an aspect-preserving frame is off by
+  15% in y on tall films). Montgomery has no pixel annotations, so the same
+  frame is assumed there.
+- Many readings name no side ("STB", "inactive TB scars"); those films are
+  matched on ROI boxes only, or not at all (3 of 60). Some readings name
+  several places; `parseLocation` keeps every side and one zone (upper over
+  middle over lower).
+
+**Data and terms.** Nothing from these sets is in this repository. Each
+user fetches the images, readings and ROI boxes from the NLM and builds
+`eval/tasks/tb` locally (gitignored). The public `/evals` page shows only
+the aggregate numbers (sensitivity, specificity and rates); per-film TB
+results stay local. The NLM readme for each set states (verbatim):
+
+> Shenzhen (`NLM-ChinaCXRSet-ReadMe.docx`): "Please do not share the dataset
+> outside of your research group/ organization, but forward new dataset
+> requests to us. Please inform us if you find errors or inconsistencies in
+> the data. It is requested that publications resulting from the use of this
+> data attribute the source (National Library of Medicine, National Institutes
+> of Health, Bethesda, MD, USA and Shenzhen No.3 People's Hospital, Guangdong
+> Medical College, Shenzhen, China) and cite the following publications:"
+
+> Montgomery (`NLM-MontgomeryCXRSet-ReadMe.pdf`): "(a) Please do not share the
+> data set outside of your research group/organization, but forward new data
+> set requests to us. (b) Please inform us if you find errors or
+> inconsistencies in the data. (c) It is requested that publications
+> resulting from the use of this data attribute the source (National Library
+> of Medicine, National Institutes of Health, Bethesda, MD, USA) and cite the
+> following publications:"
+
+Cite: Jaeger S, Candemir S, Antani S, Wáng YX, Lu PX, Thoma G. *Two public
+chest X-ray datasets for computer-aided screening of pulmonary diseases.*
+Quant Imaging Med Surg 2014;4(6):475–477. Candemir S, Jaeger S, Palaniappan
+K, et al. *Lung segmentation in chest radiographs using anatomical atlases
+with nonrigid registration.* IEEE Trans Med Imaging 2014;33(2):577–590.
+Jaeger S, Karargyris A, Candemir S, et al. *Automatic tuberculosis screening
+using chest radiographs.* IEEE Trans Med Imaging 2014;33(2):233–245. Data
+courtesy of the U.S. National Library of Medicine, Shenzhen No. 3 People's
+Hospital, and the Montgomery County Department of Health and Human Services.
+
+```sh
+python3 -I data/fetch_tb_sets.py --eval           # 120 PNGs (about 620 MB) → data/out/eval/tb (not committed)
+cd functions
+npm run eval -- build-tasks --tb                  # eval/tasks/tb (local, gitignored)
+npm run eval -- run --system helio --family tb --mock --limit 4
+```
+
+Under `--mock` the fixture model never raises the pattern, so TB films fail
+`tb_flag` by design; the mock checks the plumbing, not the model.
 
 ## Run it
 

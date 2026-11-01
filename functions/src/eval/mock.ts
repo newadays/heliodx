@@ -35,11 +35,39 @@ const ANSWERS: Record<string, unknown> = {
   },
 };
 
-export const mockGenerate = (async (input: { step: string }) => {
-  const answer = ANSWERS[input.step];
-  if (!answer) throw new Error(`no mock answer for step ${input.step}`);
-  return structuredClone(answer);
-}) as unknown as typeof generateJson;
+/** E16: a prep answer that raises the TB-suggestive pattern on the right upper zone (the patient's right is the image's left). */
+export const MOCK_TB_DETECTING = {
+  proposed: [
+    {
+      title: "Patchy opacity at the right apex",
+      description: "Patchy and nodular opacity in the right upper zone with some volume loss.",
+      evidence: ["lung_area_asymmetry"],
+      region: "none",
+      abnormal: true,
+      location: "right lung upper zone",
+      pattern: "tb_suggestive",
+    },
+    { title: "Heart size within limits", description: "The cardiothoracic ratio is within its threshold.", evidence: ["cardiothoracic_ratio"], region: "none", abnormal: false, location: "heart", pattern: "none" },
+  ],
+  clinicianSummary: {
+    findings: "Patchy opacity at the right apex. Heart size within limits.",
+    impression: ["Right upper zone opacity."],
+    recommendation: "Correlate clinically.",
+    highlights: [],
+    considerations: ["Pattern suggestive of pulmonary tuberculosis. Consider sputum GeneXpert or AFB."],
+  },
+};
+
+/** The fixture model with some steps answered differently (e.g. `{ detecting: MOCK_TB_DETECTING }`). */
+export function mockGenerateWith(overrides: Record<string, unknown>): typeof generateJson {
+  return (async (input: { step: string }) => {
+    const answer = overrides[input.step] ?? ANSWERS[input.step];
+    if (!answer) throw new Error(`no mock answer for step ${input.step}`);
+    return structuredClone(answer);
+  }) as unknown as typeof generateJson;
+}
+
+export const mockGenerate = mockGenerateWith({});
 
 /** Run-length mask of a rectangle (x0..x1, y0..y1 inclusive) on a w×h grid, starting with a false run. */
 function rectRle(w: number, h: number, x0: number, x1: number, y0: number, y1: number): number[] {

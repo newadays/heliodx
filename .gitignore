@@ -58,3 +58,5 @@ functions/.e2e-*.ts
 data/out/
 
 .firebaserc
+# E16: the NLM TB sets may not be shared outside the research group; build locally (data/fetch_tb_sets.py, eval build-tasks --tb).
+eval/tasks/tb/
