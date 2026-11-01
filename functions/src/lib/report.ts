@@ -2,7 +2,7 @@
  * B15 · Sign gates and the report hash. Pure: no Firebase.
  *
  * A study may be signed only when the clinician has decided every finding,
- * any radiologist read the gate requires (B14) is signed, the impression and recommendation exist, the
+ * any radiologist read the gate requires (B14) is signed (or the clinician chose to sign without it), the impression and recommendation exist, the
  * summary matches the review decisions (or the clinician wrote it), and the
  * impression is the clinician's own: edited, or explicitly confirmed.
  */
@@ -42,12 +42,13 @@ export type SignNeed =
   | "refresh_summary"
   | "confirm_impression";
 
-export function signNeeds(study: SignableStudy, opts: { confirmImpression?: boolean } = {}): SignNeed[] {
+export function signNeeds(study: SignableStudy, opts: { confirmImpression?: boolean; bypassRead?: boolean } = {}): SignNeed[] {
   const needs: SignNeed[] = [];
   const findings = study.findings ?? [];
   if (findings.some((f) => f.status === "pending")) needs.push("decide_every_finding");
   // B14: the gate rule (radiology/gate.ts) — a required read must exist and be signed.
-  const read = readNeed(study);
+  // The read is a strong recommendation, never a blocker: the clinician may sign without it (recorded at signing).
+  const read = opts.bypassRead ? null : readNeed(study);
   if (read === "request") needs.push("request_radiologist_read");
   if (read === "close") needs.push("close_radiologist_read");
   const s = study.clinicianSummary;

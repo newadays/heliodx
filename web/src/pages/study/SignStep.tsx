@@ -20,8 +20,8 @@ import { ReadBanner } from "./ReadBanner";
 
 const NEED_TEXT: Record<SignNeed, string> = {
   decide_every_finding: "Decide every finding first (accept, edit or reject).",
-  request_radiologist_read: "A radiologist read is required. Request one above.",
-  close_radiologist_read: "Wait for the radiologist read to be signed.",
+  request_radiologist_read: "A radiologist read is recommended. Request one above, or tick “Sign without the radiologist read” below.",
+  close_radiologist_read: "The radiologist read is still open. Wait for it, or tick “Sign without the radiologist read” below.",
   write_impression: "Write an impression.",
   write_recommendation: "Write a recommendation.",
   refresh_summary: "The report is still updating from your latest decisions.",
@@ -80,7 +80,11 @@ export function SignPanel({
   const [signing, setSigning] = useState(false);
   const [needs, setNeeds] = useState<SignNeed[]>([]);
   // B14: an open read blocks signing (the server refuses too); the banner says who has it.
-  const readOpen = !signed && readOf(study, 0).state === "open";
+  const readView = readOf(study, 0);
+  const readOpen = !signed && readView.state === "open";
+  // The read is recommended, never a blocker: the clinician may sign without it, and that is recorded.
+  const readPending = !signed && (readOpen || readView.need === "request");
+  const [bypassRead, setBypassRead] = useState(false);
   const readStatus = study.radiologistRead?.status ?? null;
   useEffect(() => {
     // The read was requested or signed since the refusal: that need is stale.
@@ -169,7 +173,7 @@ export function SignPanel({
     setSigning(true);
     setNeeds([]);
     try {
-      const out = await signStudy(study.id, true);
+      const out = await signStudy(study.id, true, readPending && bypassRead);
       if (!out.ok) {
         setNeeds(out.needs);
         // Refused only because the report is behind the decisions: redraft now
@@ -184,7 +188,7 @@ export function SignPanel({
     } finally {
       setSigning(false);
     }
-  }, [attested, signing, signed, study.id, toast, onSigned, update]);
+  }, [attested, signing, signed, study.id, toast, onSigned, update, readPending, bypassRead]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -475,19 +479,27 @@ export function SignPanel({
               <input type="checkbox" checked={attested} onChange={(e) => setAttested(e.target.checked)} />
               I have reviewed the image and the findings. The impression and recommendation are my own.
             </label>
+            {readPending ? (
+              <label className="sg-attest">
+                <input type="checkbox" checked={bypassRead} onChange={(e) => setBypassRead(e.target.checked)} />
+                Sign without the radiologist read{readView.reason ? ` (recommended: ${readView.reason})` : ""}. This is recorded with your signature.
+              </label>
+            ) : null}
             <div className="sg-sign">
               <div className="actions">
                 <button type="button" className="btn btn-ghost sg-back" onClick={onBack}>
                   Back to findings
                 </button>
-                <button type="button" className="btn btn-primary" disabled={!attested || signing || editing || readOpen} aria-describedby="sg-sign-hint" onClick={() => void sign()}>
+                <button type="button" className="btn btn-primary" disabled={!attested || signing || editing || (readPending && !bypassRead)} aria-describedby="sg-sign-hint" onClick={() => void sign()}>
                   {signing ? <span className="spinner" aria-hidden="true" /> : <Icon name="lock" />}
                   {signing ? "Signing…" : `Sign as ${name}`}
                 </button>
               </div>
               <span id="sg-sign-hint" className="muted sg-hint">
-                {readOpen
-                  ? "Signing waits for the radiologist read."
+                {readPending && !bypassRead
+                  ? readOpen
+                    ? "Waiting for the radiologist read, or tick “Sign without the radiologist read”."
+                    : "Request a radiologist read, or tick “Sign without the radiologist read”."
                   : attested
                   ? "Signing locks the report and records the time and a hash. The patient note is written from the signed version."
                   : "Tick the confirmation to sign."}

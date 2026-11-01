@@ -30,6 +30,14 @@ describe("read gate", () => {
     expect(signNeeds({ ...ready, priority: "critical", radiologistRead: { required: true, status: "assigned" } })).toEqual(["close_radiologist_read"]);
     expect(signNeeds({ ...ready, priority: "critical", radiologistRead: { required: true, status: "signed" } })).toEqual([]);
   });
+
+  it("never blocks: the clinician may sign without the read, required or still open", () => {
+    const ready = { findings: [], clinicianSummary: { impression: ["x"], recommendation: "y", editedByClinician: true } };
+    expect(signNeeds({ ...ready, priority: "critical" }, { bypassRead: true })).toEqual([]);
+    expect(signNeeds({ ...ready, priority: "critical", radiologistRead: { required: true, status: "assigned" } }, { bypassRead: true })).toEqual([]);
+    // The other sign rules still apply.
+    expect(signNeeds({ findings: [], clinicianSummary: { impression: [], recommendation: "y", editedByClinician: true }, priority: "critical" }, { bypassRead: true })).toEqual(["write_impression"]);
+  });
 });
 
 describe("simulated readers", () => {
