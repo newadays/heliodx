@@ -15,6 +15,7 @@ import { logger } from "firebase-functions/v2";
 
 import { findingColor } from "../lib/colors";
 import { parseLocation } from "../lib/location";
+import { traceEvent } from "../lib/trace";
 import { unionBox, zoneOutlines, type FindingOutline } from "../lib/zone";
 import { confidenceFor, strengthOf, thresholdFor, type Strength } from "../lib/strength";
 import { assertsCondition, stripConditionSentences } from "../lib/vocabulary";
@@ -136,6 +137,18 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
     const outlines = p.abnormal ? zoneOutlines(parseLocation(location), input.masks, input.heartBox) : [];
     const zoneBox = unionBox(outlines);
     const index = kept.length;
+    if (p.abnormal) {
+      // One row per abnormal observation: where it was drawn, or why not.
+      traceEvent({
+        kind: "check",
+        name: "locate_zone",
+        args: { finding: `f${index + 1}`, location: location.slice(0, 40) },
+        ok: outlines.length > 0,
+        result: outlines.length
+          ? outlines.map((o) => (o.kind === "heart" ? "heart region" : `${o.side} lung${o.zone ? ` ${o.zone} zone` : ""}`)).join(" and ") + " · zone outline"
+          : "location not readable · cited region kept",
+      });
+    }
     kept.push({
       modelIndex,
       regionId,
