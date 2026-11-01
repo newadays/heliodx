@@ -71,6 +71,12 @@ export const FindingsSchema = z.object({
         }),
       )
       .max(6),
+    // B26: for the clinician only; kept in code only when a finding carries a pattern (lib/patterns.ts).
+    considerations: z
+      .array(z.string().max(200))
+      .max(2)
+      .default([])
+      .describe("For the clinician only, and only when an observation was tagged with a pattern: may name the condition the pattern suggests and the test that would confirm it. Otherwise empty."),
   }),
 });
 export type FindingsDraft = z.infer<typeof FindingsSchema>;
@@ -95,6 +101,8 @@ export const PrepSchema = z.object({
           .string()
           .max(40)
           .describe("Where: 'right lung upper zone', 'left lung lower zone', 'both lungs upper zones', 'heart', or 'none'."),
+        // B26: a string read in code (lib/patterns.ts patternOf); no enum.
+        pattern: z.string().max(40).describe("'tb_suggestive' when an abnormal observation fits the TB-suggestive cues, else 'none'."),
       }),
     )
     .min(1)

@@ -70,6 +70,8 @@ export async function signStudyCore(
           reportHash: hash,
           reviewHash: reviewHash(study.findings ?? []),
           impressionConfirmed: !study.clinicianSummary?.editedByClinician,
+          // B26: how many AI considerations the clinician added to the impression (a count, never the text).
+          considerationsAdopted: ((study.clinicianSummary as { considerationsAdopted?: string[] } | null | undefined)?.considerationsAdopted ?? []).length,
         },
       };
     },

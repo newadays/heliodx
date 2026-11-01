@@ -63,7 +63,7 @@ const summary = (n: number) => ({
   highlights: Array.from({ length: n }, (_, i) => ({ findingIndex: i, quote: i === 0 ? "Heart size within normal limits" : "Lung fields symmetric" })),
 });
 
-async function prep(proposed: unknown[]) {
+async function prep(proposed: unknown[], considerations: string[] = []) {
   const image = await sharp(Buffer.alloc(W * W, 120), { raw: { width: W, height: W, channels: 1 } }).jpeg().toBuffer();
   const saveOverlay = vi.fn(async (_b: string, prefix: string, r: MaskRecord) => `${prefix}/overlays/${r.maskId}.png`);
   const out = await runPrep(
@@ -75,8 +75,8 @@ async function prep(proposed: unknown[]) {
     {
       generate: vi.fn(async () => ({
         // B25 fields default to a pertinent normal.
-        proposed: proposed.map((p) => ({ abnormal: false, location: "none", ...(p as object) })),
-        clinicianSummary: summary(proposed.length),
+        proposed: proposed.map((p) => ({ abnormal: false, location: "none", pattern: "none", ...(p as object) })),
+        clinicianSummary: { ...summary(proposed.length), considerations },
       })) as never,
       saveOverlay,
     },
@@ -154,6 +154,32 @@ describe("runPrep", () => {
     expect(out.findings[0].outlines).toEqual([]);
     expect(out.findings[0].region?.x).toBe(0.55);
     expect(out.findings[0].overlayPath).toBe("o/left-lung.png");
+  });
+
+  it("B26: tags an abnormal TB-suggestive observation, keeps a TB consideration, drops a TB title and other conditions", async () => {
+    const tb = "Pattern suggestive of pulmonary tuberculosis. Consider sputum GeneXpert or AFB.";
+    const { out } = await prep(
+      [
+        { title: "Patchy opacity in the right upper zone", description: "Right apex.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right upper zone", pattern: "tb_suggestive" },
+        { title: "Tuberculosis in the right apex", description: "Cavity.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right upper zone", pattern: "tb_suggestive" },
+        { title: "Heart size within normal limits", description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none", pattern: "tb_suggestive" },
+      ],
+      [tb, "Could also be pneumonia."],
+    );
+    expect(out.findings.map((f) => [f.title, f.pattern])).toEqual([
+      ["Patchy opacity in the right upper zone", "tb_suggestive"],
+      ["Heart size within normal limits", "none"], // a pattern counts only on an abnormal observation
+    ]);
+    expect(out.dropped.conditions).toBe(1);
+    expect(out.clinicianSummary.considerations).toEqual([tb]);
+  });
+
+  it("B26: no tagged finding means no consideration", async () => {
+    const { out } = await prep(
+      [{ title: "Heart size within normal limits", description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none" }],
+      ["Pattern suggestive of pulmonary tuberculosis."],
+    );
+    expect(out.clinicianSummary.considerations).toEqual([]);
   });
 
   it("fails visibly when nothing survives, rather than returning an empty draft", async () => {

@@ -15,6 +15,7 @@ import { logger } from "firebase-functions/v2";
 
 import { findingColor } from "../lib/colors";
 import { parseLocation } from "../lib/location";
+import { hasTbPattern, keepConsiderations, patternOf } from "../lib/patterns";
 import { traceEvent } from "../lib/trace";
 import { unionBox, zoneOutlines, type FindingOutline } from "../lib/zone";
 import { confidenceFor, strengthOf, thresholdFor, type Strength } from "../lib/strength";
@@ -48,6 +49,8 @@ export interface EvidencedFinding extends DraftFinding {
   abnormal: boolean;
   location: string | null;
   outlines: FindingOutline[];
+  /** B26: only an abnormal observation carries a pattern. */
+  pattern: "tb_suggestive" | "none";
 }
 
 export interface PrepInput {
@@ -168,6 +171,7 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
         abnormal: p.abnormal,
         location: location && location.toLowerCase() !== "none" ? location : null,
         outlines,
+        pattern: p.abnormal && patternOf(p.pattern) === "tb_suggestive" ? "tb_suggestive" : "none",
       },
     });
   }
@@ -207,6 +211,8 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
     ),
     generatedFromReviewHash: null,
     editedByClinician: false,
+    // B26: only with a tagged finding, and naming no condition but the pattern's own.
+    considerations: keepConsiderations(draft.clinicianSummary.considerations, hasTbPattern(findings)),
   };
   if (!clinicianSummary.impression.length) clinicianSummary.impression = ["See the observations above."];
   if (dropped.conditions || dropped.noEvidence) logger.info("prep: observations dropped", { step: input.step, ...dropped });
