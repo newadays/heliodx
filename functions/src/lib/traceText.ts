@@ -12,6 +12,7 @@ const NAMES: Record<MeasurementId, { tool: string; label: string; threshold: num
   cp_blunting_left: { tool: "measure_angle", label: "left costophrenic blunting", threshold: THRESHOLDS.costophrenicBlunting.flag },
   cp_blunting_right: { tool: "measure_angle", label: "right costophrenic blunting", threshold: THRESHOLDS.costophrenicBlunting.flag },
   density_ratio: { tool: "compare_density", label: "L/R density ratio", threshold: THRESHOLDS.densityRatio.flag },
+  lung_outline_ratio: { tool: "check_outline", label: "lung outline height ratio", threshold: THRESHOLDS.lungOutlineRatio.critical },
 };
 
 export const round = (n: number, d = 2): number => Math.round(n * 10 ** d) / 10 ** d;

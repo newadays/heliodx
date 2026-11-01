@@ -79,6 +79,8 @@ export interface StudyTriage {
   flags: { measurementId: string; level: "critical" | "urgent" | "flag"; value: number; threshold: number }[];
   /** Region between the lungs used for the heart width, [x0, y0, x1, y1] 0-1. */
   heartBox: [number, number, number, number] | null;
+  /** B28: lungs whose SAM outline is too short to measure from; their measurements were skipped. */
+  partialLungs?: ("left" | "right")[];
 }
 
 export interface StudySignature {

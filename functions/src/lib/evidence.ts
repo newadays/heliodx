@@ -21,7 +21,7 @@ export type Polarity = "normal" | "attention";
 const r2 = (n: number): string => String(Math.round(n * 100) / 100);
 const pct = (n: number): string => `${Math.round(n * 1000) / 10}%`;
 
-const KNOWN = new Set<string>(["cardiothoracic_ratio", "lung_area_asymmetry", "cp_blunting_left", "cp_blunting_right", "density_ratio"]);
+const KNOWN = new Set<string>(["cardiothoracic_ratio", "lung_area_asymmetry", "cp_blunting_left", "cp_blunting_right", "density_ratio", "lung_outline_ratio"]);
 
 function part(id: MeasurementId, value: number): string {
   const limit = thresholdFor(id);
@@ -36,6 +36,8 @@ function part(id: MeasurementId, value: number): string {
       return `Left blunting ${r2(value)} · limit ${r2(limit)}`;
     case "cp_blunting_right":
       return `Right blunting ${r2(value)} · limit ${r2(limit)}`;
+    case "lung_outline_ratio":
+      return `Lung outline ${pct(value)} of the other's height · limit ${pct(limit)}`;
   }
 }
 

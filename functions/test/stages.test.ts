@@ -110,11 +110,11 @@ const masks = [rec("left lung", "left-lung"), rec("right lung", "right-lung")];
 const shapes: Record<string, Uint8Array> = { "left-lung": rect(60, 89, 10, 89), "right-lung": rect(10, 39, 10, 89) };
 const smallLeft: Record<string, Uint8Array> = { "left-lung": rect(60, 89, 10, 45), "right-lung": rect(10, 39, 10, 89) };
 
-async function triage(opts: { generate: unknown; shapes?: Record<string, Uint8Array>; samError?: string | null; chest?: boolean }) {
+async function triage(opts: { generate: unknown; shapes?: Record<string, Uint8Array>; samError?: string | null; chest?: boolean; masks?: MaskRecord[] }) {
   const img = await sharp(Buffer.alloc(W * W, 120), { raw: { width: W, height: W, channels: 1 } }).jpeg().toBuffer();
   return runTriage(
     {
-      image: img, masks, chest: opts.chest ?? true, samError: opts.samError ?? null, studyType: "Chest X-ray (PA)", view: "PA",
+      image: img, masks: opts.masks ?? masks, chest: opts.chest ?? true, samError: opts.samError ?? null, studyType: "Chest X-ray (PA)", view: "PA",
       bucket: "b", studyPrefix: "studies/o/s", step: "classifying",
     },
     {
@@ -160,6 +160,21 @@ describe("runTriage", () => {
     await expect(
       triage({ generate: vi.fn(async () => { throw new PipelineError("model_unavailable", "down", "classifying"); }) }),
     ).rejects.toMatchObject({ code: "model_unavailable" });
+  });
+
+  it("B28: a partial lung outline replaces area, density, CTR and that side's angle with the outline ratio, still critical", async () => {
+    // Right lung box only half the left's height (U-SGF4's shape).
+    const partial = [{ ...rec("left lung", "left-lung"), box: [0.6, 0.1, 0.9, 0.9] as MaskRecord["box"] }, { ...rec("right lung", "right-lung"), box: [0.1, 0.5, 0.4, 0.9] as MaskRecord["box"] }];
+    const generate = vi.fn(async () => triageDraft());
+    const out = await triage({ generate, masks: partial, shapes: smallLeft });
+    expect(out.partialLungs).toEqual(["right"]);
+    expect(out.measurements.map((m) => m.id).sort()).toEqual(["cp_blunting_left", "lung_outline_ratio"]);
+    expect(out.measurements.find((m) => m.id === "lung_outline_ratio")?.value).toBe(0.5);
+    expect(out.flags.map((f) => [f.measurementId, f.level])).toEqual([["lung_outline_ratio", "critical"]]);
+    expect(out.floor).toBe("critical");
+    expect(out.heartBox).toBeNull();
+    expect(out.confidence).toBe("low");
+    expect(String((generate.mock.calls[0] as unknown[])[0] && ((generate.mock.calls[0] as unknown[])[0] as { prompt: string }).prompt)).toMatch(/right lung could not be fully outlined/);
   });
 
   it("marks the draft degraded with low confidence when SAM failed at intake", async () => {

@@ -24,6 +24,8 @@ export function thresholdFor(id: MeasurementId): number {
       return THRESHOLDS.costophrenicBlunting.flag;
     case "density_ratio":
       return THRESHOLDS.densityRatio.flag;
+    case "lung_outline_ratio":
+      return THRESHOLDS.lungOutlineRatio.critical;
   }
 }
 

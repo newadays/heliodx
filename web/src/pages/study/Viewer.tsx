@@ -13,6 +13,7 @@ import { useToast } from "~/components/Toast";
 import { deleteUpload, downloadDeidentified } from "~/data/actions";
 import { useStorageUrl } from "~/data/hooks";
 import { caseIdOf, isSigned, patientOf, studyLabel, type FindingView } from "~/data/model";
+import { partialNote } from "@/functions/src/lib/maskGuard";
 
 export type ViewerMode = "analyzing" | "review" | "sign";
 
@@ -162,6 +163,9 @@ export function Viewer({
             : null}
         </div>
       </div>
+      {mode !== "analyzing" && partialNote(study.triage?.partialLungs ?? []) ? (
+        <p className="viewer__note">{partialNote(study.triage?.partialLungs ?? [])}</p>
+      ) : null}
       <div className="viewer__status">{status}</div>
     </section>
   );

@@ -136,6 +136,7 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
         flags: flagged,
         rationale: out.rationale,
         measurements: triage.measurements.map((m) => ({ id: m.id, value: m.value })),
+        partialLungs: triage.partialLungs,
       },
     };
   }
@@ -151,6 +152,7 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
       flags: triage.flags,
       heartBox: triage.heartBox,
       overlays: triage.overlays,
+      partialLungs: triage.partialLungs,
       step: "detecting",
     },
     { generate: deps.generate, saveOverlay },
@@ -179,6 +181,7 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
       flagged,
       dropped: out.dropped,
       proposed: out.proposed,
+      partialLungs: triage.partialLungs,
       summary: { findings: prep.clinicianSummary.findings, impression: out.impression, recommendation: out.recommendation, studyType: intake.studyType },
     },
   };
