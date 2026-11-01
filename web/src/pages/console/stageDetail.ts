@@ -1,7 +1,7 @@
 /** Card W10 · The three columns of an expanded console row: inputs, output, measurements and overlays. */
 import type { Study, TraceEntry } from "@/types/study";
 import type { StageRow } from "~/data/timeline";
-import { findingsOf, indicationOf, studyLabel, verdict } from "~/data/model";
+import { findingsOf, indicationOf, studyLabel, verdict, type FindingView } from "~/data/model";
 
 export interface StageDetail {
   inputs: string[];
@@ -54,6 +54,8 @@ export function stageDetail(row: StageRow, study: Study): StageDetail {
           `Overlays: ${(study.overlays ?? []).length ? "CTR lines" : "none"}${Object.keys((study.pipeline as { overlays?: Record<string, string> })?.overlays ?? {}).length ? ", lung masks" : ""}`,
           `Confidence: ${Object.entries(bands).map(([b, n]) => `${n} ${b}`).join(" · ") || "—"}`,
           verdict(findings).text,
+          // B25/B26: the abnormal observations, where they were drawn, and the pattern tag.
+          ...abnormalLines(findings),
         ],
         overlays,
       };
@@ -121,4 +123,15 @@ export function stageDetail(row: StageRow, study: Study): StageDetail {
     default:
       return { inputs: [], output: { title: "Output", lines: [] }, measurements: [], overlays };
   }
+}
+
+/** "2 abnormal · TB-suggestive pattern", then "1 · right lung upper zone (zone)" per outline. */
+function abnormalLines(findings: FindingView[]): string[] {
+  const abnormal = findings.filter((f) => f.abnormal);
+  if (!abnormal.length) return [];
+  const tagged = abnormal.some((f) => f.patternLabel);
+  return [
+    `${abnormal.length} abnormal${tagged ? " · TB-suggestive pattern" : ""}`,
+    ...abnormal.flatMap((f) => f.outlines.map((o) => `${f.n} · ${o.side ? `${o.side} lung${o.zone ? ` ${o.zone} zone` : ""}` : "heart region"} (${o.kind})`)),
+  ];
 }

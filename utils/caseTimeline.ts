@@ -122,7 +122,10 @@ function lineFor(def: StageDef, study: Study, trace: TraceEntry[]): string {
       const obs = (study.findings ?? []).length;
       const meas = (study.measurements ?? []).length;
       const overlays = trace.filter((t) => t.name === "render_overlay").length || Object.keys((study.pipeline as { overlays?: Record<string, string> })?.overlays ?? {}).length;
-      return `Draft ready: ${obs} proposed observation${obs === 1 ? "" : "s"}, ${meas} measurement${meas === 1 ? "" : "s"}, ${overlays} overlay${overlays === 1 ? "" : "s"}.`;
+      const abnormal = (study.findings ?? []).filter((f) => f.abnormal === true);
+      const tb = abnormal.some((f) => f.pattern === "tb_suggestive") ? " · TB-suggestive" : "";
+      const ab = abnormal.length ? `, ${abnormal.length} abnormal${tb}` : "";
+      return `Draft ready: ${obs} proposed observation${obs === 1 ? "" : "s"}${ab}, ${meas} measurement${meas === 1 ? "" : "s"}, ${overlays} overlay${overlays === 1 ? "" : "s"}.`;
     }
     case "signed": {
       const f = study.findings ?? [];

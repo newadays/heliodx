@@ -12,6 +12,21 @@
 .film__placeholder{position:absolute;inset:0;background:#05080B}
 .viewer__status{min-height:40px;display:flex;align-items:center;gap:16px;padding:6px 16px;border-top:1px solid var(--hx-viewer-line);font-size:12.5px;color:var(--hx-viewer-muted);flex-wrap:wrap}
 .viewer__status .hl{color:var(--hx-viewer-label)}
+.outlines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1}
+.outlines ellipse,.outlines line{fill:none}
+.outlines__halo{stroke:var(--hx-ink);stroke-width:4;opacity:.55}
+.outlines__zone,.outlines__line{stroke:#FFFFFF;stroke-width:2;stroke-dasharray:6 4}
+.outlines .focus .outlines__zone,.outlines .focus .outlines__line{stroke:var(--hx-red);stroke-width:3}
+.outlines .dim{opacity:.7}
+.outlines.is-inverted .outlines__zone,.outlines.is-inverted .outlines__line{stroke:var(--hx-ink)}
+.outlines.is-inverted .outlines__halo{stroke:#FFFFFF}
+.olabel{position:absolute;z-index:3;min-height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--hx-red);background:var(--hx-surface);color:var(--hx-ink);font-family:inherit;font-weight:600;font-size:12px;line-height:1;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;box-shadow:var(--hx-shadow-marker)}
+.olabel::after{content:"";position:absolute;inset:-8px -4px}
+.olabel--left{transform:translate(0,-50%)}
+.olabel--right{transform:translate(-100%,-50%)}
+.olabel--top{transform:translate(-50%,-100%)}
+.olabel:hover,.olabel.focus{background:var(--hx-red);color:#FFFFFF}
+.olabel:focus-visible{outline:2px solid var(--hx-red);outline-offset:2px}
 .viewer__note{margin:0;padding:8px 16px;border-top:1px solid var(--hx-viewer-line);font-size:12.5px;color:var(--hx-viewer-label)}
 .marker{position:absolute;width:var(--hx-marker);height:var(--hx-marker);margin:-14px 0 0 -14px;border-radius:50%;background:var(--hx-green);color:#FFFFFF;border:2px solid #FFFFFF;box-shadow:var(--hx-shadow-marker);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;padding:0;cursor:pointer;font-family:inherit;z-index:2}
 .marker.focus{width:var(--hx-marker-focus);height:var(--hx-marker-focus);margin:-17px 0 0 -17px;background:#FFFFFF;color:var(--hx-green);border-color:var(--hx-green-bright);box-shadow:0 0 0 4px rgba(61,220,132,.35),0 1px 6px rgba(0,0,0,.6);font-size:14px;z-index:3}
