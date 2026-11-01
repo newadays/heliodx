@@ -91,6 +91,10 @@ export function SignPanel({
   const summary = signed ? study.report?.summary : study.clinicianSummary;
   const [impression, setImpression] = useState("");
   const [recommendation, setRecommendation] = useState("");
+  // B26: AI considerations for the clinician only; dismissed ones stay hidden for this visit.
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const adopted = study.clinicianSummary?.considerationsAdopted ?? [];
+  const considerations = signed ? [] : (study.clinicianSummary?.considerations ?? []).filter((c) => !dismissed.includes(c) && !adopted.includes(c));
   const staleSince = useRef<number | null>(null);
   const [now, setNow] = useState(Date.now());
 
@@ -219,6 +223,20 @@ export function SignPanel({
       toast({ message: "Report updated. Your wording is recorded as yours." });
     } catch {
       toast({ message: "Couldn't save the report." });
+    }
+  };
+
+  const adopt = async (line: string) => {
+    if (!study.clinicianSummary) return;
+    try {
+      await saveReport(study.id, { ...study.clinicianSummary, considerationsAdopted: [...adopted, line] }, {
+        findings: study.clinicianSummary.findings,
+        impression: [...(study.clinicianSummary.impression ?? []), line],
+        recommendation: study.clinicianSummary.recommendation,
+      });
+      toast({ message: "Added to the impression as your own wording." });
+    } catch {
+      toast({ message: "Couldn't add it. Try again." });
     }
   };
 
@@ -358,6 +376,23 @@ export function SignPanel({
                 One statement per line.
               </span>
             ) : null}
+            {!editing
+              ? considerations.map((line) => (
+                  <div key={line} className="sg-consider" role="group" aria-label="AI-suggested consideration">
+                    <span className="sg-consider__label">Consideration · AI-suggested, for you</span>
+                    <p className="sg-consider__text">{line}</p>
+                    <span className="muted sg-hint">Not in the report or the patient note unless you add it.</span>
+                    <div className="sg-consider__actions">
+                      <button type="button" className="btn btn-primary btn-sm" onClick={() => void adopt(line)}>
+                        Add to impression
+                      </button>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDismissed((d) => [...d, line])}>
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                ))
+              : null}
           </section>
 
           <section className="sg-sec">

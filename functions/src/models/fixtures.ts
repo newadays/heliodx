@@ -3,6 +3,7 @@
  * shapes the real pipeline (card 2.6) must produce. Nothing here is clinical
  * advice; the text exists to exercise the review and sharing screens.
  */
+import { PATTERNS } from "../lib/patterns";
 import { findingColor } from "../lib/colors";
 
 export type Modality = "xray" | "ct_mri" | "ultrasound" | "lab" | "skin";
@@ -23,6 +24,8 @@ export interface DraftFinding {
   abnormal?: boolean;
   location?: string | null;
   outlines?: { kind: "zone" | "lung" | "heart"; side: "left" | "right" | null; zone: "upper" | "middle" | "lower" | null; box: [number, number, number, number] }[];
+  /** B26: "tb_suggestive" or "none" (lib/patterns.ts). */
+  pattern?: "tb_suggestive" | "none";
 }
 
 export interface DraftSummaries {
@@ -33,6 +36,10 @@ export interface DraftSummaries {
     highlights: { findingId: string; start: number; end: number }[];
     generatedFromReviewHash: string | null;
     editedByClinician: boolean;
+    /** B26: AI-suggested lines for the clinician only; never in the frozen report unless adopted. */
+    considerations?: string[];
+    /** B26: considerations the clinician added to the impression. */
+    considerationsAdopted?: string[];
   };
 }
 
@@ -80,6 +87,7 @@ export function mockDraft(modality: Modality, reviewedBy: string): MockDraft {
             shape: "ellipse", x: 0.14, y: 0.6, w: 0.3, h: 0.25,
           }),
           abnormal: true,
+          pattern: "tb_suggestive" as const,
           location: "right lung lower zone",
           outlines: [{ kind: "zone" as const, side: "right" as const, zone: "lower" as const, box: [0.14, 0.6, 0.44, 0.85] as [number, number, number, number] }],
         },
@@ -103,6 +111,7 @@ export function mockDraft(modality: Modality, reviewedBy: string): MockDraft {
             highlights: highlightsFor(text, findings),
             generatedFromReviewHash: null,
             editedByClinician: false,
+            considerations: [PATTERNS.tb_suggestive.clinician],
           },
         },
       };

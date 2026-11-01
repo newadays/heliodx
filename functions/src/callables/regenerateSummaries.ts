@@ -7,6 +7,7 @@ import { gpuHealth } from "../models/gpu";
 import { generateJson } from "../models/client";
 import type { DraftFinding, DraftSummaries, Modality } from "../models/fixtures";
 import { clinicianSummaryPrompt } from "../models/prompts";
+import { hasTbPattern, keepConsiderations, PATTERNS } from "../lib/patterns";
 import { wrongState } from "../lib/callableErrors";
 import { reviewHash } from "../lib/reviewHash";
 import { traceScope } from "../lib/trace";
@@ -51,9 +52,9 @@ export interface StudyDoc {
 }
 
 /** The finding as the clinician left it: edited wording wins over the draft. */
-function reviewedText(f: DraftFinding & { editedText?: string }): { title: string; description: string } {
+function reviewedText(f: DraftFinding & { editedText?: string }): { title: string; description: string; pattern?: string | null } {
   const edited = (f.editedText ?? "").trim();
-  return { title: f.title, description: edited || f.description };
+  return { title: f.title, description: edited || f.description, pattern: f.abnormal ? (f.pattern ?? null) : null };
 }
 
 /**
@@ -68,6 +69,8 @@ export async function draftClinicianSummary(study: StudyDoc): Promise<{ hash: st
   const hash = reviewHash(findings);
   const studyType = study.studyType || "study";
   const clinicalContext = (study.clinicalContext ?? "").trim();
+  // B26: a consideration only while an accepted or edited finding carries the pattern.
+  const tagged = hasTbPattern(included);
   if (MODEL_MOCK) {
     const text = included.length ? included.map((f) => reviewedText(f).title).join(". ") + "." : "No findings were accepted for this study.";
     return {
@@ -79,6 +82,7 @@ export async function draftClinicianSummary(study: StudyDoc): Promise<{ hash: st
         highlights: resolveHighlights(text, included, included.map((f) => ({ findingIndex: f.index, quote: f.title }))),
         generatedFromReviewHash: hash,
         editedByClinician: false,
+        considerations: tagged ? [PATTERNS.tb_suggestive.clinician] : [],
       },
     };
   }
@@ -104,6 +108,7 @@ export async function draftClinicianSummary(study: StudyDoc): Promise<{ hash: st
       ),
       generatedFromReviewHash: hash,
       editedByClinician: false,
+      considerations: keepConsiderations(draft.considerations, tagged),
     },
   };
 }

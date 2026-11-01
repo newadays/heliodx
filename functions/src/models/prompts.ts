@@ -3,6 +3,8 @@
  * included; clinical context is (it is what makes the draft useful) and is
  * never logged.
  */
+import { assertedConditions } from "../lib/vocabulary";
+import { PATTERNS } from "../lib/patterns";
 import type { Modality } from "./fixtures";
 
 export const SYSTEM_INSTRUCTION = [
@@ -95,6 +97,9 @@ export function prepPrompt(
     "nodular opacity, a cavity, apical fibrotic streaks or miliary nodules; false for a pertinent normal) and give",
     "its `location` (side and zone, e.g. 'right lung upper zone'); every abnormal observation needs a location.",
     "Support devices (lines, catheters, tubes, wires, pacemakers) are not abnormal by themselves: mark them false.",
+    `Set \`pattern\` to 'tb_suggestive' on an abnormal observation that fits these cues: ${PATTERNS.tb_suggestive.cues}; otherwise 'none'.`,
+    "The pattern never goes in a title or description. Only when you tagged one, add one `considerations` line for the",
+    `clinician, such as: "${PATTERNS.tb_suggestive.clinician}" Otherwise leave \`considerations\` empty.`,
     "Evidence list:",
     ...evidence.map((e) => `- ${e.id}: ${e.about}`),
     "Region ids for marking the image (or 'none'):",
@@ -152,6 +157,9 @@ export function patientSummaryFromSignedPrompt(
     "does not contain. Do not name a condition unless the impression names it. Do not say a body part is normal",
     "or reassure about anything the report does not mention.",
     "`body`: two to four short sentences on what the clinician found, in everyday words.",
+    assertedConditions(signed.impression.join(" ")).some((t) => PATTERNS.tb_suggestive.conditionTerms.includes(t))
+      ? `The impression names tuberculosis: in \`body\` say it in these words: "${PATTERNS.tb_suggestive.plain}"`
+      : "",
     `\`nextSteps\`: exactly ${sentences.length} item(s); item i says recommendation sentence i in plain words,`,
     "same meaning, nothing added or left out, at most two short sentences each.",
     `Findings: ${signed.findings || "(none)"}`,
@@ -171,12 +179,13 @@ export function patientSummaryFromSignedPrompt(
 export function clinicianSummaryPrompt(
   studyType: string,
   modality: Modality,
-  findings: { title: string; description: string }[],
+  findings: { title: string; description: string; pattern?: string | null }[],
   clinicalContext: string,
 ): string {
   const list = findings.length
-    ? findings.map((f, i) => `${i}. ${f.title}: ${f.description}`).join("\n")
+    ? findings.map((f, i) => `${i}. ${f.title}: ${f.description}${f.pattern === "tb_suggestive" ? " [TB-suggestive pattern]" : ""}`).join("\n")
     : "(none accepted)";
+  const tagged = findings.some((f) => f.pattern === "tb_suggestive");
   return [
     `Write the clinician summary for ${MODALITY_WORDS[modality]}, confirmed as: ${studyType}.`,
     "Base it only on the reviewed findings below (index: title: description). Do not add findings.",
@@ -184,6 +193,9 @@ export function clinicianSummaryPrompt(
     "and a recommendation. In `highlights`, give for each finding index an exact substring of the findings",
     "paragraph that refers to it.",
     "If no findings were accepted, say that no reportable findings were confirmed.",
+    tagged
+      ? `A finding carries a TB-suggestive pattern: add one \`considerations\` line for the clinician, such as "${PATTERNS.tb_suggestive.clinician}" Keep it out of the findings paragraph, impression and recommendation.`
+      : "Leave `considerations` empty.",
     `Reviewed findings:\n${list}`,
     clinicalContext ? `Clinical context: ${clinicalContext}` : "",
   ]

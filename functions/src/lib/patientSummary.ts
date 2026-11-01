@@ -157,8 +157,16 @@ export function newInstructionTerms(signed: string, rewrite: string): string[] {
  * pneumothorax." "Effusion" and "pleural effusion" count as the same.
  */
 export function conditionViolations(text: string, impression: string[], alsoSigned = ""): string[] {
-  const allowed = [...impression, alsoSigned].flatMap((s) => assertedConditions(s));
-  return assertedConditions(text).filter((term) => !allowed.some((a) => a.includes(term) || term.includes(a)));
+  const allowed = [...impression, alsoSigned].flatMap((s) => assertedConditions(s)).map(canonicalTerm);
+  return assertedConditions(text).filter((term) => {
+    const t = canonicalTerm(term);
+    return !allowed.some((a) => a.includes(t) || t.includes(a));
+  });
+}
+
+/** "TB" and "tuberculosis" are the same condition (B26: the plain wording uses both). */
+function canonicalTerm(term: string): string {
+  return term === "tb" ? "tuberculosis" : term;
 }
 
 /** Condition names the body asserts that the signed Impression does not. */
@@ -168,11 +176,39 @@ export function bodyConditionViolations(body: string, impression: string[]): str
 
 // ---- checking a rewrite -----------------------------------------------------
 
+/**
+ * B26 · Radiology words a patient should never have to decode. The rewrite
+ * fails on any of them, like a grade above 8: one retry, then the signed
+ * sentences.
+ */
+export const JARGON = [
+  "reticulonodular",
+  "opacity",
+  "opacities",
+  "density",
+  "consolidation",
+  "interstitial",
+  "parenchymal",
+  "microbiologic",
+  "workup",
+  "apical",
+  "hilar",
+  "infiltrate",
+] as const;
+const JARGON_RE = new RegExp(`\\b(${JARGON.join("|")})\\b`, "gi");
+
+/** The jargon words a text uses, lower-case. */
+export function jargonIn(text: string): string[] {
+  return [...new Set((text.match(JARGON_RE) ?? []).map((w) => w.toLowerCase()))];
+}
+
 export interface RewriteCheck {
   /** Per step index: the terms it added (empty = clean); missing steps count as failed. */
   steps: { text: string | null; added: string[] }[];
   /** Body sentences that name a condition the Impression does not. */
   bodyViolations: string[];
+  /** B26: radiology words left in the body or a step. */
+  jargon: string[];
   grade: number;
   ok: boolean;
 }
@@ -185,9 +221,11 @@ export function checkRewrite(rewrite: PatientRewrite, sentences: string[], impre
   });
   const body = rewrite.body.trim();
   const bodyViolations = bodyConditionViolations(body, impression);
-  const grade = fleschKincaidGrade([body, ...steps.map((s) => s.text ?? "")].join(" "));
-  const ok = steps.every((s) => s.added.length === 0) && bodyViolations.length === 0 && grade <= TARGET_GRADE && !!body;
-  return { steps, bodyViolations, grade, ok };
+  const all = [body, ...steps.map((s) => s.text ?? "")].join(" ");
+  const grade = fleschKincaidGrade(all);
+  const jargon = jargonIn(all);
+  const ok = steps.every((s) => s.added.length === 0) && bodyViolations.length === 0 && jargon.length === 0 && grade <= TARGET_GRADE && !!body;
+  return { steps, bodyViolations, jargon, grade, ok };
 }
 
 /** What to tell the model on the retry. */
@@ -198,6 +236,9 @@ export function retryFeedback(check: RewriteCheck): string {
   });
   if (check.bodyViolations.length) {
     lines.push(`The body names ${check.bodyViolations.join(", ")}, which the impression does not. Do not name it.`);
+  }
+  if (check.jargon.length) {
+    lines.push(`Replace these medical words with everyday ones: ${check.jargon.join(", ")}.`);
   }
   if (check.grade > TARGET_GRADE) {
     lines.push(`Reading level is grade ${check.grade}. Use shorter sentences and everyday words (grade ${TARGET_GRADE} or lower).`);

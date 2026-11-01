@@ -26,6 +26,7 @@ import { gpuHealth } from "../models/gpu";
 import { prepareImages } from "./image";
 import { setTraceStage, traceEvent, traceScope } from "../lib/trace";
 import { describeMeasurement, describeQuality, measurementTool } from "../lib/traceText";
+import { patternLift } from "../lib/patterns";
 import { uniqueCaseId } from "../lib/caseId";
 import { describeUpload, type UploadMeta } from "../lib/uploads";
 import { expectedAnalysisMs, recordAnalysisRun } from "../lib/analysisStats";
@@ -391,7 +392,15 @@ async function runPipelineTraced(
     const overlays = ctrOverlays(triage?.ctrLines ?? null, ctr, findings);
     // B22: findings land one by one as they are checked, so the Analyzing
     // step fills in as it goes; the clinician can open Review before ready.
-    await writer.patch({ overlays, "analysis.expectedFindings": findings.length }, { allowedIn: ["detecting"] });
+    // B26: a TB-suggestive pattern raises a routine study to urgent; never lowers.
+    const lift = patternLift(findings, triage?.priority) !== null;
+    if (lift) {
+      traceEvent({ kind: "check", name: "pattern_floor", args: { pattern: "tb_suggestive" }, ok: true, result: "TB-suggestive pattern raises priority to urgent" });
+    }
+    await writer.patch(
+      { overlays, "analysis.expectedFindings": findings.length, ...(lift ? { priority: "urgent", "triage.priority": "urgent", "pipeline.priorityRaisedBy": "pattern" } : {}) },
+      { allowedIn: ["detecting"] },
+    );
     for (let i = 1; i <= findings.length; i++) {
       await writer.patch({ findings: findings.slice(0, i) }, { allowedIn: ["detecting"] });
     }
