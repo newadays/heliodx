@@ -19,8 +19,8 @@ const ANSWERS: Record<string, unknown> = {
   classifying: { priority: "routine", evidence: ["cardiothoracic_ratio"], rationale: "Measurements are within their limits." },
   detecting: {
     proposed: [
-      { title: "Heart size within limits", description: "The cardiothoracic ratio is within its threshold.", evidence: ["cardiothoracic_ratio"], region: "none" },
-      { title: "Lung fields symmetric", description: "Both lung outlines are similar in size.", evidence: ["lung_area_asymmetry"], region: "none" },
+      { title: "Heart size within limits", description: "The cardiothoracic ratio is within its threshold.", evidence: ["cardiothoracic_ratio"], region: "none", abnormal: false, location: "heart" },
+      { title: "Lung fields symmetric", description: "Both lung outlines are similar in size.", evidence: ["lung_area_asymmetry"], region: "none", abnormal: false, location: "both lungs" },
     ],
     clinicianSummary: {
       findings: "Heart size within limits. Lung fields symmetric.",

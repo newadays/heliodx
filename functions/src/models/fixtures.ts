@@ -19,6 +19,10 @@ export interface DraftFinding {
   status: FindingStatus;
   editedText?: string;
   reviewedAt: unknown | null;
+  /** B25: the model's abnormal call, its location and the zone drawn for it. */
+  abnormal?: boolean;
+  location?: string | null;
+  outlines?: { kind: "zone" | "lung" | "heart"; side: "left" | "right" | null; zone: "upper" | "middle" | "lower" | null; box: [number, number, number, number] }[];
 }
 
 export interface DraftSummaries {
@@ -69,9 +73,16 @@ export function mockDraft(modality: Modality, reviewedBy: string): MockDraft {
   switch (modality) {
     case "xray": {
       const findings = [
-        finding(0, "Right lower lobe opacity", "Patchy airspace opacity in the right lower zone, obscuring the hemidiaphragm.", 91, {
-          shape: "ellipse", x: 0.58, y: 0.55, w: 0.26, h: 0.2,
-        }),
+        {
+          // B25: an abnormal observation with its zone, so the outline shows on the emulators.
+          // The patient's right lung is on the image's left.
+          ...finding(0, "Right lower lobe opacity", "Patchy airspace opacity in the right lower zone, obscuring the hemidiaphragm.", 91, {
+            shape: "ellipse", x: 0.14, y: 0.6, w: 0.3, h: 0.25,
+          }),
+          abnormal: true,
+          location: "right lung lower zone",
+          outlines: [{ kind: "zone" as const, side: "right" as const, zone: "lower" as const, box: [0.14, 0.6, 0.44, 0.85] as [number, number, number, number] }],
+        },
         finding(1, "Blunted right costophrenic angle", "Loss of the sharp costophrenic angle on the right, suggesting a small effusion.", 78, {
           shape: "ellipse", x: 0.7, y: 0.78, w: 0.18, h: 0.1,
         }),

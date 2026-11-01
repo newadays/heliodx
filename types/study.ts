@@ -167,6 +167,24 @@ export interface Finding {
   evidenceLine?: string | null;
   /** B21: marker positions (0–1 of width/height), one per region; two for a paired finding. */
   regions?: { x: number; y: number; label?: string }[];
+  /** B25: the model called it abnormal for this film (drives `polarity`). */
+  abnormal?: boolean;
+  /** B25: the model's location text, e.g. "right lung upper zone". */
+  location?: string | null;
+  /** B25: where an abnormal observation sits, one per side (`lib/zone.ts`). */
+  outlines?: FindingOutline[];
+}
+
+/**
+ * B25: an area drawn for an abnormal observation, 0–1 of the image. A zone is
+ * a third of the chest's height on one side; SAM 3.1 finds no lesion phrase on
+ * a chest film, so the zone comes from the lung boxes, not a lesion mask.
+ */
+export interface FindingOutline {
+  kind: "zone" | "lung" | "heart";
+  side: "left" | "right" | null;
+  zone: "upper" | "middle" | "lower" | null;
+  box: [number, number, number, number];
 }
 
 /** B21: a measurement drawn on the film (0–1 coordinates), e.g. the CTR widths. */

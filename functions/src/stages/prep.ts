@@ -6,12 +6,17 @@
  * keeps only real ids (an observation with none left is dropped), drops
  * observations that assert a condition, sets strength from the evidence
  * (lib/strength.ts), places each region on a SAM mask or the measured heart
- * region, and points to its overlay. Same inputs/outputs an agent tool would
+ * region, and points to its overlay. B25: an observation the model marks
+ * abnormal is drawn on the zone it names (lib/zone.ts), with its own overlay.
+ * Same inputs/outputs an agent tool would
  * have (B5 can wrap it).
  */
 import { logger } from "firebase-functions/v2";
 
 import { findingColor } from "../lib/colors";
+import { parseLocation } from "../lib/location";
+import { traceEvent } from "../lib/trace";
+import { unionBox, zoneOutlines, type FindingOutline } from "../lib/zone";
 import { confidenceFor, strengthOf, thresholdFor, type Strength } from "../lib/strength";
 import { assertsCondition, stripConditionSentences } from "../lib/vocabulary";
 import { generateJson } from "../models/client";
@@ -38,6 +43,10 @@ export interface EvidencedFinding extends DraftFinding {
   strength: Strength;
   evidence: { measurementIds: string[]; maskIds: string[] };
   overlayPath: string | null;
+  /** B25: the model's own call and location; outlines only when abnormal. */
+  abnormal: boolean;
+  location: string | null;
+  outlines: FindingOutline[];
 }
 
 export interface PrepInput {
@@ -116,7 +125,22 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
       maskIds.map((id) => byMask.get(id)!.score),
     );
     const regionId = pickRegion(p.region.trim(), measurementIds, maskIds, byMask, !!input.heartBox);
+    const location = p.location.trim();
+    const outlines = p.abnormal ? zoneOutlines(parseLocation(location), input.masks, input.heartBox) : [];
+    const zoneBox = unionBox(outlines);
     const index = kept.length;
+    if (p.abnormal) {
+      // One row per abnormal observation: where it was drawn, or why not.
+      traceEvent({
+        kind: "check",
+        name: "locate_zone",
+        args: { finding: `f${index + 1}`, location: location.slice(0, 40) },
+        ok: outlines.length > 0,
+        result: outlines.length
+          ? outlines.map((o) => (o.kind === "heart" ? "heart region" : `${o.side} lung${o.zone ? ` ${o.zone} zone` : ""}`)).join(" and ") + " · zone outline"
+          : "location not readable · cited region kept",
+      });
+    }
     kept.push({
       modelIndex,
       regionId,
@@ -126,13 +150,16 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
         title: p.title.trim(),
         description: p.description.trim(),
         confidence: confidenceFor(strength),
-        region: regionFor(regionId, byMask, input.heartBox),
+        region: zoneBox ? ellipseOf(zoneBox) : regionFor(regionId, byMask, input.heartBox),
         color: findingColor(index),
         status: "pending",
         reviewedAt: null,
         strength,
         evidence: { measurementIds, maskIds },
         overlayPath: null,
+        abnormal: p.abnormal,
+        location: location && location.toLowerCase() !== "none" ? location : null,
+        outlines,
       },
     });
   }
@@ -140,9 +167,14 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
   // Overlays: lungs were rendered in triage; the heart region on first use.
   let heartOverlay: string | null = null;
   for (const { finding, regionId } of kept) {
+    if (finding.outlines.length && input.masks[0]) {
+      // B25: the zone itself, one ellipse per side.
+      finding.overlayPath = await saveEllipseOverlay(input, overlay, finding.outlines.map((o) => o.box), `zone-${finding.id}`, finding.color);
+      continue;
+    }
     if (regionId && input.overlays[regionId]) finding.overlayPath = input.overlays[regionId];
     if (regionId === HEART_REGION && input.heartBox && input.masks[0]) {
-      heartOverlay ??= await saveHeartOverlay(input, overlay);
+      heartOverlay ??= await saveEllipseOverlay(input, overlay, [input.heartBox], HEART_REGION, "#F5B400");
       finding.overlayPath = heartOverlay;
     }
   }
@@ -196,29 +228,39 @@ function regionFor(
   heartBox: PrepInput["heartBox"],
 ): DraftFinding["region"] {
   const box = regionId === HEART_REGION ? heartBox : regionId ? byMask.get(regionId)?.box : null;
-  if (!box) return null;
-  const [x0, y0, x1, y1] = box;
+  return box ? ellipseOf(box) : null;
+}
+
+function ellipseOf([x0, y0, x1, y1]: [number, number, number, number]): NonNullable<DraftFinding["region"]> {
   const r = (v: number) => Math.round(v * 1000) / 1000;
   return { shape: "ellipse", x: r(x0), y: r(y0), w: r(x1 - x0), h: r(y1 - y0) };
 }
 
-/** An ellipse over the measured heart region, at the mask resolution. */
-async function saveHeartOverlay(input: PrepInput, overlay: typeof saveOverlay): Promise<string> {
+/** Translucent ellipses over boxes (the heart region, or an abnormal zone per side), at the mask resolution. */
+async function saveEllipseOverlay(
+  input: PrepInput,
+  overlay: typeof saveOverlay,
+  boxes: [number, number, number, number][],
+  maskId: string,
+  color: string,
+): Promise<string> {
   const ref = input.masks[0];
   const { width: w, height: h } = ref;
-  const [x0, y0, x1, y1] = input.heartBox!;
-  const cx = ((x0 + x1) / 2) * w;
-  const cy = ((y0 + y1) / 2) * h;
-  const rx = Math.max(1, ((x1 - x0) / 2) * w);
-  const ry = Math.max(1, ((y1 - y0) / 2) * h);
   const mask = new Uint8Array(w * h);
-  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
-    if (y < 0 || y >= h) continue;
-    for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
-      if (x < 0 || x >= w) continue;
-      if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) mask[y * w + x] = 1;
+  for (const [x0, y0, x1, y1] of boxes) {
+    const cx = ((x0 + x1) / 2) * w;
+    const cy = ((y0 + y1) / 2) * h;
+    const rx = Math.max(1, ((x1 - x0) / 2) * w);
+    const ry = Math.max(1, ((y1 - y0) / 2) * h);
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+      if (y < 0 || y >= h) continue;
+      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+        if (x < 0 || x >= w) continue;
+        if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) mask[y * w + x] = 1;
+      }
     }
   }
-  const record: MaskRecord = { ...ref, label: ref.label, maskId: HEART_REGION, box: input.heartBox!, path: "" };
-  return overlay(input.bucket, input.studyPrefix, record, mask, "#F5B400");
+  const box = unionBox(boxes.map((b) => ({ kind: "zone" as const, side: null, zone: null, box: b })))!;
+  const record: MaskRecord = { ...ref, maskId, box, path: "" };
+  return overlay(input.bucket, input.studyPrefix, record, mask, color);
 }
