@@ -114,6 +114,7 @@ function Row({
       <div className="rv-text">
         <span className="rv-title">
           {f.title}
+          {f.patternLabel ? <span className="chip chip-warn">{f.patternLabel}</span> : null}
           {f.decision === "edited" ? <span className="chip chip-neutral">Edited by you</span> : null}
         </span>
         <span className="muted rv-evidence">

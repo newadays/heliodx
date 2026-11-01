@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Finding, Study } from "@/types/study";
 
-import { analysisProgress, caseIdOf, defaultStep, findingView, patientOf, studyLabel, verdict, viewStatus } from "./model";
+import { analysisProgress, caseIdOf, defaultStep, findingView, hasPatternLabel, patientOf, studyLabel, verdict, viewStatus } from "./model";
 
 const ts = (ms: number) => ({ toMillis: () => ms });
 
@@ -94,5 +94,25 @@ describe("model", () => {
     expect(analysisProgress(study({ status: "detecting", findings: [], analysis: {} }))).toBe(45);
     expect(analysisProgress(study({ status: "detecting", analysis: { expectedFindings: 2 } }))).toBe(73);
     expect(analysisProgress(study())).toBe(100);
+  });
+});
+
+describe("B25/B26 abnormal findings", () => {
+  it("count as attention with no flags, carry their zones in %, and the TB label only when abnormal", () => {
+    const tagged = finding({
+      abnormal: true,
+      pattern: "tb_suggestive",
+      evidence: { measurementIds: [], maskIds: [] },
+      polarity: "attention",
+      outlines: [{ kind: "zone", side: "right", zone: "upper", box: [0.1, 0.1, 0.4, 0.35] }],
+    });
+    const v = findingView(tagged, { measurements: [], triage: undefined });
+    expect(verdict([v]).text).toBe("1 finding · 1 needs attention");
+    expect(v.outlines[0]).toMatchObject({ side: "right", zone: "upper", x: 10, y: 10 });
+    expect(v.outlines[0].w).toBeCloseTo(30);
+    expect(v.patternLabel).toBe("TB-suggestive");
+    expect(hasPatternLabel([v])).toBe(true);
+    expect(hasPatternLabel([{ ...v, decision: "rejected" }])).toBe(false);
+    expect(findingView(finding({ abnormal: false, pattern: "tb_suggestive" }), { measurements: [], triage: undefined }).patternLabel).toBeNull();
   });
 });

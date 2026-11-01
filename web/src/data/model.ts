@@ -6,6 +6,7 @@
  * fall back to values derived here.
  */
 import { confidenceBand, evidenceLine } from "@/functions/src/lib/evidence";
+import { PATTERNS } from "@/functions/src/lib/patterns";
 import { readNeed, readRequirement, READ_REASON_TEXT } from "@/functions/src/radiology/gate";
 import type { Finding, FindingStatus, ShareChannel, Study, StudyStatus } from "@/types/study";
 import { caseId as derivedCaseId } from "@/utils/caseTimeline";
@@ -122,6 +123,11 @@ export interface FindingView {
   spot: { x: number; y: number; w: number; h: number } | null;
   decision: FindingStatus;
   editedText?: string;
+  /** B25: the model called it abnormal; its zones in % of the image (ellipse boxes). */
+  abnormal: boolean;
+  outlines: { side: "left" | "right" | null; zone: "upper" | "middle" | "lower" | null; kind: "zone" | "lung" | "heart"; x: number; y: number; w: number; h: number }[];
+  /** B26: "TB-suggestive" when tagged, else null. */
+  patternLabel: string | null;
 }
 
 export function findingView(f: Finding, study: Pick<Study, "measurements" | "triage">): FindingView {
@@ -147,7 +153,23 @@ export function findingView(f: Finding, study: Pick<Study, "measurements" | "tri
     spot: f.region ? { x: f.region.x * 100, y: f.region.y * 100, w: f.region.w * 100, h: f.region.h * 100 } : null,
     decision: f.status,
     editedText: f.editedText,
+    abnormal: f.abnormal === true,
+    outlines: (f.outlines ?? []).map((o) => ({
+      side: o.side,
+      zone: o.zone,
+      kind: o.kind,
+      x: o.box[0] * 100,
+      y: o.box[1] * 100,
+      w: (o.box[2] - o.box[0]) * 100,
+      h: (o.box[3] - o.box[1]) * 100,
+    })),
+    patternLabel: f.abnormal === true && f.pattern === "tb_suggestive" ? PATTERNS.tb_suggestive.label : null,
   };
+}
+
+/** B26: true when a finding the clinician has not rejected carries the TB-suggestive tag. */
+export function hasPatternLabel(findings: Pick<FindingView, "patternLabel" | "decision">[]): boolean {
+  return findings.some((f) => f.patternLabel && f.decision !== "rejected");
 }
 
 export function findingsOf(study: Pick<Study, "findings" | "measurements" | "triage">): FindingView[] {
@@ -304,8 +326,9 @@ export function statusDetail(study: Study, now: number): string {
     return "Analysis didn't complete";
   }
   if (vs === "draft_ready" || vs === "in_review") {
-    const v = verdict(findingsOf(study));
-    return v.text;
+    const findings = findingsOf(study);
+    const v = verdict(findings);
+    return hasPatternLabel(findings) ? `${v.text} · ${PATTERNS.tb_suggestive.label}` : v.text;
   }
   const share = lastShare(study);
   if (share) {
