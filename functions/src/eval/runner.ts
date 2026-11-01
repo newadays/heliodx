@@ -1,15 +1,17 @@
 /**
  * E2 · Runs one task through the real stage code (`runIntake`, `runTriage`,
- * `runPrep`, `writePatientNote`) against one system. The only thing that
- * differs between systems is `generate`, bound by the CLI to the `clinical`
- * route (HelioDX: Glimmer) or the baseline route (MedGemma). SAM masks come
- * from one cached segmenter, so both systems measure the same lungs.
+ * `runPrep`, `writePatientNote`) against one system; the TB family (E16) runs
+ * intake, triage and prep like Prep. The only thing that differs between
+ * systems is `generate`, bound by the CLI to the `clinical` route (HelioDX:
+ * Glimmer) or the baseline route (MedGemma). SAM masks come from one cached
+ * segmenter, so both systems measure the same lungs.
  *
  * Nothing is written to Firestore or Storage: masks stay in memory, overlays
  * are not rendered, and the trace is captured in memory for latency, tokens
  * and the model's raw answer.
  */
 import { polarityOf } from "../lib/evidence";
+import { patternLift } from "../lib/patterns";
 import { writePatientNote, rewriterWith } from "../callables/generatePatientSummary";
 import { decodeRle } from "../models/gpu";
 import type { generateJson } from "../models/client";
@@ -21,16 +23,17 @@ import { runIntake } from "../stages/intake";
 import { runPrep } from "../stages/prep";
 import { runTriage } from "../stages/triage";
 import type { MaskRecord, Segmenter } from "../tools/segment";
-import { gradeError, gradeIntake, gradeNote, gradePrep, gradeTriage, scoreOf, type IntakeOutcome, type NoteOutcome, type PrepOutcome, type TriageOutcome } from "./grade";
+import { gradeError, gradeIntake, gradeNote, gradePrep, gradeTb, gradeTriage, scoreOf, type IntakeOutcome, type NoteOutcome, type PrepOutcome, type TbOutcome, type TriageOutcome } from "./grade";
 import { taskImage } from "./images";
-import type { CriterionResult, EvalResult, EvalSystem, EvalTask } from "./types";
+import type { CriterionResult, EvalResult, EvalSystem, EvalTask, TbDataset } from "./types";
 
 export interface RunDeps {
   system: EvalSystem;
   model: string;
   generate: typeof generateJson;
   segment: Segmenter;
-  loadFilm: (filmId: string) => Promise<Buffer>;
+  /** The original film: NIH by id, TB-set films (E16) by id and dataset. */
+  loadFilm: (filmId: string, dataset?: TbDataset) => Promise<Buffer>;
   gpuUsdPerHour: number;
 }
 
@@ -86,7 +89,7 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
   if (task.family === "note") return runNote(task, deps);
 
   const nonMedicalIndex = Number(/(\d+)$/.exec(task.id)?.[1] ?? 1);
-  const film = task.film ? await deps.loadFilm(task.film.id) : null;
+  const film = task.film ? await deps.loadFilm(task.film.id, task.film.dataset) : null;
   const image = await taskImage(film, task.variant, nonMedicalIndex);
   const masksByPath = new Map<string, string>();
   const studyPrefix = `eval/${task.id}`;
@@ -158,6 +161,46 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
     { generate: deps.generate, saveOverlay },
   );
   const raw = rawAnswer(events, "detecting");
+  if (task.family === "tb") {
+    // E16: graded on the stored observations and the lane after the B26 lift; the leak check reads the model's text before the filters.
+    const proposed = Array.isArray(raw?.proposed) ? (raw.proposed as { title?: unknown; description?: unknown }[]) : null;
+    const summary = (raw?.clinicianSummary ?? null) as { findings?: unknown; impression?: unknown; recommendation?: unknown } | null;
+    const asText = (v: unknown) => (typeof v === "string" ? v : "");
+    const out: TbOutcome = {
+      findings: prep.findings.map((f) => ({
+        title: f.title,
+        description: f.description,
+        abnormal: f.abnormal,
+        location: f.location,
+        pattern: f.pattern,
+        outlines: f.outlines,
+        measurementIds: f.evidence.measurementIds,
+      })),
+      flagged,
+      considerations: prep.clinicianSummary.considerations ?? [],
+      triagePriority: triage.priority,
+      needsHuman: triage.needsHuman,
+      text: {
+        titles: proposed ? proposed.map((p) => asText(p.title)) : prep.findings.map((f) => f.title),
+        descriptions: proposed ? proposed.map((p) => asText(p.description)) : prep.findings.map((f) => f.description),
+        findings: summary ? asText(summary.findings) : prep.clinicianSummary.findings,
+        impression: summary && Array.isArray(summary.impression) ? summary.impression.map(asText) : prep.clinicianSummary.impression,
+        recommendation: summary ? asText(summary.recommendation) : prep.clinicianSummary.recommendation,
+      },
+    };
+    return {
+      criteria: gradeTb(task, out),
+      output: {
+        findings: out.findings.map(({ measurementIds, ...f }) => ({ ...f, evidence: measurementIds })),
+        considerations: out.considerations,
+        priority: patternLift(prep.findings, triage.priority) ?? triage.priority,
+        triagePriority: triage.priority,
+        flagged,
+        partialLungs: triage.partialLungs,
+        summary: { findings: prep.clinicianSummary.findings, impression: prep.clinicianSummary.impression, recommendation: prep.clinicianSummary.recommendation },
+      },
+    };
+  }
   const out: PrepOutcome = {
     // Polarity as the app stores it (lib/findingFields.ts): the model's abnormal call or a crossed threshold.
     findings: prep.findings.map((f) => ({ title: f.title, description: f.description, evidence: f.evidence, polarity: polarityOf(f.evidence.measurementIds, triage.flags, f.abnormal) })),

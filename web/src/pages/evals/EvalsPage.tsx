@@ -58,6 +58,11 @@ function PublicShell({ children }: { children: React.ReactNode }) {
           Films: NIH Clinical Center ChestX-ray14 (Wang et al., CVPR 2017); indications are synthetic. MedGemma is used under the Health AI Developer
           Foundations terms of use and is not for clinical use.
         </p>
+        <p>
+          TB screening films: the Shenzhen and Montgomery County chest X-ray sets (Jaeger et al., Quant Imaging Med Surg 2014; Candemir et al. and Jaeger et
+          al., IEEE TMI 2014), courtesy of the U.S. National Library of Medicine, Shenzhen No. 3 People&apos;s Hospital, and the Montgomery County Department of
+          Health and Human Services. Images are not shown or redistributed here.
+        </p>
       </footer>
     </div>
   );
@@ -83,7 +88,7 @@ export default function EvalsPage() {
         </button>
       </div>
     );
-  } else if (!data || !data.tasks.length) {
+  } else if (!data || !SYSTEMS.some((s) => data.runs[s])) {
     body = (
       <div className="card ev-state">
         <p>No published run yet.</p>
@@ -106,6 +111,8 @@ function Library({ data }: { data: EvalData }) {
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: data.tasks.length };
     for (const f of EVAL_FAMILIES) c[f] = data.tasks.filter((t) => firstResult(t.bySystem)?.family === f).length;
+    // TB results are aggregate only (the NLM terms): count the films from the run summary.
+    c.tb = Math.max(0, ...SYSTEMS.map((s) => data.familyRuns[s]?.tb?.tb?.n ?? 0));
     return c;
   }, [data]);
 
@@ -126,10 +133,21 @@ function Library({ data }: { data: EvalData }) {
       </div>
 
       <section className="ev-systems" aria-label="Results per system">
-        {systems.map((s) => (
-          <SystemSummary key={s} run={data.runs[s]!} results={data.tasks.map((t) => t.bySystem[s]).filter((r): r is EvalResult => !!r)} />
-        ))}
+        {systems.map((s) => {
+          const tbRun = data.familyRuns[s]?.tb;
+          return family === "tb" && tbRun ? (
+            <TbSummaryCard key={s} run={tbRun} />
+          ) : (
+            <SystemSummary key={s} run={data.runs[s]!} results={data.tasks.map((t) => t.bySystem[s]).filter((r): r is EvalResult => !!r)} />
+          );
+        })}
       </section>
+      {family === "tb" ? (
+        <p className="ev-tbnote muted">
+          Labels are film-level (TB yes/no). Zone matching is coarse (thirds of the chest). No lesion-level accuracy is claimed. Films from the public Shenzhen and
+          Montgomery County TB screening sets, not the clinic&apos;s own population.
+        </p>
+      ) : null}
 
       <div className="ev-filters">
         <nav className="ev-tabs" aria-label="Task family">
@@ -147,6 +165,13 @@ function Library({ data }: { data: EvalData }) {
         </label>
       </div>
 
+      {family === "tb" ? (
+        <p className="muted">
+          Per-film TB results are not published: the NLM data terms ask that the Shenzhen and Montgomery sets not be shared outside the research
+          group. Reproduce them with <span className="mono">data/fetch_tb_sets.py</span> and the eval runner (see eval/README.md).
+        </p>
+      ) : (
+      <>
       <div className="ev-gridhead">
         <span className="muted">
           {shown.length} task{shown.length === 1 ? "" : "s"}
@@ -161,6 +186,8 @@ function Library({ data }: { data: EvalData }) {
         </ul>
       ) : (
         <p className="muted">No task matches.</p>
+      )}
+      </>
       )}
     </>
   );
@@ -205,6 +232,45 @@ function SystemSummary({ run, results }: { run: EvalRun; results: EvalResult[] }
           {run.triage.abnormalRecall === null ? "–" : pct(run.triage.abnormalRecall)} · normal over-triaged {run.triage.overTriage === null ? "–" : pct(run.triage.overTriage)}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+const ci = (v: [number, number] | null | undefined) => (v ? `${pct(v[0])}–${pct(v[1])}` : "–");
+const rate = (v: number | null | undefined) => (v === null || v === undefined ? "–" : pct(v));
+
+/** E16 · The TB tab's headline: sensitivity and specificity with 95% Wilson intervals, not a mean score. */
+function TbSummaryCard({ run }: { run: EvalRun }) {
+  const tb = run.tb;
+  return (
+    <div className="card ev-system">
+      <div className="ev-system__head">
+        <h2>{run.label}</h2>
+        <p className="muted">
+          TB screening · {tb?.n ?? 0} films · run {new Date(run.startedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · commit{" "}
+          <span className="mono">{run.commit}</span>
+        </p>
+      </div>
+      {tb ? (
+        <>
+          <div className="stats stats-page">
+            <div className="stat">
+              <b>{rate(tb.sensitivity)}</b>
+              <span>Sensitivity · 95% CI {ci(tb.sensitivityCi)}</span>
+            </div>
+            <div className="stat">
+              <b>{rate(tb.specificity)}</b>
+              <span>Specificity · 95% CI {ci(tb.specificityCi)}</span>
+            </div>
+          </div>
+          <p className="ev-system__triage muted">
+            TB films sent urgent or higher {rate(tb.floorRate)} · outline in the read zone {rate(tb.zoneMatchRate)} · TB never named outside the considerations{" "}
+            {rate(tb.noLeakRate)}
+          </p>
+        </>
+      ) : (
+        <p className="muted">No TB screening numbers in this run.</p>
+      )}
     </div>
   );
 }
@@ -421,6 +487,49 @@ function Output({ result }: { result: EvalResult }) {
             <dd>{(summary.impression ?? []).join(" ")}</dd>
             <dt>Recommendation</dt>
             <dd>{summary.recommendation ?? "–"}</dd>
+          </dl>
+        </>
+      );
+    }
+    case "tb": {
+      const summary = (o.summary ?? {}) as { impression?: string[]; recommendation?: string };
+      const lifted = str(o.priority) !== str(o.triagePriority);
+      return (
+        <>
+          <ol className="ev-findings">
+            {list(o.findings).map((f, i) => {
+              const x = f as { title: string; description: string; abnormal?: boolean; location?: string | null; pattern?: string; outlines?: unknown[] };
+              return (
+                <li key={i}>
+                  <strong>{x.title}</strong> {x.description}
+                  <span className="ev-findmeta muted">
+                    {x.abnormal ? "Abnormal" : "Pertinent normal"}
+                    {x.location ? ` · ${x.location}` : ""}
+                    {x.pattern === "tb_suggestive" ? " · TB-suggestive" : ""}
+                    {x.abnormal ? ` · ${list(x.outlines).length} outline${list(x.outlines).length === 1 ? "" : "s"}` : ""}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          <dl className="ev-kv">
+            <dt>Lane</dt>
+            <dd>
+              {str(o.priority)}
+              {lifted ? <span className="muted"> (triage {str(o.triagePriority)}, raised by the pattern)</span> : null}
+            </dd>
+            <dt>Considerations</dt>
+            <dd>{list(o.considerations).join(" ") || "–"}</dd>
+            <dt>Impression</dt>
+            <dd>{(summary.impression ?? []).join(" ")}</dd>
+            <dt>Recommendation</dt>
+            <dd>{summary.recommendation ?? "–"}</dd>
+            {list(o.partialLungs).length ? (
+              <>
+                <dt>Incomplete lung outline</dt>
+                <dd>{list(o.partialLungs).join(", ")}</dd>
+              </>
+            ) : null}
           </dl>
         </>
       );

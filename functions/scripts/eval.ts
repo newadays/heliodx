@@ -3,6 +3,7 @@
  * real stage code against one system at a time and grades every task.
  *
  *   npm run eval -- build-tasks                       # eval/tasks from data/out/eval/films.json
+ *   npm run eval -- build-tasks --tb                  # eval/tasks/tb from data/out/eval/tb-films.json (E16)
  *   npm run eval -- build-notes                       # patient-note tasks from HelioDX drafts (GPU)
  *   npm run eval -- run --system helio|medgemma [--family triage] [--limit 3] [--split held-out] [--mock]
  *   npm run eval -- publish <runId>                   # write a local run to Firestore (SEED_TARGET=project for live)
@@ -33,7 +34,7 @@ import type { Segmenter } from "../src/tools/segment";
 import { mockGenerate, mockSegment } from "../src/eval/mock";
 import { runTask, type RunDeps } from "../src/eval/runner";
 import { markdownTable, summarize } from "../src/eval/summary";
-import { buildTasks, noteTask, type Film } from "../src/eval/tasks";
+import { buildTasks, buildTbTasks, noteTask, type Film, type TbFilm } from "../src/eval/tasks";
 import { EVAL_FAMILIES, type EvalFamily, type EvalResult, type EvalRun, type EvalSystem, type EvalTask } from "../src/eval/types";
 
 const REPO = resolve(__dirname, "../..");
@@ -71,6 +72,12 @@ function readFilms(): Film[] {
   const path = join(DATA, "films.json");
   if (!existsSync(path)) throw new Error("data/out/eval/films.json is missing: run python3 -I data/fetch_demo_samples.py --eval");
   return (JSON.parse(readFileSync(path, "utf8")) as { films: Film[] }).films;
+}
+
+function readTbFilms(): TbFilm[] {
+  const path = join(DATA, "tb-films.json");
+  if (!existsSync(path)) throw new Error("data/out/eval/tb-films.json is missing: run python3 -I data/fetch_tb_sets.py --eval");
+  return (JSON.parse(readFileSync(path, "utf8")) as { films: TbFilm[] }).films;
 }
 
 function readTasks(): EvalTask[] {
@@ -118,7 +125,8 @@ function deps(system: EvalSystem, mock: boolean): RunDeps {
     model: mock ? "mock" : SYSTEMS[system].model,
     generate,
     segment: cachedSegment(mock),
-    loadFilm: async (id) => readFileSync(join(DATA, "films", `${id}.jpg`)),
+    // NIH films are the JPEG copies from fetch_demo_samples.py; TB-set films the original PNGs from fetch_tb_sets.py.
+    loadFilm: async (id, dataset) => readFileSync(dataset ? join(DATA, "tb", `${id}.png`) : join(DATA, "films", `${id}.jpg`)),
     gpuUsdPerHour: Number(process.env.EVAL_GPU_USD_PER_HOUR ?? 0),
   };
 }
@@ -218,10 +226,14 @@ async function publish(id: string): Promise<void> {
   const db = getFirestore();
   const ref = db.collection("evalRuns").doc(record.id);
   const batch = db.batch();
-  for (const r of results) batch.set(ref.collection("results").doc(r.taskId), r);
+  // E16: the NLM TB sets may not be shared outside the research group, so
+  // per-film TB results stay local; only the aggregate (record.tb) is published.
+  const shared = results.filter((r) => r.family !== "tb");
+  for (const r of shared) batch.set(ref.collection("results").doc(r.taskId), r);
   batch.set(ref, { ...record, published: true });
   await batch.commit();
-  console.log(`Published ${record.id} (${results.length} results) to ${process.env.SEED_TARGET === "project" ? `project ${PROJECT_ID}` : "the emulator"}.`);
+  if (shared.length < results.length) console.log(`Kept ${results.length - shared.length} TB results local (aggregate only).`);
+  console.log(`Published ${record.id} (${shared.length} results) to ${process.env.SEED_TARGET === "project" ? `project ${PROJECT_ID}` : "the emulator"}.`);
 }
 
 /** Patient-note tasks: HelioDX drafts on held-out films, "signed" as drafted by a simulated signer. */
@@ -252,6 +264,14 @@ async function main(): Promise<void> {
   const { cmd, pos, flags } = args(process.argv.slice(2));
   switch (cmd) {
     case "build-tasks": {
+      if (flags.tb === true) {
+        const tb = buildTbTasks(readTbFilms());
+        rmSync(join(TASKS_DIR, "tb"), { recursive: true, force: true });
+        tb.forEach(writeTask);
+        const count = (split: string, label: string) => tb.filter((t) => t.split === split && t.film?.label === label).length;
+        console.log(`Wrote ${tb.length} TB tasks to eval/tasks/tb (held-out ${count("held-out", "tb")} TB + ${count("held-out", "normal")} normal; tuning ${count("tuning", "tb")} + ${count("tuning", "normal")}).`);
+        return;
+      }
       const tasks = buildTasks(readFilms());
       for (const f of ["intake", "triage", "prep"]) rmSync(join(TASKS_DIR, f), { recursive: true, force: true });
       tasks.forEach(writeTask);

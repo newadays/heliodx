@@ -55,6 +55,8 @@
 .ev-kv dd{margin:0;overflow-wrap:anywhere}
 .ev-kv dd.mono{font-size:13px}
 .ev-findings{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.ev-findmeta{display:block;font-size:13px;margin-top:2px}
+.ev-tbnote{font-size:14px;max-width:820px;text-wrap:pretty}
 .ev-note{font-size:14px}
 .ev-error{color:var(--hx-red);font-size:14px}
 

@@ -1,27 +1,31 @@
 /**
  * E15 · The published evaluation runs, for the public /evals page. No sign-in:
  * `evalRuns` is readable by anyone and written only by `scripts/eval.ts`
- * through the Admin SDK (firestore.rules). The latest published run per
- * system is shown.
+ * through the Admin SDK (firestore.rules). Per system and family, the latest
+ * published run that covers the family is shown, so a TB-only run (E16) does
+ * not hide the other families.
  */
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 
-import type { EvalResult, EvalRun, EvalSystem } from "@/functions/src/eval/types";
+import { EVAL_FAMILIES, type EvalFamily, type EvalResult, type EvalRun, type EvalSystem } from "@/functions/src/eval/types";
 import { db } from "~/firebase";
 
 export const SYSTEMS: EvalSystem[] = ["helio", "medgemma"];
 
 export interface EvalData {
+  /** The latest published run per system. */
   runs: Partial<Record<EvalSystem, EvalRun>>;
+  /** The run each family's results come from, per system. */
+  familyRuns: Partial<Record<EvalSystem, Partial<Record<EvalFamily, EvalRun>>>>;
   /** taskId → result per system, in family, film and variant order (`sortKey`). */
   tasks: { taskId: string; bySystem: Partial<Record<EvalSystem, EvalResult>> }[];
 }
 
-const FAMILY_ORDER = ["intake", "triage", "prep", "note"];
+const FAMILY_ORDER = ["intake", "triage", "prep", "note", "tb"];
 const VARIANT_ORDER = ["clean", "blur", "lowres", "nonmedical"];
 
-/** Family, then film number, then intake variant: "intake-blur-3" sorts after "intake-clean-3". */
+/** Family, then film number, then intake variant: "intake-blur-3" sorts after "intake-clean-3", "tb-10" after "tb-9". */
 export function sortKey(taskId: string): string {
   const [family, ...rest] = taskId.split("-");
   const n = Number(rest[rest.length - 1]) || 0;
@@ -30,6 +34,16 @@ export function sortKey(taskId: string): string {
   // Non-medical images come after the films.
   const film = variant === 3 ? 900 + n : n;
   return `${f < 0 ? 9 : f}-${String(film).padStart(4, "0")}-${variant}`;
+}
+
+/** For each family, the newest published run (runs newest first) that has results for it. */
+export function pickFamilyRuns(runs: readonly EvalRun[]): Partial<Record<EvalFamily, EvalRun>> {
+  const out: Partial<Record<EvalFamily, EvalRun>> = {};
+  for (const run of runs) {
+    if (!run.published) continue;
+    for (const f of EVAL_FAMILIES) if (!out[f] && run.summary?.[f]) out[f] = run;
+  }
+  return out;
 }
 
 export function useEvalRuns(): { data: EvalData | null; loading: boolean; error: Error | null; retry: () => void } {
@@ -41,28 +55,35 @@ export function useEvalRuns(): { data: EvalData | null; loading: boolean; error:
     setState((s) => ({ ...s, loading: true, error: null }));
     (async () => {
       const snap = await getDocs(query(collection(db, "evalRuns"), orderBy("startedAt", "desc"), limit(20)));
+      const all = snap.docs.map((d) => ({ ...(d.data() as EvalRun), id: d.id }));
       const runs: EvalData["runs"] = {};
-      for (const d of snap.docs) {
-        const run = { ...(d.data() as EvalRun), id: d.id };
-        if (run.published && !runs[run.system]) runs[run.system] = run;
+      const familyRuns: EvalData["familyRuns"] = {};
+      for (const system of SYSTEMS) {
+        const mine = all.filter((r) => r.system === system && r.published);
+        if (!mine.length) continue;
+        runs[system] = mine[0];
+        familyRuns[system] = pickFamilyRuns(mine);
       }
       const order: string[] = [];
       const byTask = new Map<string, EvalData["tasks"][number]>();
       for (const system of SYSTEMS) {
-        const run = runs[system];
-        if (!run) continue;
-        const results = await getDocs(collection(db, "evalRuns", run.id, "results"));
-        for (const r of results.docs) {
-          const result = r.data() as EvalResult;
-          if (!byTask.has(result.taskId)) {
-            byTask.set(result.taskId, { taskId: result.taskId, bySystem: {} });
-            order.push(result.taskId);
+        const chosen = familyRuns[system] ?? {};
+        for (const run of new Set(Object.values(chosen))) {
+          const results = await getDocs(collection(db, "evalRuns", run.id, "results"));
+          for (const r of results.docs) {
+            const result = r.data() as EvalResult;
+            // Only the families this run is the latest for.
+            if (chosen[result.family]?.id !== run.id) continue;
+            if (!byTask.has(result.taskId)) {
+              byTask.set(result.taskId, { taskId: result.taskId, bySystem: {} });
+              order.push(result.taskId);
+            }
+            byTask.get(result.taskId)!.bySystem[system] = result;
           }
-          byTask.get(result.taskId)!.bySystem[system] = result;
         }
       }
       order.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
-      return { runs, tasks: order.map((id) => byTask.get(id)!) };
+      return { runs, familyRuns, tasks: order.map((id) => byTask.get(id)!) };
     })().then(
       (data) => live && setState({ data, loading: false, error: null }),
       (error: unknown) => live && setState({ data: null, loading: false, error: error instanceof Error ? error : new Error(String(error)) }),

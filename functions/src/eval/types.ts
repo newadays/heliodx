@@ -6,11 +6,12 @@
  * `functions/scripts/eval.ts` against each system. Results are written to
  * `evalRuns/{runId}` and `evalRuns/{runId}/results/{taskId}`, which anyone may
  * read (the public /evals page) and no client may write. Nothing here holds a
- * patient identifier: the films are public NIH ChestX-ray14 images and every
- * clinical context is synthetic.
+ * patient identifier: the films are public NIH ChestX-ray14 images or (TB
+ * family, E16) the public Shenzhen and Montgomery TB screening sets, and every
+ * indication is synthetic.
  */
 
-export const EVAL_FAMILIES = ["intake", "triage", "prep", "note"] as const;
+export const EVAL_FAMILIES = ["intake", "triage", "prep", "note", "tb"] as const;
 export type EvalFamily = (typeof EVAL_FAMILIES)[number];
 
 export const FAMILY_LABEL: Record<EvalFamily, string> = {
@@ -18,12 +19,15 @@ export const FAMILY_LABEL: Record<EvalFamily, string> = {
   triage: "Triage",
   prep: "Prep",
   note: "Patient note",
+  tb: "TB screening",
 };
 
 /** How a criterion is graded. Only deterministic exists so far (E11, E12 are later). */
 export type GradingMethod = "deterministic" | "agent" | "clinician";
 
 export type EvalSystem = "helio" | "medgemma";
+/** E16: the public TB screening sets. */
+export type TbDataset = "shenzhen" | "montgomery";
 export type Lane = "routine" | "urgent" | "critical";
 
 /** How an intake variant was built from its film (ground truth by construction). */
@@ -43,8 +47,20 @@ export interface EvalTask {
   tags: string[];
   /** Tuning half for threshold work (E3); reports use held-out. */
   split: "tuning" | "held-out";
-  /** The NIH film; absent for synthetic non-medical intake images. */
-  film: { id: string; nihLabel: string; rowIdx: number; source: string } | null;
+  /**
+   * The film; absent for synthetic non-medical intake images. NIH films carry
+   * `nihLabel` and `rowIdx`; TB-set films (E16) carry `dataset`, the film-level
+   * `label` and the consensus ROI boxes (normalised 0–1, [x0, y0, x1, y1]).
+   */
+  film: {
+    id: string;
+    nihLabel?: string;
+    rowIdx?: number;
+    source: string;
+    dataset?: TbDataset;
+    label?: "tb" | "normal";
+    roi?: [number, number, number, number][];
+  } | null;
   variant?: IntakeVariant;
   /** Synthetic, never a real patient's. */
   context: { age: number | null; sex: string | null; indication: string; synthetic: true };
@@ -57,6 +73,10 @@ export interface EvalTask {
     chest?: boolean;
     lane?: Lane;
     polarity?: "normal" | "attention";
+    /** TB family: the film-level label. */
+    tbSuggestive?: boolean;
+    /** TB family: side and zone named by the clinical reading, only when it names a side. */
+    zone?: { sides: ("left" | "right")[]; zone: "upper" | "middle" | "lower" | null };
   };
   /** Patient note tasks: the signed text both systems rewrite. */
   signed?: { studyType: string; findings: string; impression: string[]; recommendation: string };
@@ -114,5 +134,24 @@ export interface EvalRun {
   summary: Partial<Record<EvalFamily, FamilySummary>>;
   /** Triage only: critical films sent critical, and normal films sent above routine. */
   triage: { criticalRecall: number | null; abnormalRecall: number | null; overTriage: number | null; floorAbnormalRecall: number | null } | null;
+  /** TB family (E16): screening numbers over the films that ran without error. */
+  tb?: TbSummary | null;
   published: boolean;
+}
+
+/** E16 · TB screening per run. Intervals are 95% Wilson; rates are null when nothing applies. */
+export interface TbSummary {
+  n: number;
+  /** TB films flagged (tb_flag passed) over TB films. */
+  sensitivity: number | null;
+  /** Normal films not flagged over normal films. */
+  specificity: number | null;
+  sensitivityCi: [number, number] | null;
+  specificityCi: [number, number] | null;
+  /** TB films sent urgent or higher after the pattern lift. */
+  floorRate: number | null;
+  /** TB films with a zone to match whose outline matched it. */
+  zoneMatchRate: number | null;
+  /** Films whose clinician-facing text never named TB. */
+  noLeakRate: number | null;
 }
