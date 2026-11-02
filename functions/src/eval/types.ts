@@ -136,11 +136,17 @@ export interface EvalRun {
   triage: { criticalRecall: number | null; abnormalRecall: number | null; overTriage: number | null; floorAbnormalRecall: number | null } | null;
   /** TB family (E16): screening numbers over the films that ran without error. */
   tb?: TbSummary | null;
+  /** E17: the same numbers per split (tuning films were seen while tuning the lung cutoff and prompts). */
+  tbBySplit?: { heldOut: TbSummary | null; tuning: TbSummary | null } | null;
+  /** E17: the vLLM release the GPU image pins (gpu/Dockerfile). */
+  vllm?: string | null;
   published: boolean;
 }
 
 /** E16 · TB screening per run. Intervals are 95% Wilson; rates are null when nothing applies. */
 export interface TbSummary {
+  /** E17: the TB set the films came from, or "mixed". */
+  dataset?: TbDataset | "mixed" | null;
   n: number;
   /** TB films flagged (tb_flag passed) over TB films. */
   sensitivity: number | null;

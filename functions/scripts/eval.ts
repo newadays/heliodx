@@ -5,9 +5,10 @@
  *   npm run eval -- build-tasks                       # eval/tasks from data/out/eval/films.json
  *   npm run eval -- build-tasks --tb                  # eval/tasks/tb from data/out/eval/tb-films.json (E16)
  *   npm run eval -- build-notes                       # patient-note tasks from HelioDX drafts (GPU)
- *   npm run eval -- run --system helio|medgemma [--family triage] [--limit 3] [--split held-out] [--mock]
+ *   npm run eval -- run --system helio|medgemma [--family triage] [--limit 3] [--split held-out] [--dataset shenzhen] [--resume <runId>] [--mock]
  *   npm run eval -- publish <runId>                   # write a local run to Firestore (SEED_TARGET=project for live)
  *   npm run eval -- table <runId> [<runId>…]           # Markdown table for the README
+ *   npm run eval -- export <runId>… [--bucket [name]]  # E17: the public results JSON (local copy; --bucket uploads it)
  *
  * Runs are saved to data/out/eval/runs/<runId>.json (gitignored) before
  * anything is published. SAM masks are cached per image in
@@ -16,7 +17,8 @@
  * Environment for a live run: GPU_URL (the HelioDX service, also used for
  * SAM), BASELINE_GPU_URL (the MedGemma service, for --system medgemma), and
  * application-default credentials that may invoke both (see eval/README.md).
- * EVAL_GPU_USD_PER_HOUR sets the cost per task.
+ * EVAL_GPU_USD_PER_HOUR sets the cost per task. EVAL_RESULTS_BUCKET names the
+ * bucket `export --bucket` writes to (kept out of the repository).
  */
 import { createHash } from "node:crypto";
 import { execSync } from "node:child_process";
@@ -25,6 +27,7 @@ import { join, resolve } from "node:path";
 
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 
 import { MODELS } from "../src/config";
 import { generateJson } from "../src/models/client";
@@ -32,6 +35,7 @@ import { samSegment, type SegmentResponse } from "../src/models/gpu";
 import { gpuAudience, gpuIdToken } from "../src/models/gpuAuth";
 import type { Segmenter } from "../src/tools/segment";
 import { mockGenerate, mockSegment } from "../src/eval/mock";
+import { buildPublicResults } from "../src/eval/publicResults";
 import { runTask, type RunDeps } from "../src/eval/runner";
 import { markdownTable, summarize } from "../src/eval/summary";
 import { buildTasks, buildTbTasks, noteTask, type Film, type TbFilm } from "../src/eval/tasks";
@@ -39,6 +43,7 @@ import { EVAL_FAMILIES, type EvalFamily, type EvalResult, type EvalRun, type Eva
 
 const REPO = resolve(__dirname, "../..");
 const TASKS_DIR = join(REPO, "eval/tasks");
+const PUBLIC = join(REPO, "data/out/eval/public");
 const DATA = join(REPO, "data/out/eval");
 const RUNS = join(DATA, "runs");
 const MASKS = join(DATA, "masks");
@@ -172,15 +177,48 @@ async function run(flags: Record<string, string | true>): Promise<void> {
   let tasks = readTasks();
   if (typeof flags.family === "string") tasks = tasks.filter((t) => t.family === (flags.family as EvalFamily));
   if (typeof flags.split === "string") tasks = tasks.filter((t) => t.split === flags.split);
+  if (typeof flags.dataset === "string") {
+    if (flags.dataset !== "shenzhen" && flags.dataset !== "montgomery") throw new Error("--dataset shenzhen|montgomery");
+    tasks = tasks.filter((t) => t.film?.dataset === flags.dataset);
+  }
   if (typeof flags.limit === "string") tasks = tasks.slice(0, Number(flags.limit));
   if (!tasks.length) throw new Error("No tasks: run build-tasks first, or check --family/--split.");
 
+  // --resume: keep what the saved run already graded; re-run tasks that hit the GPU going away.
+  const resumed = typeof flags.resume === "string" ? readRun(flags.resume) : null;
+  if (resumed && resumed.run.system !== system) throw new Error(`${resumed.run.id} is a ${resumed.run.system} run`);
+  const done = new Map((resumed?.results ?? []).filter((r) => !(r.error && INFRA_ERROR.test(r.error))).map((r) => [r.taskId, r]));
+
   const d = deps(system, mock);
-  if (!mock) await warmUp(system);
-  const startedAt = new Date();
-  const runId = `${system}${mock ? "-mock" : ""}-${startedAt.toISOString().slice(0, 19).replace(/[-:T]/g, "")}`;
+  const startedAt = resumed ? new Date(resumed.run.startedAt) : new Date();
+  const runId = resumed?.run.id ?? `${system}${mock ? "-mock" : ""}-${startedAt.toISOString().slice(0, 19).replace(/[-:T]/g, "")}`;
   const results: EvalResult[] = [];
+  const save = (): EvalRun => {
+    const record: EvalRun = {
+      id: runId,
+      system,
+      ...SYSTEMS[system],
+      model: d.model,
+      commit: commit(),
+      startedAt: startedAt.toISOString(),
+      finishedAt: new Date().toISOString(),
+      gpuUsdPerHour: d.gpuUsdPerHour,
+      vllm: vllmVersion(),
+      published: false,
+      ...summarize(results, tasks),
+    };
+    mkdirSync(RUNS, { recursive: true });
+    writeFileSync(join(RUNS, `${runId}.json`), JSON.stringify({ run: record, results }, null, 2));
+    return record;
+  };
+  if (done.size) console.log(`Resuming ${runId}: ${done.size} of ${tasks.length} tasks already graded.`);
+  if (!mock && done.size < tasks.length) await warmUp(system);
   for (const [i, task] of tasks.entries()) {
+    const kept = done.get(task.id);
+    if (kept) {
+      results.push(kept);
+      continue;
+    }
     let r = await runTask(task, d);
     // A GPU instance can vanish mid-run (Cloud Run starts a new one, ~5 min).
     // That is infrastructure, not the model: wait until healthy and run the task again.
@@ -192,24 +230,60 @@ async function run(flags: Record<string, string | true>): Promise<void> {
     results.push(r);
     const mark = r.error ? "error" : `${Math.round(r.score * 100)}%`;
     console.log(`[${i + 1}/${tasks.length}] ${task.id}: ${mark} · ${(r.latencyMs / 1000).toFixed(1)} s${r.error ? ` · ${r.error.slice(0, 120)}` : ""}`);
+    // Saved after every task, so a crash loses nothing: `run --resume <runId>` picks up here.
+    save();
   }
-  const record: EvalRun = {
-    id: runId,
-    system,
-    ...SYSTEMS[system],
-    model: d.model,
-    commit: commit(),
-    startedAt: startedAt.toISOString(),
-    finishedAt: new Date().toISOString(),
-    gpuUsdPerHour: d.gpuUsdPerHour,
-    published: false,
-    ...summarize(results, tasks),
-  };
-  mkdirSync(RUNS, { recursive: true });
-  writeFileSync(join(RUNS, `${runId}.json`), JSON.stringify({ run: record, results }, null, 2));
+  const record = save();
   console.log(`\nSaved data/out/eval/runs/${runId}.json\n`);
   console.log(markdownTable([record]));
   if (!d.gpuUsdPerHour) console.log("\nNote: EVAL_GPU_USD_PER_HOUR is not set, so cost per task is 0.");
+}
+
+/** The vLLM release the GPU image pins (`ARG VLLM_IMAGE=vllm/vllm-openai:v0.32.0`). */
+function vllmVersion(): string | null {
+  const path = join(REPO, "gpu/Dockerfile");
+  if (!existsSync(path)) return null;
+  return /ARG VLLM_IMAGE=\S+:v?([\w.]+)/.exec(readFileSync(path, "utf8"))?.[1] ?? null;
+}
+
+/**
+ * E17 · The public results file from local runs. Always writes a local copy to
+ * data/out/eval/public; `--bucket` (EVAL_RESULTS_BUCKET) or `--bucket <name>`
+ * also uploads results/runs/<stamp>.json, results/latest.json and
+ * results/index.json. Mock runs are never uploaded.
+ */
+async function exportResults(ids: string[], flags: Record<string, string | true>): Promise<void> {
+  if (!ids.length) throw new Error("export <runId> [<runId>…]");
+  const runs = ids.map(readRun);
+  const generatedAt = new Date().toISOString();
+  const data = buildPublicResults({ runs, tasks: readTasks(), vllm: vllmVersion(), generatedAt });
+  const json = JSON.stringify(data, null, 2) + "\n";
+  const file = `${generatedAt.slice(0, 19).replace(/[-:]/g, "")}Z.json`;
+  const entry = { file, generatedAt, runIds: data.systems.flatMap((s) => s.runIds) };
+
+  mkdirSync(join(PUBLIC, "runs"), { recursive: true });
+  writeFileSync(join(PUBLIC, "runs", file), json);
+  writeFileSync(join(PUBLIC, "latest.json"), json);
+  const localIndex = join(PUBLIC, "index.json");
+  const prior = existsSync(localIndex) ? (JSON.parse(readFileSync(localIndex, "utf8")) as { runs: (typeof entry)[] }).runs : [];
+  writeFileSync(localIndex, JSON.stringify({ runs: [entry, ...prior] }, null, 2) + "\n");
+  console.log(`Wrote data/out/eval/public/runs/${file} and latest.json (${data.tasks.length} tasks, ${data.systems.length} systems).`);
+
+  if (!flags.bucket) return;
+  const bucketName = typeof flags.bucket === "string" ? flags.bucket : process.env.EVAL_RESULTS_BUCKET;
+  if (!bucketName) throw new Error("--bucket needs a name or EVAL_RESULTS_BUCKET");
+  if (runs.some((r) => r.run.id.includes("-mock-"))) throw new Error("Mock runs are never uploaded.");
+  if (!getApps().length) initializeApp({ projectId: PROJECT_ID });
+  const bucket = getStorage().bucket(bucketName);
+  const put = (path: string, body: string, cacheControl: string) =>
+    bucket.file(path).save(body, { resumable: false, contentType: "application/json", metadata: { cacheControl } });
+  await put(`results/runs/${file}`, json, "public, max-age=31536000, immutable");
+  await put("results/latest.json", json, "public, max-age=300");
+  const index = bucket.file("results/index.json");
+  const [exists] = await index.exists();
+  const remote = exists ? (JSON.parse((await index.download())[0].toString("utf8")) as { runs: (typeof entry)[] }).runs : [];
+  await put("results/index.json", JSON.stringify({ runs: [entry, ...remote] }, null, 2) + "\n", "public, max-age=300");
+  console.log(`Uploaded results/runs/${file}, results/latest.json and results/index.json.`);
 }
 
 function readRun(id: string): { run: EvalRun; results: EvalResult[] } {
@@ -285,6 +359,8 @@ async function main(): Promise<void> {
     case "publish":
       if (!pos[0]) throw new Error("publish <runId>");
       return publish(pos[0]);
+    case "export":
+      return exportResults(pos, flags);
     case "table":
       console.log(markdownTable(pos.map((id) => readRun(id).run)));
       return;
