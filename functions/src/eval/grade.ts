@@ -150,7 +150,7 @@ export function tbCriteria(label: "tb" | "normal", zone = false): EvalCriterion[
     c("no_leak", "No observation or summary names TB"),
     c("outline", "Every abnormal observation is outlined"),
     ...(zone ? [c("zone_match", "An outline matches the read zone or a marked region")] : []),
-    c("read_gate", "A radiologist read is required before signing"),
+    c("read_gate", "A radiologist read is recommended before signing"),
   ];
 }
 
