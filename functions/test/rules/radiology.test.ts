@@ -114,6 +114,15 @@ describe("radiologist reads", () => {
     expect(await read(ref)).toMatchObject({ reason: "weak_finding", requestedBy: UID_A1 });
   });
 
+  it("lets the clinician sign without the read, recording that the read was bypassed", async () => {
+    const ref = await study("bypass", { priority: "critical", flags: { needsHuman: true } });
+    expect(await tick(NOW)).toEqual({ opened: 1, stepped: 0 });
+    await signStudyCore(db, UID_A1, { studyId: "bypass", confirmImpression: true, bypassRead: true });
+    const signed = (await ref.get()).data()!;
+    expect(signed.status).toBe("signed");
+    expect(signed.signed.readBypassed).toEqual({ reason: "critical", readOpen: true });
+  });
+
   it("refuses a request from another clinician, a second request and one before the draft", async () => {
     await study("own");
     await expect(requestRadiologistReadCore(db, { uid: UID_B1, orgId: "other-clinic" }, { studyId: "own" })).rejects.toMatchObject({ code: "permission-denied" });

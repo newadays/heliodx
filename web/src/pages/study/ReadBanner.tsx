@@ -35,7 +35,7 @@ export function ReadBanner({ study }: { study: Study }) {
 
   if (read.state === "none") {
     // Only offered while the draft can still be signed.
-    const hint = read.need === "request" ? `A radiologist read is required before signing: ${read.reason}.` : read.suggested ? "The coordinator recommends a radiologist read." : null;
+    const hint = read.need === "request" ? `A radiologist read is recommended before signing: ${read.reason}. You can still sign without it.` : read.suggested ? "The coordinator recommends a radiologist read." : null;
     return (
       <div className={`rd-banner ${read.need === "request" ? "rd-banner--need" : ""}`} role="note">
         <Icon name="info" size={14} />

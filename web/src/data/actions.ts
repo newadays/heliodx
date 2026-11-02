@@ -80,12 +80,12 @@ export function deviceLabel(): string {
   return `web / ${navigator.userAgent.slice(0, 100)}`;
 }
 
-export async function signStudy(studyId: string, confirmImpression: boolean): Promise<SignOutcome> {
+export async function signStudy(studyId: string, confirmImpression: boolean, bypassRead = false): Promise<SignOutcome> {
   try {
-    const { data } = await httpsCallable<{ studyId: string; confirmImpression: boolean; device: string }, { reportHash: string; signedAt: string }>(
+    const { data } = await httpsCallable<{ studyId: string; confirmImpression: boolean; device: string; bypassRead: boolean }, { reportHash: string; signedAt: string }>(
       functions,
       "signStudy",
-    )({ studyId, confirmImpression, device: deviceLabel() });
+    )({ studyId, confirmImpression, device: deviceLabel(), bypassRead });
     return { ok: true, ...data };
   } catch (error) {
     if (error instanceof FirebaseError && error.code === "functions/failed-precondition") {

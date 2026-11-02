@@ -11,6 +11,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 import { wrongState } from "../lib/callableErrors";
 import { freezeReport, reportHash, signNeeds, type SignNeed, type SignableStudy } from "../lib/report";
+import { readNeed, readRequirement } from "../radiology/gate";
 import { reviewHash } from "../lib/reviewHash";
 import { WrongStateError } from "../study/stateMachine";
 import { StudyWriter } from "../study/writer";
@@ -23,6 +24,8 @@ export interface SignRequest {
   confirmImpression?: boolean;
   /** The signing browser, as "web / <user agent>" (first 100 characters). */
   device?: string;
+  /** The clinician signs without the radiologist read the gate asks for; recorded with the signature. */
+  bypassRead?: boolean;
 }
 
 export interface SignResult {
@@ -56,7 +59,8 @@ export async function signStudyCore(
     "signed",
     (data) => {
       const study = data as SignableStudy & { clinicianName?: string };
-      const needs = signNeeds(study, { confirmImpression: req.confirmImpression === true });
+      const bypass = req.bypassRead === true;
+      const needs = signNeeds(study, { confirmImpression: req.confirmImpression === true, bypassRead: bypass });
       if (needs.length) throw new NotReadyToSign(needs);
       const report = freezeReport(req.studyId, study, uid, now);
       hash = reportHash(report);
@@ -70,6 +74,8 @@ export async function signStudyCore(
           reportHash: hash,
           reviewHash: reviewHash(study.findings ?? []),
           impressionConfirmed: !study.clinicianSummary?.editedByClinician,
+          // A read the gate asked for but the clinician signed without (its reason, and whether one was open).
+          readBypassed: bypass && readNeed(study) ? { reason: readRequirement(study)?.reason ?? null, readOpen: readNeed(study) === "close" } : null,
           // B26: how many AI considerations the clinician added to the impression (a count, never the text).
           considerationsAdopted: ((study.clinicianSummary as { considerationsAdopted?: string[] } | null | undefined)?.considerationsAdopted ?? []).length,
         },
@@ -78,7 +84,13 @@ export async function signStudyCore(
     { action: "study_signed" },
   );
   await traceScope(ref, "signed", async () => {
-    traceEvent({ kind: "check", name: "freeze_report", args: { confirmImpression: req.confirmImpression === true }, ok: true, result: `report frozen · ${hash.slice(0, 15)}…` });
+    traceEvent({
+      kind: "check",
+      name: "freeze_report",
+      args: { confirmImpression: req.confirmImpression === true, bypassRead: req.bypassRead === true },
+      ok: true,
+      result: `report frozen · ${hash.slice(0, 15)}…${req.bypassRead === true ? " · signed without the radiologist read" : ""}`,
+    });
   });
   return { reportHash: hash, signedAt: now.toISOString() };
 }
