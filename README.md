@@ -36,7 +36,7 @@ building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/
 | Web app (React + Vite) | Working: upload, review, sign, patient note PDF, agent console |
 | Backend pipeline (Cloud Functions) | Working end to end on Muse Glimmer and SAM 3.1 |
 | Muse Wonder coordination | Completed |
-| Accuracy eval on public chest X-rays | Run 31 October 2026: 70 tasks on NIH ChestX-ray14, HelioDX vs MedGemma 27B on the same GPU. Results below and on the app's public `/evals` page ([`eval/README.md`](eval/README.md)) |
+| Accuracy eval on public chest X-rays | Published 2 November 2026: 160 tasks (70 on NIH ChestX-ray14, 90 TB screening on the Shenzhen set), HelioDX vs MedGemma 27B on the same GPU. Results below and at [evals.heliodx.com](https://evals.heliodx.com) ([`eval/README.md`](eval/README.md)) |
 
 ## Which model does what
 
@@ -84,31 +84,49 @@ analytics, crash reports, or logs. See
 
 ## Eval results
 
-70 tasks on public NIH ChestX-ray14 films, graded by code, run on 31 October
-2026 (commit `777914c`). Both systems ran on one NVIDIA RTX PRO 6000 each and
-got the same SAM 3.1 masks and measurements, so only the language model
-differs. Method, task files and limits: [`eval/README.md`](eval/README.md).
-Every task and both outputs: the app's public `/evals` page.
+160 tasks on public chest X-rays, graded by code: 70 on NIH ChestX-ray14 films
+(run 1 November 2026, commit `0c344b6`) and 90 TB screening tasks on the
+Shenzhen set (run 2 November 2026, commit `908a62e`). Both systems ran on one
+NVIDIA RTX PRO 6000 each and got the same SAM 3.1 masks and measurements, so
+only the language model differs. Method, task files and limits:
+[`eval/README.md`](eval/README.md). Every task and both systems' scores:
+[evals.heliodx.com](https://evals.heliodx.com).
 
 | Family | Tasks | HelioDX (Glimmer 30B FP8) | MedGemma 27B (bf16) | Median time, H / M | Cost per task, H / M |
 |---|---|---|---|---|---|
-| Intake | 14 | 96.4% | 92.9% | 2.3 s / 3.6 s | $0.003 / $0.005 |
-| Triage | 24 | 84.7% | 84.7% | 3.4 s / 6.5 s | $0.004 / $0.009 |
-| Prep | 24 | 91.7% | 92.5% | 24.3 s / 46.8 s | $0.033 / $0.074 |
-| Patient note | 8 | 90.0% | 60.0% | 2.4 s / 8.8 s | $0.004 / $0.011 |
+| Intake | 14 | 94.6% | 92.9% | 2.6 s / 3.6 s | $0.003 / $0.005 |
+| Triage | 24 | 84.7% | 84.7% | 3.5 s / 6.9 s | $0.004 / $0.009 |
+| Prep | 24 | 90.0% | 85.8% | 27.2 s / 116.0 s | $0.040 / $0.115 |
+| Patient note | 8 | 87.5% | 60.0% | 2.6 s / 8.7 s | $0.004 / $0.011 |
+| TB screening | 90 | 69.2% | 58.5% | 29.4 s / 49.2 s | $0.043 / $0.106 |
 
-Cost is GPU time at $4.50 per hour. On the held-out half of the films (the
+Mean score: the share of a task's criteria passed, averaged over the family.
+Cost is GPU time at $4.50 per hour. On the held-out half of the NIH films (the
 lung cutoff was tuned on the other half), triage is 94.4% for HelioDX and
-91.7% for MedGemma, and prep is 95.0% for both.
+91.7% for MedGemma, and prep is 86.7% and 91.7%.
+
+TB screening, Shenzhen set (45 TB and 45 normal films):
+
+| | Films graded | Sensitivity (95% CI) | Specificity (95% CI) | TB sent urgent or higher | Outline in the read zone |
+|---|---|---|---|---|---|
+| HelioDX | 88 | 31.8% (20.0%–46.6%) | 100.0% (92.0%–100.0%) | 63.6% | 43.9% |
+| MedGemma 27B | 82 | 36.6% (23.6%–51.9%) | 100.0% (91.4%–100.0%) | 73.2% | 39.5% |
+
+Films that errored are left out of the counts: HelioDX lost 2 (one answer cut
+off at the length limit, one where the lungs were not found), MedGemma 8 (seven
+cut off, one lungs not found).
 
 What it shows:
 
 - HelioDX is about twice as fast and half the cost per task. Its clearest
-  lead is the patient note (90% against 60%): rewriting a signed report
+  lead is the patient note (87.5% against 60%): rewriting a signed report
   without adding words or conditions.
-- Triage and prep are level. Each system sent 2 of 4 pneumothorax films to
-  the critical lane; HelioDX over-triaged fewer normal films (37.5% against
-  50%).
+- Triage is level. Each system sent 2 of 4 pneumothorax films to the critical
+  lane; HelioDX over-triaged fewer normal films (37.5% against 50%).
+- TB: neither system flagged a normal film, and both miss most TB films. The
+  sensitivity intervals overlap almost completely, so neither leads on finding
+  TB. HelioDX outlines the lungs more often, which is most of its higher mean
+  score.
 - A weakness found: Glimmer called 3 of 4 clean PA films "AP", and the
   heart-size check runs only on PA films, so an enlarged heart can go
   unflagged. MedGemma read all 4 as PA.
@@ -266,6 +284,7 @@ cd functions && npm run test:rules                 # security rules, inside the 
 |---|---|
 | `web/` | The web app (React + Vite): worklist, study workspace, agent console, public `/evals` page |
 | `eval/` | The evaluation task library and how to run it |
+| `site/` | The public results site, [evals.heliodx.com](https://evals.heliodx.com) |
 | `design/` | Design spec, tokens and mockups for the web app |
 | `functions/` | Cloud Functions: pipeline, callables, admin scripts, tests |
 | `gpu/` | Private model service: Muse Glimmer on vLLM and SAM 3.1 on Cloud Run GPU, with deploy scripts |

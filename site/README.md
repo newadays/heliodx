@@ -52,6 +52,6 @@ npx firebase deploy --only hosting:evals --project heliodx  # leaves the app unt
 ## Custom domain (not done yet)
 
 Firebase console → Hosting → the `heliodx-evals` site → Add custom domain →
-`heliodx.com`. Add the TXT record it shows to prove ownership, then the A
+`evals.heliodx.com`. Add the TXT record it shows to prove ownership, then the A
 records it lists, at the domain's DNS host. The certificate is issued once
 the records resolve (up to 24 hours).
