@@ -48,6 +48,7 @@ export function tbSummary(results: EvalResult[], tasks: EvalTask[]): TbSummary |
   const isTb = new Map(tasks.map((t) => [t.id, t.expected.tbSuggestive ?? t.film?.label === "tb"]));
   const ran = results.filter((r) => r.family === "tb" && !r.error);
   if (!ran.length) return null;
+  const sets = new Set(tasks.filter((t) => t.family === "tb" && ran.some((r) => r.taskId === t.id)).map((t) => t.film?.dataset ?? null));
   const tb = ran.filter((r) => isTb.get(r.taskId));
   const normal = ran.filter((r) => isTb.get(r.taskId) === false);
   const rate = (rs: EvalResult[], id: string) => {
@@ -56,6 +57,7 @@ export function tbSummary(results: EvalResult[], tasks: EvalTask[]): TbSummary |
   };
   const k = (rs: EvalResult[]) => rs.filter((r) => passed(r, "tb_flag")).length;
   return {
+    dataset: sets.size === 1 ? [...sets][0] : "mixed",
     n: ran.length,
     sensitivity: tb.length ? round(k(tb) / tb.length) : null,
     specificity: normal.length ? round(k(normal) / normal.length) : null,
@@ -67,7 +69,7 @@ export function tbSummary(results: EvalResult[], tasks: EvalTask[]): TbSummary |
   };
 }
 
-export function summarize(results: EvalResult[], tasks: EvalTask[]): Pick<EvalRun, "summary" | "triage" | "tasks" | "tb"> {
+export function summarize(results: EvalResult[], tasks: EvalTask[]): Pick<EvalRun, "summary" | "triage" | "tasks" | "tb" | "tbBySplit"> {
   const summary: EvalRun["summary"] = {};
   for (const f of EVAL_FAMILIES) {
     const rs = results.filter((r) => r.family === f);
@@ -91,7 +93,23 @@ export function summarize(results: EvalResult[], tasks: EvalTask[]): Pick<EvalRu
         }
       : null,
     tb: tbSummary(results, tasks),
+    tbBySplit: tbBySplit(results, tasks),
   };
+}
+
+/** E17 · TB numbers per split; null when the run has no TB tasks. */
+export function tbBySplit(results: EvalResult[], tasks: EvalTask[]): EvalRun["tbBySplit"] {
+  if (!results.some((r) => r.family === "tb")) return null;
+  const split = new Map(tasks.map((t) => [t.id, t.split]));
+  const of = (s: EvalTask["split"]) => tbSummary(results.filter((r) => split.get(r.taskId) === s), tasks);
+  return { heldOut: of("held-out"), tuning: of("tuning") };
+}
+
+/** For each family, the newest run (runs newest first) that has results for it. */
+export function latestFamilyRuns(runs: readonly EvalRun[]): Partial<Record<EvalFamily, EvalRun>> {
+  const out: Partial<Record<EvalFamily, EvalRun>> = {};
+  for (const run of runs) for (const f of EVAL_FAMILIES) if (!out[f] && run.summary?.[f]) out[f] = run;
+  return out;
 }
 
 const pct = (v: number | null | undefined) => (v === null || v === undefined ? "–" : `${(v * 100).toFixed(1)}%`);

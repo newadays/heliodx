@@ -8,7 +8,8 @@
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 
-import { EVAL_FAMILIES, type EvalFamily, type EvalResult, type EvalRun, type EvalSystem } from "@/functions/src/eval/types";
+import { latestFamilyRuns } from "@/functions/src/eval/summary";
+import type { EvalFamily, EvalResult, EvalRun, EvalSystem } from "@/functions/src/eval/types";
 import { db } from "~/firebase";
 
 export const SYSTEMS: EvalSystem[] = ["helio", "medgemma"];
@@ -38,12 +39,7 @@ export function sortKey(taskId: string): string {
 
 /** For each family, the newest published run (runs newest first) that has results for it. */
 export function pickFamilyRuns(runs: readonly EvalRun[]): Partial<Record<EvalFamily, EvalRun>> {
-  const out: Partial<Record<EvalFamily, EvalRun>> = {};
-  for (const run of runs) {
-    if (!run.published) continue;
-    for (const f of EVAL_FAMILIES) if (!out[f] && run.summary?.[f]) out[f] = run;
-  }
-  return out;
+  return latestFamilyRuns(runs.filter((r) => r.published));
 }
 
 export function useEvalRuns(): { data: EvalData | null; loading: boolean; error: Error | null; retry: () => void } {

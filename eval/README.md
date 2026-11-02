@@ -112,6 +112,11 @@ Limits, stated plainly:
   (median ratio 1.01 in x, 0.99 in y; an aspect-preserving frame is off by
   15% in y on tall films). Montgomery has no pixel annotations, so the same
   frame is assumed there.
+- On 26 of the first 60 Shenzhen films SAM 3.1 returned both lungs under the
+  "right lung" prompt and nothing under "left lung", so intake rejected them
+  as "lungs not found" (1 Nov run). Since 2 Nov a lung with no detection of
+  its own takes the other prompt's box on its side of the film (`pickBest`,
+  `tools/segment.ts`); that recovers 25 of the 26.
 - Many readings name no side ("STB", "inactive TB scars"); those films are
   matched on ROI boxes only, or not at all (3 of 60). Some readings name
   several places; `parseLocation` keeps every side and one zone (upper over
@@ -119,9 +124,13 @@ Limits, stated plainly:
 
 **Data and terms.** Nothing from these sets is in this repository. Each
 user fetches the images, readings and ROI boxes from the NLM and builds
-`eval/tasks/tb` locally (gitignored). The public `/evals` page shows only
-the aggregate numbers (sensitivity, specificity and rates); per-film TB
-results stay local. The NLM readme for each set states (verbatim):
+`eval/tasks/tb` locally (gitignored). The in-app `/evals` page shows only
+the aggregate numbers (sensitivity, specificity and rates). The public results
+file (E17, below) also lists each TB task by its library id and title ("tb-37",
+"TB screening · film 37") with its split, the film-level label (TB or normal)
+and each system's pass or fail per criterion; it never holds a film id, file
+name, reading, age, sex, ROI box, image or model text, so it cannot be mapped
+back to the set's files. The NLM readme for each set states (verbatim):
 
 > Shenzhen (`NLM-ChinaCXRSet-ReadMe.docx`): "Please do not share the dataset
 > outside of your research group/ organization, but forward new dataset
@@ -191,8 +200,34 @@ npm run eval -- table <helio runId> <medgemma runId>
 SEED_TARGET=project npm run eval -- publish <runId>    # to the public page
 ```
 
-Runs are saved to `data/out/eval/runs/` first; nothing is published until
-`publish`. Mock runs are never published to the live project.
+Runs are saved to `data/out/eval/runs/` after every task; nothing is
+published until `publish`. Mock runs are never published to the live project.
+A run that stops part way continues with `run … --resume <runId>` (the same
+flags), which keeps every graded task and re-runs those that lost the GPU.
+
+### Public results file (E17)
+
+The results site (E18) reads one JSON file from a public Cloud Storage bucket,
+built from local runs by `export` and validated against `PublicResultsSchema`
+(`functions/src/eval/publicSchema.ts`). For each system and family the newest
+run that has the family is used, so the NIH families and the TB family can
+come from different runs; each family keeps its run id and commit.
+
+```sh
+npm run eval -- run --system helio    --family tb --dataset shenzhen
+npm run eval -- run --system medgemma --family tb --dataset shenzhen
+npm run eval -- export <helio NIH> <medgemma NIH> <helio TB> <medgemma TB>            # data/out/eval/public
+npm run eval -- export <same runIds> --bucket            # also uploads; the name comes from EVAL_RESULTS_BUCKET
+```
+
+The upload writes `results/runs/<time>.json` (cached for a year),
+`results/latest.json` and `results/index.json` (five minutes). The bucket is
+uniform-access with public read and CORS GET; its name stays out of this
+repository. The file holds per-family and per-system summaries, triage and
+TB numbers (combined, held-out and tuning, per criterion), and per task: id,
+title, split, tags, criteria, the synthetic indication, what is expected in
+words, and per system the score, pass or fail per criterion, latency and a
+short error class. Mock runs are never uploaded.
 
 ## Data and licences
 
