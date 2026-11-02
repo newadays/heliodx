@@ -52,7 +52,18 @@ export interface SegmentResult {
 
 export type Segmenter = (image: Buffer, prompts: string[], step: PipelineStatus, threshold: number) => Promise<SegmentResponse>;
 
-/** Pure: the highest-scoring detection per label that clears its threshold. */
+const centreX = (d: Detection): number => (d.box[0] + d.box[2]) / 2;
+/** On a frontal film the patient's left lung sits on the image's right half. */
+const onSide = (label: AnatomyLabel, d: Detection): boolean => (label === "left lung" ? centreX(d) > 0.5 : centreX(d) < 0.5);
+
+/**
+ * Pure: the highest-scoring detection per label that clears its threshold.
+ * When a lung has nothing under its own prompt, SAM sometimes returned both
+ * lungs under the other lung's prompt (Shenzhen films, 2026-11-02): one box
+ * on each half. The missing lung then takes the best such box on its own
+ * side, provided the other lung's pick sits on the opposite side, and never
+ * the box already picked.
+ */
 export function pickBest(detections: Detection[], labels: AnatomyLabel[]): Map<AnatomyLabel, Detection> {
   const best = new Map<AnatomyLabel, Detection>();
   for (const label of labels) {
@@ -62,6 +73,16 @@ export function pickBest(detections: Detection[], labels: AnatomyLabel[]): Map<A
       const current = best.get(label);
       if (!current || d.score > current.score) best.set(label, d);
     }
+  }
+  for (const label of labels) {
+    if (best.has(label)) continue;
+    const other = labels.find((l) => l !== label && best.has(l));
+    const picked = other ? best.get(other)! : null;
+    if (!other || !picked || !onSide(other, picked)) continue;
+    const swap = detections
+      .filter((d) => d !== picked && d.prompt === ANATOMY[other].prompt && d.score >= ANATOMY[label].threshold && onSide(label, d))
+      .sort((a, b) => b.score - a.score)[0];
+    if (swap) best.set(label, swap);
   }
   return best;
 }
@@ -94,7 +115,9 @@ export async function segmentRegions(
         args: { label, prompt: ANATOMY[label].prompt },
         ms: i === 0 ? samMs : undefined,
         ok: !!d,
-        result: d ? describeBox(d.box as [number, number, number, number], d.score) : `not found above score ${ANATOMY[label].threshold}`,
+        result: d
+          ? `${describeBox(d.box as [number, number, number, number], d.score)}${d.prompt === ANATOMY[label].prompt ? "" : ` · found under the "${d.prompt}" prompt`}`
+          : `not found above score ${ANATOMY[label].threshold}`,
       });
     });
     const save: MaskSaver =
