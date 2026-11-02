@@ -189,7 +189,8 @@ only the cases they created, and keep them until the account is removed.
 python3 data/fetch_demo_samples.py                         # ~10 NIH ChestX-ray14 images → data/out (not committed)
 cd functions && SEED_TARGET=project npx tsx scripts/upload-samples.ts && cd ..
 npm run build:web                                          # web/ → dist/
-npx firebase deploy --only hosting,functions,firestore:rules,storage
+npx firebase target:apply hosting app <your Hosting site>   # once: firebase.json has two Hosting targets
+npx firebase deploy --only hosting:app,functions,firestore:rules,storage
 cd functions && SEED_TARGET=project npm run demo-user -- add --email judge@example.org --seed
 ```
 

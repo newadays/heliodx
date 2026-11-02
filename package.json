@@ -6,7 +6,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build:web": "npm --prefix web ci && npm --prefix web run build"
+    "build:web": "npm --prefix web ci && npm --prefix web run build",
+    "build:site": "npm --prefix site ci && npm --prefix site run build"
   },
   "devDependencies": {
     "typescript": "~5.9.2",
