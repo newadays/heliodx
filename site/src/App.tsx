@@ -100,8 +100,8 @@ function Footer() {
     <footer className="foot">
       <div className="foot-in">
         <p>
-          <strong>HelioDX is a research prototype and is not for clinical use.</strong> MedGemma is used under the Health AI Developer Foundations terms of use and is
-          not for clinical use.
+          <strong>HelioDX is a research prototype and is not for clinical use.</strong> <a href="https://deepmind.google/models/gemma/medgemma/">MedGemma</a> is used under the Health AI
+          Developer Foundations terms of use and is not for clinical use.
         </p>
         <p className="muted">
           Films: NIH Clinical Center ChestX-ray14 (Wang et al., CVPR 2017); Shenzhen and Montgomery County chest X-ray sets, courtesy of the U.S. National Library of
