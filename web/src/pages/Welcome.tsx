@@ -49,9 +49,9 @@ export default function WelcomePage() {
           <a className="navlink" href="#expect">
             What to expect
           </a>
-          <Link className="navlink" to="/evals">
+          <a className="navlink" href="https://evals.heliodx.com">
             Evals
-          </Link>
+          </a>
           <Link className="navlink" to="/worklist">
             Log in
           </Link>
@@ -159,7 +159,7 @@ export default function WelcomePage() {
           <div className="lx-links">
             <Link to="/worklist">Log in</Link>
             <a href="#contact">Contact us</a>
-            <Link to="/evals">Evals</Link>
+            <a href="https://evals.heliodx.com">Evals</a>
             <Link to="/console">Agent console</Link>
           </div>
           <p className="lx-muted" style={{ fontSize: 12.5 }}>
