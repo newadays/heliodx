@@ -14,6 +14,11 @@
  * 0.5 on 9 films; the left lung scores 0.39–0.84. Non-medical images return
  * nothing at all. So both labels accept 0.2: confirmStudyType still requires
  * both lungs, on the correct sides and not overlapping.
+ *
+ * Shenzhen probe (2026-11-02, 60 TB-set films, ~2048 px): on 26 films SAM
+ * returned nothing for "left lung" and both lungs under "right lung", one
+ * box on each half. pickBest (segment.ts) gives the missing lung the box on
+ * its own side.
  */
 export type AnatomyLabel = "left lung" | "right lung";
 

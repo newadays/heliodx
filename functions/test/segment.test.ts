@@ -17,6 +17,28 @@ describe("pickBest", () => {
     expect(best.has("right lung")).toBe(false); // 0.15 < 0.2
     expect(best.size).toBe(1); // a prompt we did not ask for is ignored
   });
+
+  // Shenzhen film 4e8fddbc (2026-11-02): both lungs under "right lung", nothing under "left lung".
+  const shenzhen = [det("right lung", 0.49, [0.53, 0.07, 0.84, 0.77]), det("right lung", 0.59, [0.12, 0.07, 0.46, 0.75])];
+
+  it("gives a lung with no detection of its own the other prompt's box on its side", () => {
+    const best = pickBest(shenzhen, ["left lung", "right lung"]);
+    expect(best.get("right lung")?.score).toBe(0.59);
+    expect(best.get("left lung")?.score).toBe(0.49);
+    expect(best.get("left lung")?.prompt).toBe("right lung");
+  });
+
+  it("leaves the lung missing when the other prompt has nothing on its side, and never reuses a box", () => {
+    expect(pickBest([shenzhen[1]], ["left lung", "right lung"]).has("left lung")).toBe(false);
+    expect(pickBest([det("right lung", 0.6, [0.4, 0.1, 0.62, 0.8])], ["left lung", "right lung"]).size).toBe(1);
+  });
+
+  it("prefers a lung's own prompt and does not borrow when the other pick is on the wrong side", () => {
+    const own = pickBest([...shenzhen, det("left lung", 0.3, [0.55, 0.1, 0.9, 0.8])], ["left lung", "right lung"]);
+    expect(own.get("left lung")?.prompt).toBe("left lung");
+    const flipped = pickBest([det("right lung", 0.6, [0.55, 0.1, 0.9, 0.8]), det("right lung", 0.5, [0.1, 0.1, 0.45, 0.8])], ["left lung", "right lung"]);
+    expect(flipped.has("left lung")).toBe(false);
+  });
 });
 
 describe("maskIdFor", () => {
