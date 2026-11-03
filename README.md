@@ -9,6 +9,10 @@ images and reports stay in the project.
 draft. A licensed clinician must accept, edit, or reject each one before
 anything reaches the patient.
 
+<a href="docs/media/heliodx-analyzing-tb.mp4"><img src="docs/media/heliodx-analyzing-tb.png" alt="HelioDX analysing a chest X-ray: quality and study type checked, two findings outlined for clinician review, report drafting, in about 12 seconds" width="720"></a>
+
+*HelioDX analysing a chest X-ray (14 s, synthetic data). Click the image to play.*
+
 ## Why
 
 Tuberculosis is a top 5 killer disease in Nigeria. A clinic can take an X-ray but has no radiologist to read
