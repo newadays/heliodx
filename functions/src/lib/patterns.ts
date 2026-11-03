@@ -25,7 +25,7 @@ export const PATTERNS: Record<PatternId, Pattern> = {
 };
 
 /** Stored and older ids read as the pattern of concern (studies and eval records from before the rename). */
-const LEGACY = new Set(["tb_suggestive", "tb", "tuberculosis_suggestive"]);
+const LEGACY = new Set(["tb_suggestive", "tb", "tuberculosis_suggestive"]); // compliance-allow: stored ids from before the rename, read only
 
 /** The model's free text read in code: "pattern_of_concern", "none", or null when unknown (treated as none). */
 export function patternOf(text: string | null | undefined): PatternId | null {

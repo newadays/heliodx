@@ -1,0 +1,20 @@
+# Phrases blanked out before the banned-terms check, each with its reason.
+# One case-insensitive regular expression per line; "#" lines are comments.
+#
+# Disclaimers that say HelioDX does not diagnose.
+\b(not|never|no)( a)? diagnos(is|e)\b
+does not diagnose
+never name a disease or diagnosis
+do not state a diagnosis
+\b(no|never give a|gave a)\s+(probability or\s+)?likelihood of (a disease|one)\b
+diagnostic wording
+# The guard's own name.
+\bno_?diagnosis\b
+# Negated observations ("No pneumothorax", "without effusion") are observations.
+\b(no|without|absence of)\s+(a\s+)?(pneumothorax|pleural effusion|effusion)\b
+# The public screening sets' own name and film-level label (ground truth, not HelioDX output).
+\bTB[- ]labell?ed\b
+\blabell?ed TB\b
+\blabels TB\b
+\bTB or normal\b
+\bTB[- ]screening (clinic|set|sets|programme)\b

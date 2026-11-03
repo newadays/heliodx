@@ -94,7 +94,7 @@ export function prepPrompt(
   return [
     `This is a ${studyType}. Draft up to six observations for the clinician to review, most relevant first.`,
     "Observations only: describe what is seen and where, with measured values where they apply. Never name a",
-    "disease or diagnosis as present (no 'pneumonia', 'cardiomegaly', 'effusion'); a negative such as",
+    "disease or diagnosis as present (no 'pneumonia', 'cardiomegaly', 'effusion'); a negative such as", // compliance-allow: the rule names what is banned
     "'No pneumothorax' is allowed. Include pertinent normals so a normal film still yields reviewable findings.",
     "Every observation must cite at least one id from the evidence list below, exactly as written. Use the",
     "measurements when they support the observation; cite a lung region id for something seen in that lung.",

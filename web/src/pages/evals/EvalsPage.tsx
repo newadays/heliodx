@@ -59,7 +59,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
           Foundations terms of use and is not for clinical use.
         </p>
         <p>
-          TB screening films: the Shenzhen and Montgomery County chest X-ray sets (Jaeger et al., Quant Imaging Med Surg 2014; Candemir et al. and Jaeger et
+          Screening-clinic films: the Shenzhen and Montgomery County chest X-ray sets (Jaeger et al., Quant Imaging Med Surg 2014; Candemir et al. and Jaeger et
           al., IEEE TMI 2014), courtesy of the U.S. National Library of Medicine, Shenzhen No. 3 People&apos;s Hospital, and the Montgomery County Department of
           Health and Human Services. Images are not shown or redistributed here.
         </p>

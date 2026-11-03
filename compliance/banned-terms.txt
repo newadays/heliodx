@@ -1,0 +1,31 @@
+# Compliance: words HelioDX must never show or prompt with. One case-insensitive
+# regular expression per line; checked by scripts/compliance-check.mjs.
+# A "case:" prefix makes the line case-sensitive (so the code id `tb` is not a hit).
+# Disease names
+tubercul\w*
+case:\bTB\b
+pneumonia
+covid
+cancer
+malignan\w*
+carcinoma
+tumou?r
+metasta\w*
+lymphoma
+cardiomegaly
+heart failure
+pulmonary o?edema
+pleural effusion
+pneumothorax
+\bcopd\b
+emphysema
+fibrosis
+sarcoidosis
+abscess
+# Diagnostic wording and disease likelihoods
+TB-suggestive
+consistent with
+suggestive of
+(likelihood|probability|chance) of
+diagnos(e|es|ed|is|tic)\b
+detect the disease

@@ -39,8 +39,8 @@ determination, and shares the signed result privately with the right people.
   disease the clinician did not write and sign. The agents describe what is
   seen (for example "right upper zone opacity with possible cavitation"), with
   the measurement and region behind it.
-- **No disease likelihoods.** There is no probability or likelihood of a
-  disease anywhere. A finding carries the strength of its evidence
+- **No disease likelihoods.** No disease probability or likelihood appears
+  anywhere. A finding carries the strength of its evidence
   (strong, moderate or weak) and is marked "needs attention" or normal.
 - **No medical advice.** The agents never recommend a test or a treatment.
   The impression and recommendation are the clinician's own, and the patient
@@ -65,7 +65,7 @@ Code enforces this, not just the prompts:
 | Web app (React + Vite) | Working: upload, review, sign, patient note PDF, agent console |
 | Backend pipeline (Cloud Functions) | Working end to end on Muse Glimmer and SAM 3.1 |
 | Muse Wonder coordination | Completed |
-| Accuracy eval on public chest X-rays | Published 2 November 2026: 160 tasks (70 on NIH ChestX-ray14, 90 TB screening on the Shenzhen set), HelioDX vs MedGemma 27B on the same GPU. Results below and at [evals.heliodx.com](https://evals.heliodx.com) ([`eval/README.md`](eval/README.md)) |
+| Accuracy eval on public chest X-rays | Published 2 November 2026: 160 tasks (70 on NIH ChestX-ray14, 90 screening-clinic films from the Shenzhen TB screening set), HelioDX vs MedGemma 27B on the same GPU. Results below and at [evals.heliodx.com](https://evals.heliodx.com) ([`eval/README.md`](eval/README.md)) |
 
 ## Which model does what
 

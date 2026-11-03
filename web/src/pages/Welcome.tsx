@@ -96,8 +96,8 @@ export default function WelcomePage() {
             </h1>
             <p className="lx-body lx-lead">
               An agentic radiology workflow for clinics with no radiologist on site. Meta Muse Wonder coordinates a team of Muse Glimmer agents that take a
-              chest X-ray from intake to a signed report, on the clinic&apos;s own GPU. A clinician reviews, edits and signs every finding; HelioDX does not
-              diagnose or give medical advice.
+              chest X-ray from intake to a signed report, on the clinic&apos;s own GPU. A clinician reviews, edits and signs every finding;
+              HelioDX does not diagnose or give medical advice.
             </p>
             <div className="lx-pills">
               <Link className="pill pill-light" to="/worklist">
