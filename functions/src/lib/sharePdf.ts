@@ -31,7 +31,7 @@ const INK = "#0F172A";
 const MUTED = "#64748B";
 const RULE = "#E2E8F0";
 
-export const PROTOTYPE = "HelioDX research prototype";
+export const PROTOTYPE = "HelioDX research prototype · not for clinical use";
 
 /**
  * The "Prepared for" name. An upload's name is the uploader's pseudonym label,

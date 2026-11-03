@@ -15,11 +15,11 @@ import { logger } from "firebase-functions/v2";
 
 import { findingColor } from "../lib/colors";
 import { parseLocation } from "../lib/location";
-import { hasTbPattern, keepConsiderations, patternOf } from "../lib/patterns";
+import { diagnosisHits, namesDiagnosis, reaskFeedback, stripDiagnosis } from "../lib/noDiagnosis";
+import { patternOf } from "../lib/patterns";
 import { traceEvent } from "../lib/trace";
 import { unionBox, zoneOutlines, type FindingOutline } from "../lib/zone";
 import { confidenceFor, strengthOf, thresholdFor, type Strength } from "../lib/strength";
-import { assertsCondition, stripConditionSentences } from "../lib/vocabulary";
 import { generateJson } from "../models/client";
 import type { DraftFinding, DraftSummaries } from "../models/fixtures";
 import { prepPrompt } from "../models/prompts";
@@ -50,7 +50,7 @@ export interface EvidencedFinding extends DraftFinding {
   location: string | null;
   outlines: FindingOutline[];
   /** B26: only an abnormal observation carries a pattern. */
-  pattern: "tb_suggestive" | "none";
+  pattern: "pattern_of_concern" | "none";
 }
 
 export interface PrepInput {
@@ -103,15 +103,22 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
     ...(input.heartBox ? [{ id: HEART_REGION, about: "the cardiac silhouette between the lungs" }] : []),
   ];
 
-  const draft = await generate({
-    route: "clinical",
-    schema: PrepSchema,
-    prompt: prepPrompt(input.studyType, input.clinicalContext, evidence, regions),
-    image: { mimeType: "image/jpeg", data: input.image },
-    step: input.step,
-    answerTokens: 2048,
-    reasoningEffort: "medium",
-  });
+  const ask = (feedback: string) =>
+    generate({
+      route: "clinical",
+      schema: PrepSchema,
+      prompt: [prepPrompt(input.studyType, input.clinicalContext, evidence, regions), feedback].filter(Boolean).join("\n"),
+      image: { mimeType: "image/jpeg", data: input.image },
+      step: input.step,
+      answerTokens: 2048,
+      reasoningEffort: "medium",
+    });
+  // Compliance: an answer that names a disease is asked again once, with the rule restated.
+  let draft = await ask("");
+  const firstHits = prepDiagnosisHits(draft);
+  if (firstHits.length) draft = await ask(reaskFeedback(firstHits));
+  const lastHits = firstHits.length ? prepDiagnosisHits(draft) : [];
+  traceNoDiagnosis(firstHits, lastHits);
 
   const byMeasure = new Map(input.measurements.map((m) => [m.id as string, m]));
   const byMask = new Map(input.masks.map((m) => [m.maskId, m]));
@@ -120,7 +127,7 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
   const kept: { modelIndex: number; regionId: string | null; finding: EvidencedFinding }[] = [];
 
   for (const [modelIndex, p] of draft.proposed.entries()) {
-    if (assertsCondition(`${p.title} ${p.description}`)) {
+    if (namesDiagnosis(`${p.title} ${p.description}`)) {
       dropped.conditions++;
       continue;
     }
@@ -171,7 +178,7 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
         abnormal: p.abnormal,
         location: location && location.toLowerCase() !== "none" ? location : null,
         outlines,
-        pattern: p.abnormal && patternOf(p.pattern) === "tb_suggestive" ? "tb_suggestive" : "none",
+        pattern: p.abnormal && patternOf(p.pattern) === "pattern_of_concern" ? "pattern_of_concern" : "none",
       },
     });
   }
@@ -196,12 +203,12 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
     // An empty draft would read as a normal film; fail visibly instead.
     throw new PipelineError("schema_invalid", "No observation cited real evidence.", input.step);
   }
-  const text = stripConditionSentences(draft.clinicianSummary.findings.trim());
+  const text = stripDiagnosis(draft.clinicianSummary.findings.trim());
   const indexMap = new Map(kept.map((k) => [k.modelIndex, k.finding.index]));
   const clinicianSummary: DraftSummaries["clinicianSummary"] = {
     findings: text,
-    impression: draft.clinicianSummary.impression.map((s) => s.trim()).filter((s) => s && !assertsCondition(s)),
-    recommendation: stripConditionSentences(draft.clinicianSummary.recommendation.trim()),
+    impression: draft.clinicianSummary.impression.map((s) => s.trim()).filter((s) => s && !namesDiagnosis(s)),
+    recommendation: stripDiagnosis(draft.clinicianSummary.recommendation.trim()),
     highlights: resolveHighlights(
       text,
       findings,
@@ -211,8 +218,6 @@ export async function runPrep(input: PrepInput, deps: PrepDeps = {}): Promise<Pr
     ),
     generatedFromReviewHash: null,
     editedByClinician: false,
-    // B26: only with a tagged finding, and naming no condition but the pattern's own.
-    considerations: keepConsiderations(draft.clinicianSummary.considerations, hasTbPattern(findings)),
   };
   if (!clinicianSummary.impression.length) clinicianSummary.impression = ["See the observations above."];
   if (dropped.conditions || dropped.noEvidence) logger.info("prep: observations dropped", { step: input.step, ...dropped });
@@ -277,4 +282,36 @@ async function saveEllipseOverlay(
   const box = unionBox(boxes.map((b) => ({ kind: "zone" as const, side: null, zone: null, box: b })))!;
   const record: MaskRecord = { ...ref, maskId, box, path: "" };
   return overlay(input.bucket, input.studyPrefix, record, mask, color);
+}
+
+/** Every model text in a prep answer, labelled for the re-ask and the trace. */
+export function prepDiagnosisHits(draft: { proposed: { title: string; description: string }[]; clinicianSummary: { findings: string; impression: string[]; recommendation: string } }): string[] {
+  return diagnosisHits([
+    ...draft.proposed.flatMap((p, i) => [
+      { where: `title ${i + 1}`, text: p.title },
+      { where: `description ${i + 1}`, text: p.description },
+    ]),
+    { where: "findings paragraph", text: draft.clinicianSummary.findings },
+    ...draft.clinicianSummary.impression.map((t, i) => ({ where: `impression ${i + 1}`, text: t })),
+    { where: "recommendation", text: draft.clinicianSummary.recommendation },
+  ]);
+}
+
+/**
+ * Compliance: one `no_diagnosis` check per model step. Passed when the answer
+ * was clean or the re-ask fixed it; failed when code had to drop text, so the
+ * console counts it in "Checks failed".
+ */
+export function traceNoDiagnosis(firstHits: readonly string[], lastHits: readonly string[] = firstHits): void {
+  traceEvent({
+    kind: "check",
+    name: "no_diagnosis",
+    args: { reasked: firstHits.length > 0 },
+    ok: lastHits.length === 0,
+    result: !firstHits.length
+      ? "passed · observations only"
+      : lastHits.length
+        ? `failed · removed after one re-ask: ${lastHits.slice(0, 3).join("; ").slice(0, 160)}`
+        : "passed after one re-ask",
+  });
 }

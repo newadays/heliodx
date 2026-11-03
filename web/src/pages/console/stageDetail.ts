@@ -125,13 +125,13 @@ export function stageDetail(row: StageRow, study: Study): StageDetail {
   }
 }
 
-/** "2 abnormal · TB-suggestive pattern", then "1 · right lung upper zone (zone)" per outline. */
+/** "2 abnormal · pattern of concern", then "1 · right lung upper zone (zone)" per outline. */
 function abnormalLines(findings: FindingView[]): string[] {
   const abnormal = findings.filter((f) => f.abnormal);
   if (!abnormal.length) return [];
   const tagged = abnormal.some((f) => f.patternLabel);
   return [
-    `${abnormal.length} abnormal${tagged ? " · TB-suggestive pattern" : ""}`,
+    `${abnormal.length} abnormal${tagged ? " · pattern of concern" : ""}`,
     ...abnormal.flatMap((f) => f.outlines.map((o) => `${f.n} · ${o.side ? `${o.side} lung${o.zone ? ` ${o.zone} zone` : ""}` : "heart region"} (${o.kind})`)),
   ];
 }

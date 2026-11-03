@@ -35,7 +35,7 @@ const tbFinding = (over: Partial<TbFinding> = {}): TbFinding => ({
   description: "Patchy opacity in the right upper zone.",
   abnormal: true,
   location: "right lung upper zone",
-  pattern: "tb_suggestive",
+  pattern: "pattern_of_concern",
   outlines: [rightUpper],
   measurementIds: [],
   ...over,
@@ -48,7 +48,6 @@ const outcome = (over: Partial<TbOutcome> = {}): TbOutcome => {
   return {
     findings,
     flagged: [],
-    considerations: [],
     triagePriority: "routine",
     needsHuman: false,
     text: { titles: findings.map((f) => f.title), descriptions: findings.map((f) => f.description), findings: "Opacity at the right apex.", impression: ["Right upper zone opacity."], recommendation: "Correlate clinically." },
@@ -77,7 +76,7 @@ describe("TB sample and tasks", () => {
   it("builds tasks whose titles never give the label, with zone_match only where it applies", () => {
     const tasks = buildTbTasks([film(), normalFilm(1), film({ id: "CHNCXR_0332_1", reading: "STB" }), film({ id: "CHNCXR_0330_1", reading: "STB", roi: [[0.2, 0.1, 0.4, 0.3]] })]);
     expect(tasks.map((t) => t.id)).toEqual(["tb-1", "tb-2", "tb-3", "tb-4"]);
-    expect(tasks.every((t) => /^TB screening · film \d+$/.test(t.title) && t.context.synthetic && t.family === "tb")).toBe(true);
+    expect(tasks.every((t) => /^Screening film \d+$/.test(t.title) && t.context.synthetic && t.family === "tb")).toBe(true);
     expect(JSON.stringify(tasks)).not.toContain("fibrous");
     const of = (id: string) => tasks.find((t) => t.film?.id === id)!;
     expect(of("CHNCXR_0400_1").expected).toEqual({ tbSuggestive: true, zone: { sides: ["right"], zone: "upper" } });
@@ -100,10 +99,10 @@ describe("TB grading", () => {
     expect(r).toMatchObject({ tb_flag: false, priority_floor: false, attention: false, no_leak: true, outline: true, zone_match: false, read_gate: false });
   });
 
-  it("counts a kept consideration naming TB as a flag, and a critical lane as a read", () => {
-    const untagged = tbFinding({ pattern: "none" });
-    const r = byId(gradeTb(task(film()), outcome({ findings: [untagged], considerations: ["Consider tuberculosis; sputum GeneXpert."], triagePriority: "critical" })));
-    expect(r.tb_flag).toBe(true);
+  it("counts a legacy tb_suggestive tag as a flag, and a critical lane as a read", () => {
+    expect(byId(gradeTb(task(film()), outcome({ findings: [tbFinding({ pattern: "tb_suggestive" })] }))).tb_flag).toBe(true);
+    const r = byId(gradeTb(task(film()), outcome({ findings: [tbFinding({ pattern: "none" })], triagePriority: "critical" })));
+    expect(r.tb_flag).toBe(false);
     expect(r.priority_floor).toBe(true);
     expect(r.read_gate).toBe(true);
   });
@@ -116,8 +115,8 @@ describe("TB grading", () => {
     expect(byId(gradeTb(t, outcome({ findings: [normalFinding], flagged: ["cardiothoracic_ratio"] }))).attention).toBe(false);
   });
 
-  it("catches TB named in a title or the impression, but not in a negation or the considerations", () => {
-    const base = outcome({ considerations: ["Pattern suggestive of pulmonary tuberculosis."] });
+  it("catches a disease or diagnostic wording in a title or the impression, but not in a negation", () => {
+    const base = outcome();
     const titled = { ...base, text: { ...base.text, titles: ["Apical changes typical of TB"] } };
     const r = gradeTb(task(film()), titled).find((c) => c.id === "no_leak")!;
     expect(r.pass).toBe(false);
@@ -127,6 +126,8 @@ describe("TB grading", () => {
     const negated = { ...base, text: { ...base.text, impression: ["No sign of tuberculosis."] } };
     expect(byId(gradeTb(task(film()), negated)).no_leak).toBe(true);
     expect(byId(gradeTb(task(film()), base)).no_leak).toBe(true);
+    const phrased = { ...base, text: { ...base.text, findings: "Apical opacity consistent with an infection." } };
+    expect(byId(gradeTb(task(film()), phrased)).no_leak).toBe(false);
   });
 
   it("fails outline when an abnormal observation has none", () => {
@@ -224,7 +225,7 @@ describe("TB runner (mock model and SAM)", () => {
     const right = results.find((r) => r.taskId === tasks.find((t) => t.film?.id === "CHNCXR_0400_1")!.id)!;
     expect(right.score).toBe(1);
     expect(right.output.priority).toBe("urgent");
-    expect((right.output.considerations as string[]).length).toBe(1);
+    expect(right.output.considerations).toBeUndefined();
     // The fixture draws the right upper zone; this reading says left upper.
     const left = results.find((r) => r.taskId === tasks.find((t) => t.film?.id === "MCUCXR_0141_1")!.id)!;
     expect(byId(left.criteria)).toMatchObject({ tb_flag: true, zone_match: false, read_gate: true });

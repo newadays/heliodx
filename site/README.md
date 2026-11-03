@@ -8,7 +8,7 @@ time: the file `npm run eval -- export … --bucket` writes (E17, see
 cookies or analytics, and no result data in the build: publishing new results
 needs no redeploy.
 
-- `/`: the results by family, TB screening (sensitivity and specificity with
+- `/`: the results by family, the screening clinic (sensitivity and specificity with
   95% intervals), triage, hardware and models.
 - `/tasks`: the task library, with family tabs, search and a grading filter.
 - `/tasks/<id>`: one task, the recorded run per system, and each criterion

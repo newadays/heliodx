@@ -94,7 +94,11 @@ export default function WelcomePage() {
             <h1>
               The platform for <span>Clinical AI Workflow</span>
             </h1>
-            <p className="lx-body lx-lead">HelioDX: Meta Muse Wonder coordinating a team of Muse Glimmer agents that run the radiology workflow privately, on the clinic's own GPU.</p>
+            <p className="lx-body lx-lead">
+              An agentic radiology workflow for clinics with no radiologist on site. Meta Muse Wonder coordinates a team of Muse Glimmer agents that take a
+              chest X-ray from intake to a signed report, on the clinic&apos;s own GPU. A clinician reviews, edits and signs every finding; HelioDX does not
+              diagnose or give medical advice.
+            </p>
             <div className="lx-pills">
               <Link className="pill pill-light" to="/worklist">
                 Log in
@@ -163,7 +167,7 @@ export default function WelcomePage() {
             <Link to="/console">Agent console</Link>
           </div>
           <p className="lx-muted" style={{ fontSize: 12.5 }}>
-            Research Beta · Not ready for clinical use
+            Research prototype · synthetic data · not for clinical use
           </p>
         </div>
       </footer>

@@ -19,7 +19,7 @@ export const FAMILY_LABEL: Record<EvalFamily, string> = {
   triage: "Triage",
   prep: "Prep",
   note: "Patient note",
-  tb: "TB screening",
+  tb: "Screening clinic",
 };
 
 /** How a criterion is graded. Only deterministic exists so far (E11, E12 are later). */

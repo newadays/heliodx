@@ -23,7 +23,7 @@ the share of its criteria passed.
 | Triage | 24 | The reading lane against the NIH label (pneumothorax → critical; cardiomegaly, effusion, mass, consolidation → urgent; no finding must stay routine), the model answered, and every cited measurement exists. |
 | Prep | 24 | What the model proposed before the app's filters: no observation names a condition, none lacks evidence, the impression survives the filter, and the observations flag attention exactly when the label is abnormal. |
 | Patient note | 8 | The rewrite of a signed report: one step per signed sentence, nothing added (number, timeframe, dose, medicine, test or urgency word), no condition the impression does not assert, reading grade 8 or lower, all on the first try. |
-| TB screening | 120 | Whether the agents surface a TB-suggestive pattern for the clinician on public TB screening films, and stay quiet on normal ones. See [TB screening](#tb-screening). |
+| Screening clinic | 120 | Whether the agents flag a pattern of concern, so the film is read first, on films a public TB screening set labels TB, and stay quiet on normal ones. HelioDX never names the disease. See [Screening clinic](#screening-clinic). |
 
 Limits, stated plainly:
 
@@ -50,18 +50,20 @@ Limits, stated plainly:
   view. So the "floor from measurements" triage column depends on the model
   even though both systems get identical measurements.
 
-## TB screening
+## Screening clinic
 
-Card E16. Film-level TB labels from two public screening sets, run through
-intake, triage and prep exactly like the Prep family, then graded on the
-TB-suggestive pattern (B26) and the zone outlines (B25).
+Card E16. Films from two public TB screening sets, run through intake, triage
+and prep exactly like the Prep family, then graded on the pattern of concern
+(B26) and the zone outlines (B25). The sets' film-level label (TB or normal)
+is the ground truth; HelioDX itself never names a disease. It describes what
+it sees and flags films that need attention, and the clinician names it.
 
 **Sets.** Shenzhen (Shenzhen No. 3 People's Hospital: 336 TB, 326 normal,
 about 3000 px) and Montgomery County (Montgomery County TB screening
 programme: 58 TB, 80 normal, 4020 × 4892 px), both from the U.S. National
 Library of Medicine. Each film has a clinical reading (sex, age and a short
-text such as "right upper PTB with fibrous changes" or "inactive TB scars
-LUL"); 68 Shenzhen and 55 Montgomery TB films also have consensus ROI boxes.
+free-text note, used only to find the side and zone); 68 Shenzhen and 55
+Montgomery TB-labelled films also have consensus ROI boxes.
 
 **Sample.** Fixed (`pick` in `data/fetch_tb_sets.py` and
 `functions/src/eval/tasks.ts`: the ids with the smallest
@@ -74,34 +76,34 @@ sha256 of seed and id, so the same ids every time):
 
 21 of the 60 sampled TB films have ROI boxes. Every task has the same
 synthetic indication ("Adult with a cough for several weeks."); age and sex
-come from the dataset. Titles are "TB screening · film N" and task numbers
+come from the dataset. Titles are "Screening film N" and task numbers
 are in a seeded order, so neither gives the label away.
 
 **Criteria** (all code, `gradeTb` in `functions/src/eval/grade.ts`):
 
 | Criterion | Films | Passes when |
 |---|---|---|
-| `tb_flag` | all | The TB pattern is raised (an abnormal observation tagged `tb_suggestive`, or a kept consideration naming TB) on TB films, and not raised on normal films. |
+| `tb_flag` | all | A pattern of concern is flagged (an abnormal observation tagged `pattern_of_concern`; older runs recorded it as `tb_suggestive`) on TB-labelled films, and not on normal films. |
 | `priority_floor` | TB | The lane after the B26 lift (a tagged pattern raises routine to urgent) is urgent or critical. |
 | `attention` | all | TB films: at least one observation is attention (`polarityOf`: abnormal, or cites a crossed threshold). Normal films: none is. |
-| `no_leak` | all | The model's titles, descriptions, findings paragraph, impression and recommendation, before the app's filters, never assert TB. Considerations may, by design. |
+| `no_leak` | all | The model's titles, descriptions, findings paragraph, impression and recommendation, before the app's filters, never name a disease or use diagnostic wording (`lib/noDiagnosis.ts`). |
 | `outline` | all | Every abnormal observation has at least one zone outline. |
 | `zone_match` | TB with a read side or an ROI (57 of 60) | An abnormal outline is on a side the reading names (and its zone, when the reading names one), or its box overlaps an ROI box. |
 | `read_gate` | TB | `readRequirement` asks for a radiologist read (critical, or pattern of concern) with every observation accepted. |
 
-Sensitivity is TB films whose `tb_flag` passed over TB films; specificity is
+Sensitivity is TB-labelled films whose `tb_flag` passed over TB-labelled films; specificity is
 normal films whose `tb_flag` passed over normal films. Both are reported with
 95% Wilson intervals over the films that ran without error; the run record
 also carries the floor, zone-match and no-leak rates (`tbSummary`).
 
 Limits, stated plainly:
 
-- These are screening sets from two sites, not the clinic's own population,
-  equipment or TB prevalence. A sensitivity here does not transfer.
-- The language model is a general model, not a trained TB detector. The
-  number says whether the agents surface the pattern for a clinician to
-  consider, not how well a film is diagnosed.
-- Labels are film-level (TB yes/no). The zone check is coarse: thirds of the
+- These are screening sets from two sites, not the clinic's own population
+  or equipment. A sensitivity here does not transfer.
+- HelioDX does not diagnose, and the language model is not trained to detect
+  any disease. The number says whether the agents flag a pattern of concern for
+  the clinician on films the set labels TB, not how well a film is read.
+- Ground truth is the sets' film-level label (TB or normal). The zone check is coarse: thirds of the
   chest from the lung masks, matched to a side and zone parsed from a free-text
   reading (Montgomery shorthand such as RUL, LUL, rt, lt is spelled out first),
   or any overlap with an ROI box. No lesion-level accuracy is claimed.
@@ -117,7 +119,7 @@ Limits, stated plainly:
   as "lungs not found" (1 Nov run). Since 2 Nov a lung with no detection of
   its own takes the other prompt's box on its side of the film (`pickBest`,
   `tools/segment.ts`); that recovers 25 of the 26.
-- Many readings name no side ("STB", "inactive TB scars"); those films are
+- Many readings name no side; those films are
   matched on ROI boxes only, or not at all (3 of 60). Some readings name
   several places; `parseLocation` keeps every side and one zone (upper over
   middle over lower).
@@ -126,8 +128,8 @@ Limits, stated plainly:
 user fetches the images, readings and ROI boxes from the NLM and builds
 `eval/tasks/tb` locally (gitignored). The in-app `/evals` page shows only
 the aggregate numbers (sensitivity, specificity and rates). The public results
-file (E17, below) also lists each TB task by its library id and title ("tb-37",
-"TB screening · film 37") with its split, the film-level label (TB or normal)
+file (E17, below) also lists each task in this family by its library id and title ("tb-37",
+"Screening film 37") with its split, the film-level label (TB or normal)
 and each system's pass or fail per criterion; it never holds a film id, file
 name, reading, age, sex, ROI box, image or model text, so it cannot be mapped
 back to the set's files. The NLM readme for each set states (verbatim):

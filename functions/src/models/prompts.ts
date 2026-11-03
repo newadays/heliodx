@@ -3,14 +3,18 @@
  * included; clinical context is (it is what makes the draft useful) and is
  * never logged.
  */
-import { assertedConditions } from "../lib/vocabulary";
 import { PATTERNS } from "../lib/patterns";
 import type { Modality } from "./fixtures";
+
+/** The compliance rule every clinical prompt restates: observations, never a disease or advice. */
+export const NO_DIAGNOSIS_RULE =
+  "Never name a disease or diagnosis as present, never give a probability or likelihood of a disease, and never give medical advice: describe what is seen and where, and leave naming it to the clinician.";
 
 export const SYSTEM_INSTRUCTION = [
   "You assist a licensed clinician by drafting observations from a single medical image or report.",
   "Your output is a draft for the clinician to review, accept, edit or reject. It is never shown to a patient unreviewed.",
   "Describe what is visible; do not state a diagnosis as fact. Use neutral, specific radiology/dermatology language.",
+  NO_DIAGNOSIS_RULE,
   "Never address the patient directly in clinician-facing text. Never include names, dates of birth or identifiers.",
   "If the image is not a medical image, say so through the schema rather than inventing findings.",
   "Return only JSON that matches the provided schema.",
@@ -73,6 +77,7 @@ export function triagePrompt(
       : "",
     "In evidence, list only ids from the measurements or mask ids above, exactly as written.",
     "Rationale: at most two sentences, observations only, no diagnosis or condition names.",
+    NO_DIAGNOSIS_RULE,
   ].filter(Boolean).join("\n");
 }
 
@@ -97,9 +102,8 @@ export function prepPrompt(
     "nodular opacity, a cavity, apical fibrotic streaks or miliary nodules; false for a pertinent normal) and give",
     "its `location` (side and zone, e.g. 'right lung upper zone'); every abnormal observation needs a location.",
     "Support devices (lines, catheters, tubes, wires, pacemakers) are not abnormal by themselves: mark them false.",
-    `Set \`pattern\` to 'tb_suggestive' on an abnormal observation that fits these cues: ${PATTERNS.tb_suggestive.cues}; otherwise 'none'.`,
-    "The pattern never goes in a title or description. Only when you tagged one, add one `considerations` line for the",
-    `clinician, such as: "${PATTERNS.tb_suggestive.clinician}" Otherwise leave \`considerations\` empty.`,
+    `Set \`pattern\` to 'pattern_of_concern' on an abnormal observation that fits these features: ${PATTERNS.pattern_of_concern.cues}; otherwise 'none'.`,
+    "The pattern only orders the worklist: it never goes in a title or description.",
     "Evidence list:",
     ...evidence.map((e) => `- ${e.id}: ${e.about}`),
     "Region ids for marking the image (or 'none'):",
@@ -122,6 +126,7 @@ export function findingsPrompt(studyType: string, modality: Modality, clinicalCo
     "Then write a clinician summary: a findings paragraph that quotes each finding title verbatim, a numbered impression",
     "(1–5 items), and a recommendation. In `highlights`, give for each finding an exact substring of the findings",
     "paragraph that refers to it.",
+    NO_DIAGNOSIS_RULE,
     "Include pertinent normal observations as findings too (for example 'Heart size within normal limits',",
     "'Lungs clear', 'No pneumothorax') so the clinician can confirm them; a readable image should yield at least",
     "two findings and at most six. Use high confidence for clear normals. Only return an empty list when the image",
@@ -157,9 +162,6 @@ export function patientSummaryFromSignedPrompt(
     "does not contain. Do not name a condition unless the impression names it. Do not say a body part is normal",
     "or reassure about anything the report does not mention.",
     "`body`: two to four short sentences on what the clinician found, in everyday words.",
-    assertedConditions(signed.impression.join(" ")).some((t) => PATTERNS.tb_suggestive.conditionTerms.includes(t))
-      ? `The impression names tuberculosis: in \`body\` say it in these words: "${PATTERNS.tb_suggestive.plain}"`
-      : "",
     `\`nextSteps\`: exactly ${sentences.length} item(s); item i says recommendation sentence i in plain words,`,
     "same meaning, nothing added or left out, at most two short sentences each.",
     `Findings: ${signed.findings || "(none)"}`,
@@ -183,9 +185,8 @@ export function clinicianSummaryPrompt(
   clinicalContext: string,
 ): string {
   const list = findings.length
-    ? findings.map((f, i) => `${i}. ${f.title}: ${f.description}${f.pattern === "tb_suggestive" ? " [TB-suggestive pattern]" : ""}`).join("\n")
+    ? findings.map((f, i) => `${i}. ${f.title}: ${f.description}`).join("\n")
     : "(none accepted)";
-  const tagged = findings.some((f) => f.pattern === "tb_suggestive");
   return [
     `Write the clinician summary for ${MODALITY_WORDS[modality]}, confirmed as: ${studyType}.`,
     "Base it only on the reviewed findings below (index: title: description). Do not add findings.",
@@ -193,9 +194,7 @@ export function clinicianSummaryPrompt(
     "and a recommendation. In `highlights`, give for each finding index an exact substring of the findings",
     "paragraph that refers to it.",
     "If no findings were accepted, say that no reportable findings were confirmed.",
-    tagged
-      ? `A finding carries a TB-suggestive pattern: add one \`considerations\` line for the clinician, such as "${PATTERNS.tb_suggestive.clinician}" Keep it out of the findings paragraph, impression and recommendation.`
-      : "Leave `considerations` empty.",
+    `Findings paragraph, impression and recommendation: observations only. ${NO_DIAGNOSIS_RULE}`,
     `Reviewed findings:\n${list}`,
     clinicalContext ? `Clinical context: ${clinicalContext}` : "",
   ]

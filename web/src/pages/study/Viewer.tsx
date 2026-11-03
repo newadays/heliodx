@@ -4,7 +4,7 @@
  * markers per region, the focused finding's spotlight, the CTR measurement
  * lines, and Markers / Measurements / Fit / 1:1 / Invert toggles. B27: the
  * abnormal zones as dashed ellipses with a leader line to a label chip
- * ("TB-suggestive" or "Attention · N"), behind a Labels toggle.
+ * ("Pattern of concern" or "Attention · N"), behind a Labels toggle.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";

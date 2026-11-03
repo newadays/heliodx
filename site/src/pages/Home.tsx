@@ -178,18 +178,18 @@ function TbSection({ tb, systems }: { tb: NonNullable<PublicResults["tb"]>; syst
   return (
     <section className="section" aria-labelledby="tb">
       <h2 id="tb" className="h2">
-        TB screening
+        Screening clinic
       </h2>
       <p className="lede-sm">
-        {tb.dataset.name}: {tb.dataset.tb} TB and {tb.dataset.normal} normal films. Does each system raise the TB-suggestive pattern for the clinician on TB films, and stay
-        quiet on normal ones? Bars show the 95% interval.
+        {tb.dataset.name}: {tb.dataset.tb} films labelled TB and {tb.dataset.normal} normal. Does each system flag a pattern of concern, so the film is read first, on the
+        TB-labelled films, and stay quiet on normal ones? HelioDX never names the disease; the clinician does. Bars show the 95% interval.
       </p>
       <div className="tiles">
         {systems.map((s) => {
           const t = tb.perSystem[s];
           if (!t) return null;
           return (
-            <article key={s} className="tile" aria-label={`${SHORT_NAME[s]}, TB screening`}>
+            <article key={s} className="tile" aria-label={`${SHORT_NAME[s]}, screening clinic`}>
               <h3 className="tile-name">{SHORT_NAME[s]}</h3>
               <Measure label="Sensitivity" value={t.combined.sensitivity} ci={t.combined.sensitivityCi} />
               <Measure label="Specificity" value={t.combined.specificity} ci={t.combined.specificityCi} />
@@ -199,7 +199,7 @@ function TbSection({ tb, systems }: { tb: NonNullable<PublicResults["tb"]>; syst
                   <dd>{t.combined.n}</dd>
                 </div>
                 <div>
-                  <dt>TB sent urgent or higher</dt>
+                  <dt>TB-labelled sent urgent or higher</dt>
                   <dd>{pct(t.combined.floorRate)}</dd>
                 </div>
                 <div>
@@ -207,7 +207,7 @@ function TbSection({ tb, systems }: { tb: NonNullable<PublicResults["tb"]>; syst
                   <dd>{pct(t.combined.zoneMatchRate)}</dd>
                 </div>
                 <div>
-                  <dt>TB never named</dt>
+                  <dt>No disease named</dt>
                   <dd>{pct(t.combined.noLeakRate)}</dd>
                 </div>
               </dl>

@@ -4,6 +4,8 @@
  * is shown as a hint only. Pure (no Firebase): the web app imports it to show
  * the same reason the server enforces.
  */
+import { hasPatternOfConcern } from "../lib/patterns";
+
 export type ReadReason = "critical" | "pattern_of_concern" | "weak_finding" | "requested" | "needs_human";
 export type ReadProfile = "fast" | "slow" | "silent";
 
@@ -36,8 +38,8 @@ export interface GateStudy {
 export function readRequirement(study: GateStudy): { reason: ReadReason } | null {
   if (study.priority === "critical") return { reason: "critical" };
   if (study.flags?.needsHuman) return { reason: "needs_human" };
-  // B26: a TB-suggestive pattern the clinician kept needs a radiologist.
-  if ((study.findings ?? []).some((f) => (f.status === "accepted" || f.status === "edited") && f.abnormal === true && f.pattern === "tb_suggestive")) {
+  // B26: a pattern of concern the clinician kept needs a radiologist.
+  if (hasPatternOfConcern((study.findings ?? []).filter((f) => f.status === "accepted" || f.status === "edited"))) {
     return { reason: "pattern_of_concern" };
   }
   if ((study.findings ?? []).some((f) => (f.status === "accepted" || f.status === "edited") && f.strength === "weak")) return { reason: "weak_finding" };
@@ -58,7 +60,7 @@ export function readNeed(study: GateStudy): "request" | "close" | null {
 
 export const READ_REASON_TEXT: Record<ReadReason, string> = {
   critical: "critical priority",
-  pattern_of_concern: "a TB-suggestive pattern",
+  pattern_of_concern: "a pattern of concern",
   weak_finding: "an accepted finding has weak evidence",
   requested: "requested by the clinician",
   needs_human: "flagged for a human",

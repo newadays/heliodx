@@ -1,22 +1,23 @@
 # HelioDX
 
-HelioDX: Meta Muse Wonder coordinates a team of Muse Glimmer agents that
-run the radiology workflow for clinics with no radiologist. Meta SAM 3.1
-preps every scan. Glimmer and SAM run on our own GPU, so patient
-images and reports stay in the project.
+**HelioDX** is an agentic radiology workflow for clinics with no radiologist on site. Meta Muse Wonder coordinates a team of Muse Glimmer agents that take a chest X-ray from intake to a signed report: Meta SAM 3.1 segments and preps every scan, the agents measure the film and draft observations with the evidence behind each one, and a plain-language patient note is written from the signed report. A clinician reviews, edits and signs every finding; nothing reaches a patient until they do. Glimmer and SAM run on our own GPU, so images and reports never leave the project, and every agent step is recorded in an auditable trace.
 
-**Drafting assistance, never diagnosis.** Every AI finding starts as a
-draft. A licensed clinician must accept, edit, or reject each one before
-anything reaches the patient.
-
-<img src="docs/media/heliodx-analyzing-tb.gif" alt="HelioDX analysing a chest X-ray: quality and study type checked, two findings outlined for clinician review, report drafting, in about 12 seconds" width="720">
-
-*HelioDX analysing a chest X-ray (14 s, synthetic data). [MP4 with sound](docs/media/heliodx-analyzing-tb.mp4).*
+HelioDX does not diagnose or give medical advice. It does the measuring, drafting and documentation that a clinician would otherwise do by hand, so the clinician decides faster and with a record of how the draft was made.
 
 ## Why
 
-Tuberculosis is a top 5 killer disease in Nigeria. A clinic can take an X-ray but has no radiologist to read
-it to detect the disease. The film waits days for a report, or the patient leaves without one. Nigeria (pop. - 242 million) has 1 doctor per 1,000 population, one of the lowest on the African continent, compared with 2.6 per 1,000 people in the US ([Idowu & Okedere, Journal of Global Radiology · BMJ Open 2026](https://publishing.escholarship.umassmed.edu/jgr/article/id/576/)). HelioDX gives the clinician in the room a structured draft in under 5 minutes, then steps aside so they can make the call and share it privately and compliantly with the right people.
+A clinic can take a chest X-ray but often has no radiologist on site to read
+it. The film waits days for a report, or the patient leaves without one.
+Nigeria (pop. 242 million) has 1 doctor per 1,000 people, one of the lowest
+ratios on the African continent, against 2.6 per 1,000 in the US ([Idowu &
+Okedere, Journal of Global Radiology · BMJ Open 2026](https://publishing.escholarship.umassmed.edu/jgr/article/id/576/)).
+While building a [mobile app](https://apps.apple.com/us/app/newcare-ai-for-clinicians/id6757157686)
+for Nigerian clinicians, this is the gap they describe most often.
+
+Our demo is a chest X-ray worklist in a TB-screening clinic. HelioDX drafts
+the observations for each film and orders the worklist so films with findings
+that need attention are reviewed first. The clinician makes every
+determination, and shares the signed result privately with the right people.
 
 ## What it does
 
@@ -31,6 +32,31 @@ it to detect the disease. The film waits days for a report, or the patient leave
    text only, and code checks it: no instruction, test, urgency, or condition
    the signed report does not contain. They save it as a PDF for the patient
    (sending by WhatsApp to be supported later).
+
+## What HelioDX does not do
+
+- **No diagnosis.** No screen, report draft, patient note or PDF names a
+  disease the clinician did not write and sign. The agents describe what is
+  seen (for example "right upper zone opacity with possible cavitation"), with
+  the measurement and region behind it.
+- **No disease likelihoods.** There is no probability or likelihood of a
+  disease anywhere. A finding carries the strength of its evidence
+  (strong, moderate or weak) and is marked "needs attention" or normal.
+- **No medical advice.** The agents never recommend a test or a treatment.
+  The impression and recommendation are the clinician's own, and the patient
+  note restates only what the clinician signed.
+- **Nothing reaches a patient unsigned.** A clinician reviews, edits and
+  signs every finding first.
+
+Code enforces this, not just the prompts:
+
+- Every model answer goes through a guard (`functions/src/lib/noDiagnosis.ts`).
+  An answer that names a disease is asked again once with the rule restated.
+  If it still does, the text is removed and the step is marked failed in the
+  agent console ("Checks failed").
+- `npm run check:compliance` fails the build if a banned term
+  (`compliance/banned-terms.txt`) appears in the app's UI strings, the
+  prompts or this README.
 
 ## Status
 

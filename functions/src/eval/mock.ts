@@ -35,7 +35,7 @@ const ANSWERS: Record<string, unknown> = {
   },
 };
 
-/** E16: a prep answer that raises the TB-suggestive pattern on the right upper zone (the patient's right is the image's left). */
+/** E16: a prep answer that flags a pattern of concern on the right upper zone (the patient's right is the image's left). */
 export const MOCK_TB_DETECTING = {
   proposed: [
     {
@@ -45,7 +45,7 @@ export const MOCK_TB_DETECTING = {
       region: "none",
       abnormal: true,
       location: "right lung upper zone",
-      pattern: "tb_suggestive",
+      pattern: "pattern_of_concern",
     },
     { title: "Heart size within limits", description: "The cardiothoracic ratio is within its threshold.", evidence: ["cardiothoracic_ratio"], region: "none", abnormal: false, location: "heart", pattern: "none" },
   ],
@@ -54,7 +54,6 @@ export const MOCK_TB_DETECTING = {
     impression: ["Right upper zone opacity."],
     recommendation: "Correlate clinically.",
     highlights: [],
-    considerations: ["Pattern suggestive of pulmonary tuberculosis. Consider sputum GeneXpert or AFB."],
   },
 };
 

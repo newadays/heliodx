@@ -101,7 +101,7 @@ describe("B25/B26 abnormal findings", () => {
   it("count as attention with no flags, carry their zones in %, and the TB label only when abnormal", () => {
     const tagged = finding({
       abnormal: true,
-      pattern: "tb_suggestive",
+      pattern: "pattern_of_concern",
       evidence: { measurementIds: [], maskIds: [] },
       polarity: "attention",
       outlines: [{ kind: "zone", side: "right", zone: "upper", box: [0.1, 0.1, 0.4, 0.35] }],
@@ -110,9 +110,9 @@ describe("B25/B26 abnormal findings", () => {
     expect(verdict([v]).text).toBe("1 finding · 1 needs attention");
     expect(v.outlines[0]).toMatchObject({ side: "right", zone: "upper", x: 10, y: 10 });
     expect(v.outlines[0].w).toBeCloseTo(30);
-    expect(v.patternLabel).toBe("TB-suggestive");
+    expect(v.patternLabel).toBe("Pattern of concern");
     expect(hasPatternLabel([v])).toBe(true);
     expect(hasPatternLabel([{ ...v, decision: "rejected" }])).toBe(false);
-    expect(findingView(finding({ abnormal: false, pattern: "tb_suggestive" }), { measurements: [], triage: undefined }).patternLabel).toBeNull();
+    expect(findingView(finding({ abnormal: false, pattern: "pattern_of_concern" }), { measurements: [], triage: undefined }).patternLabel).toBeNull();
   });
 });

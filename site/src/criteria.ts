@@ -53,21 +53,20 @@ export const CRITERIA: Record<string, CriterionText> = {
   "note:grade": { earns: "A reading grade of 8 or lower (Flesch–Kincaid) on the first draft.", doesNot: "Above grade 8." },
   "note:first_try": { earns: "The first draft passes every check, with no retry.", doesNot: "A check failed and the note had to be rewritten." },
 
-  // TB screening: Shenzhen and Montgomery films with a film-level label.
+  // Screening clinic: Shenzhen and Montgomery films; the set's film-level label (TB or normal) is the ground truth.
   "tb:tb_flag": {
-    earns: "On a TB film, the agents raise the TB-suggestive pattern for the clinician; on a normal film, they do not.",
-    doesNot: "A TB film with no pattern raised, or a normal film with one.",
-    alternatives: "Either an abnormal observation tagged TB-suggestive or a kept clinician consideration naming TB counts as raised.",
+    earns: "On a film the set labels TB, the agents flag a pattern of concern so the film is read first; on a normal film, they do not.",
+    doesNot: "A TB-labelled film with no pattern flagged, or a normal film with one.",
+    alternatives: "The pattern names radiographic features only (upper-zone opacity, cavitation, apical change); the clinician names the cause.",
   },
-  "tb:priority_floor": { earns: "The case is sent urgent or higher, after the TB-suggestive pattern lifts a routine case.", doesNot: "The case stays routine." },
+  "tb:priority_floor": { earns: "The case is sent urgent or higher, after the pattern of concern lifts a routine case.", doesNot: "The case stays routine." },
   "tb:attention": {
-    earns: "On a TB film, at least one observation is flagged for attention; on a normal film, none is.",
-    doesNot: "Nothing flagged on a TB film, or a flag on a normal film.",
+    earns: "On a TB-labelled film, at least one observation is flagged for attention; on a normal film, none is.",
+    doesNot: "Nothing flagged on a TB-labelled film, or a flag on a normal film.",
   },
   "tb:no_leak": {
-    earns: "No observation title, description, findings paragraph, impression or recommendation names TB; the pattern is surfaced, not diagnosed.",
-    doesNot: "Any of those texts asserts TB, before the app's filters.",
-    alternatives: "Clinician considerations may name TB by design.",
+    earns: "No observation title, description, findings paragraph, impression or recommendation names a disease or uses diagnostic wording.",
+    doesNot: "Any of those texts names a disease, before the app's filters.",
   },
   "tb:outline": { earns: "Every abnormal observation has a zone outline on the film.", doesNot: "An abnormal observation with no outline." },
   "tb:zone_match": {

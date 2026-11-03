@@ -3,7 +3,6 @@
  * shapes the real pipeline (card 2.6) must produce. Nothing here is clinical
  * advice; the text exists to exercise the review and sharing screens.
  */
-import { PATTERNS } from "../lib/patterns";
 import { findingColor } from "../lib/colors";
 
 export type Modality = "xray" | "ct_mri" | "ultrasound" | "lab" | "skin";
@@ -24,8 +23,8 @@ export interface DraftFinding {
   abnormal?: boolean;
   location?: string | null;
   outlines?: { kind: "zone" | "lung" | "heart"; side: "left" | "right" | null; zone: "upper" | "middle" | "lower" | null; box: [number, number, number, number] }[];
-  /** B26: "tb_suggestive" or "none" (lib/patterns.ts). */
-  pattern?: "tb_suggestive" | "none";
+  /** B26: "pattern_of_concern" or "none" (lib/patterns.ts); older studies may hold "tb_suggestive". */
+  pattern?: "pattern_of_concern" | "tb_suggestive" | "none";
 }
 
 export interface DraftSummaries {
@@ -36,9 +35,8 @@ export interface DraftSummaries {
     highlights: { findingId: string; start: number; end: number }[];
     generatedFromReviewHash: string | null;
     editedByClinician: boolean;
-    /** B26: AI-suggested lines for the clinician only; never in the frozen report unless adopted. */
+    /** Legacy (B26, removed for compliance): never written now; older studies may hold them. */
     considerations?: string[];
-    /** B26: considerations the clinician added to the impression. */
     considerationsAdopted?: string[];
   };
 }
@@ -83,15 +81,15 @@ export function mockDraft(modality: Modality, reviewedBy: string): MockDraft {
         {
           // B25: an abnormal observation with its zone, so the outline shows on the emulators.
           // The patient's right lung is on the image's left.
-          ...finding(0, "Right lower lobe opacity", "Patchy airspace opacity in the right lower zone, obscuring the hemidiaphragm.", 91, {
-            shape: "ellipse", x: 0.14, y: 0.6, w: 0.3, h: 0.25,
+          ...finding(0, "Right upper zone opacity", "Patchy nodular opacity in the right upper zone with a small lucent area.", 91, {
+            shape: "ellipse", x: 0.14, y: 0.15, w: 0.3, h: 0.25,
           }),
           abnormal: true,
-          pattern: "tb_suggestive" as const,
-          location: "right lung lower zone",
-          outlines: [{ kind: "zone" as const, side: "right" as const, zone: "lower" as const, box: [0.14, 0.6, 0.44, 0.85] as [number, number, number, number] }],
+          pattern: "pattern_of_concern" as const,
+          location: "right lung upper zone",
+          outlines: [{ kind: "zone" as const, side: "right" as const, zone: "upper" as const, box: [0.14, 0.15, 0.44, 0.4] as [number, number, number, number] }],
         },
-        finding(1, "Blunted right costophrenic angle", "Loss of the sharp costophrenic angle on the right, suggesting a small effusion.", 78, {
+        finding(1, "Blunted right costophrenic angle", "Loss of the sharp costophrenic angle on the right.", 78, {
           shape: "ellipse", x: 0.7, y: 0.78, w: 0.18, h: 0.1,
         }),
         finding(2, "Borderline cardiac silhouette", "Cardiothoracic ratio at the upper limit of normal on this projection.", 84, {
@@ -106,12 +104,11 @@ export function mockDraft(modality: Modality, reviewedBy: string): MockDraft {
         summaries: {
           clinicianSummary: {
             findings: text,
-            impression: ["Right lower lobe consolidation, likely infective.", "Small right pleural effusion."],
-            recommendation: "Correlate clinically; consider follow-up imaging after treatment.",
+            impression: ["Right upper zone opacity.", "Blunted right costophrenic angle."],
+            recommendation: "Interpret alongside the clinical picture and any prior imaging.",
             highlights: highlightsFor(text, findings),
             generatedFromReviewHash: null,
             editedByClinician: false,
-            considerations: [PATTERNS.tb_suggestive.clinician],
           },
         },
       };

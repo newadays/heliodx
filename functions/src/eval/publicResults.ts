@@ -23,9 +23,9 @@ export const LIMITS = [
   "NIH labels are text-mined and noisy, and carry no size: an effusion is graded urgent, never critical.",
   "Triage floors come from geometry (heart size, lung asymmetry, angle blunting, density). Mass and consolidation have no measurement behind them, so they are expected to be missed unless the model raises the lane.",
   "The prompts were written for Glimmer. MedGemma runs them unchanged, so some of its misses may be about following our format rather than reading the film.",
-  "These are screening sets from two sites, not the clinic's own population, equipment or TB prevalence. A sensitivity here does not transfer.",
-  "The language model is a general model, not a trained TB detector. The number says whether the agents surface the pattern for a clinician to consider, not how well a film is diagnosed.",
-  "Labels are film-level (TB yes/no). The zone check is coarse: thirds of the chest from the lung masks, matched to a side and zone parsed from a free-text reading (Montgomery shorthand such as RUL, LUL, rt, lt is spelled out first), or any overlap with an ROI box. No lesion-level accuracy is claimed.",
+  "These are screening sets from two sites, not the clinic's own population or equipment. A sensitivity here does not transfer.",
+  "HelioDX does not diagnose, and the language model is not trained to detect any disease. The number says whether the agents flag a pattern of concern for the clinician on films the set labels TB, not how well a film is read.",
+  "Ground truth is the sets' film-level label (TB or normal). The zone check is coarse: thirds of the chest from the lung masks, matched to a side and zone parsed from a free-text reading (Montgomery shorthand such as RUL, LUL, rt, lt is spelled out first), or any overlap with an ROI box. No lesion-level accuracy is claimed.",
 ];
 
 const NIH_CITATION =
@@ -52,7 +52,7 @@ export function expectedText(task: EvalTask): string | null {
   const e = task.expected;
   switch (task.family) {
     case "tb":
-      return (e.tbSuggestive ?? task.film?.label === "tb") ? "TB film" : "Normal film";
+      return (e.tbSuggestive ?? task.film?.label === "tb") ? "Labelled TB" : "Labelled normal";
     case "triage":
       return e.lane ? LANE_TEXT[e.lane] : null;
     case "prep":

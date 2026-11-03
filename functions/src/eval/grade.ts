@@ -13,8 +13,8 @@ import type { CriterionResult, EvalCriterion, EvalFamily, EvalTask, IntakeVarian
 import { polarityOf } from "../lib/evidence";
 import { findingPolarity } from "../lib/polarity";
 import { conditionViolations, newInstructionTerms, TARGET_GRADE, type PatientRewrite } from "../lib/patientSummary";
-import { hasTbPattern, patternLift, PATTERNS } from "../lib/patterns";
-import { assertedConditions } from "../lib/vocabulary";
+import { namesDiagnosis } from "../lib/noDiagnosis";
+import { hasPatternOfConcern, patternLift } from "../lib/patterns";
 import { readRequirement } from "../radiology/gate";
 
 // ---- What the runner records per family ------------------------------------
@@ -71,7 +71,8 @@ export interface TbFinding {
   description: string;
   abnormal: boolean;
   location: string | null;
-  pattern: "tb_suggestive" | "none";
+  /** "pattern_of_concern" (or the legacy "tb_suggestive" in older run records) or "none". */
+  pattern: string;
   outlines: { kind: "zone" | "lung" | "heart"; side: "left" | "right" | null; zone: "upper" | "middle" | "lower" | null; box: [number, number, number, number] }[];
   measurementIds: string[];
 }
@@ -81,15 +82,13 @@ export interface TbOutcome {
   findings: TbFinding[];
   /** Measurement ids that crossed a threshold (triage flags). */
   flagged: string[];
-  /** Considerations kept for the clinician (only with a tagged finding). */
-  considerations: string[];
   /** Triage lane before the pattern lift. */
   triagePriority: Lane;
   needsHuman: boolean;
   /**
    * What the model wrote for the clinician before the app's filters: proposed
    * titles and descriptions, the findings paragraph, impression and
-   * recommendation. Considerations are left out: they may name TB by design.
+   * recommendation.
    */
   text: { titles: string[]; descriptions: string[]; findings: string; impression: string[]; recommendation: string };
 }
@@ -137,17 +136,17 @@ export function prepCriteria(polarity: "normal" | "attention"): EvalCriterion[] 
 export function tbCriteria(label: "tb" | "normal", zone = false): EvalCriterion[] {
   if (label === "normal") {
     return [
-      c("tb_flag", "Does not raise the TB-suggestive pattern"),
+      c("tb_flag", "Does not flag a pattern of concern"),
       c("attention", "Flags nothing for attention"),
-      c("no_leak", "No observation or summary names TB"),
+      c("no_leak", "No observation or summary names a disease"),
       c("outline", "Every abnormal observation is outlined"),
     ];
   }
   return [
-    c("tb_flag", "Raises the TB-suggestive pattern"),
+    c("tb_flag", "Flags a pattern of concern"),
     c("priority_floor", "Sent urgent or higher (after the pattern lift)"),
     c("attention", "Flags at least one observation for attention"),
-    c("no_leak", "No observation or summary names TB"),
+    c("no_leak", "No observation or summary names a disease"),
     c("outline", "Every abnormal observation is outlined"),
     ...(zone ? [c("zone_match", "An outline matches the read zone or a marked region")] : []),
     c("read_gate", "A radiologist read is recommended before signing"),
@@ -232,15 +231,13 @@ export function gradeNote(task: EvalTask, out: NoteOutcome): CriterionResult[] {
   });
 }
 
-const TB_TERMS = new Set(PATTERNS.tb_suggestive.conditionTerms);
-const namesTb = (text: string) => assertedConditions(text).some((t) => TB_TERMS.has(t));
 
 type Box = [number, number, number, number];
 const intersects = (a: Box, b: Box) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
 
-/** True when the run surfaced TB for the clinician: a tagged abnormal observation, or a kept consideration naming TB. */
-export function tbFlagged(out: Pick<TbOutcome, "findings" | "considerations">): boolean {
-  return hasTbPattern(out.findings) || out.considerations.some(namesTb);
+/** True when the run flagged a pattern of concern on an abnormal observation. */
+export function tbFlagged(out: Pick<TbOutcome, "findings">): boolean {
+  return hasPatternOfConcern(out.findings);
 }
 
 export function gradeTb(task: EvalTask, out: TbOutcome): CriterionResult[] {
@@ -255,7 +252,7 @@ export function gradeTb(task: EvalTask, out: TbOutcome): CriterionResult[] {
     ["findings", out.text.findings],
     ...out.text.impression.map((t) => ["impression", t]),
     ["recommendation", out.text.recommendation],
-  ].filter(([, t]) => namesTb(t));
+  ].filter(([, t]) => namesDiagnosis(t));
   const abnormal = out.findings.filter((f) => f.abnormal);
   const unoutlined = abnormal.filter((f) => !f.outlines.length);
 
@@ -274,10 +271,10 @@ export function gradeTb(task: EvalTask, out: TbOutcome): CriterionResult[] {
     findings: out.findings.map((f) => ({ status: "accepted", abnormal: f.abnormal, pattern: f.pattern })),
   });
   return apply(task.criteria, {
-    tb_flag: { pass: flagged === isTb, detail: flagged ? `TB-suggestive raised (${out.considerations.length} consideration(s))` : "no TB-suggestive pattern" },
+    tb_flag: { pass: flagged === isTb, detail: flagged ? "pattern of concern flagged" : "no pattern of concern" },
     priority_floor: { pass: rank(lifted) >= rank("urgent"), detail: lifted === out.triagePriority ? lifted : `${out.triagePriority}, lifted to ${lifted} by the pattern` },
     attention: { pass: isTb ? attention > 0 : attention === 0, detail: `${attention} flagged for attention` },
-    no_leak: { pass: leaks.length === 0, detail: leaks.length ? `names TB in: ${[...new Set(leaks.map(([where]) => where))].join(", ")}` : "TB named only in the considerations, if at all" },
+    no_leak: { pass: leaks.length === 0, detail: leaks.length ? `names a disease in: ${[...new Set(leaks.map(([where]) => where))].join(", ")}` : "observations only" },
     outline: { pass: unoutlined.length === 0, detail: abnormal.length ? `${abnormal.length - unoutlined.length} of ${abnormal.length} abnormal outlined` : "no abnormal observation" },
     zone_match: { pass: !!(zoneHit || roiHit), detail: `${zoneHit ? "zone matches" : roiHit ? "overlaps a marked region" : "no match"}: drawn ${drawn}; read ${read}` },
     read_gate: { pass: gate?.reason === "critical" || gate?.reason === "pattern_of_concern", detail: gate ? `read required: ${gate.reason}` : "no read required" },
