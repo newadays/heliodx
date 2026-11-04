@@ -1,5 +1,7 @@
 # HelioDX
 
+**Demo video:** [HelioDX: AI Agents for Chest X-rays](https://www.youtube.com/watch?v=gaQmFrep_O8) on YouTube · Live app: [app.heliodx.com](https://app.heliodx.com)
+
 **HelioDX** is an agentic radiology workflow for clinics with no radiologist on site. Meta Muse Wonder coordinates a team of Muse Glimmer agents that take a chest X-ray from intake to a signed report: Meta SAM 3.1 segments and preps every scan, the agents measure the film and draft observations with the evidence behind each one, and a plain-language patient note is written from the signed report. A clinician reviews, edits and signs every finding; nothing reaches a patient until they do. Glimmer and SAM run on our own GPU, so images and reports never leave the project, and every agent step is recorded in an auditable trace.
 
 HelioDX does not diagnose or give medical advice. It does the measuring, drafting and documentation that a clinician would otherwise do by hand, so the clinician decides faster and with a record of how the draft was made.
