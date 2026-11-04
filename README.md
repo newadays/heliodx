@@ -80,9 +80,9 @@ created. Every later change is in the
 All of the code was written during the event; nothing was carried over from
 earlier projects.
 
-Earlier versions of this repository had `EXPO_PUBLIC_*` environment names, a
-five-modality enum and a Gemini safety setting in the docs. These leftovers
-were removed on 4 November; HelioDX reads plain chest X-rays only.
+Earlier commits had `EXPO_PUBLIC_*` environment names, a five-modality enum
+and a Gemini safety setting in the docs, from early design choices during the
+event. They were removed on 4 November; HelioDX reads plain chest X-rays only.
 
 ## Which model does what
 
