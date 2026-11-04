@@ -77,8 +77,8 @@ which holds the work done from 26 to 29 October before the repository was
 created. Every later change is in the
 [commit log](https://github.com/newadays/heliodx/commits/develop).
 
-> **TODO before merge (owner):** what, if anything, was carried over from
-> NewCare or earlier work, and roughly how much.
+All of the code was written during the event; nothing was carried over from
+earlier projects.
 
 Earlier versions of this repository had `EXPO_PUBLIC_*` environment names, a
 five-modality enum and a Gemini safety setting in the docs. These leftovers
