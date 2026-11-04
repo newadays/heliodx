@@ -1,0 +1,42 @@
+# Checks every pull request: types, unit tests and the compliance check (no
+# disease naming). No secrets: nothing here deploys or calls a model.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Compliance (banned terms)
+        run: npm run check:compliance
+      - name: Install
+        run: |
+          npm ci
+          npm --prefix web ci
+          npm --prefix functions ci
+          npm --prefix site ci
+      - name: Shared types and utils
+        run: npm test
+      - name: Functions
+        working-directory: functions
+        run: |
+          npx tsc --noEmit -p .
+          npm test
+      - name: Web
+        run: |
+          npm --prefix web run typecheck
+          npm --prefix web test
+      - name: Results site
+        run: |
+          npm --prefix site run typecheck
+          npm --prefix site test

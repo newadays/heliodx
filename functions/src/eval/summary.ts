@@ -139,7 +139,7 @@ export function markdownTable(runs: EvalRun[]): string {
   const screened = runs.filter((r) => r.tb);
   if (screened.length) {
     const ci = (v: [number, number] | null) => (v ? ` (${pct(v[0])}–${pct(v[1])})` : "");
-    lines.push("", "| TB screening | Films | Sensitivity (95% CI) | Specificity (95% CI) | TB sent urgent or higher | Zone matched | TB never named |", "|---|---|---|---|---|---|---|");
+    lines.push("", "| Screening clinic | Films | Sensitivity on TB-labelled (95% CI) | Specificity on normal (95% CI) | TB-labelled sent urgent or higher | Zone matched | No disease named |", "|---|---|---|---|---|---|---|");
     for (const r of screened) {
       const t = r.tb!;
       lines.push(`| ${r.label} | ${t.n} | ${pct(t.sensitivity)}${ci(t.sensitivityCi)} | ${pct(t.specificity)}${ci(t.specificityCi)} | ${pct(t.floorRate)} | ${pct(t.zoneMatchRate)} | ${pct(t.noLeakRate)} |`);

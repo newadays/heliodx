@@ -131,9 +131,9 @@ describe("buildPublicResults", () => {
       }
     });
     const row = data.tasks.find((t) => t.family === "tb")!;
-    expect(row.title).toMatch(/^TB screening · film \d+$/);
+    expect(row.title).toMatch(/^Screening film \d+$/);
     expect(row.inputs).toEqual({ indication: "Adult with a cough for several weeks.", variant: null });
-    expect(["TB film", "Normal film"]).toContain(row.expected);
+    expect(["Labelled TB", "Labelled normal"]).toContain(row.expected);
   });
 
   it("reduces errors to a short class", () => {
@@ -147,7 +147,7 @@ describe("buildPublicResults", () => {
 
   it("says what each family expects in words", () => {
     expect(expectedText(triageTask)).toBe("Critical");
-    expect(expectedText(tbTasks.find((t) => t.expected.tbSuggestive)!)).toBe("TB film");
+    expect(expectedText(tbTasks.find((t) => t.expected.tbSuggestive)!)).toBe("Labelled TB");
     expect(expectedText({ ...triageTask, family: "intake", expected: { retake: true, blockingReason: "blurred" } })).toBe("Retake: blurred");
   });
 

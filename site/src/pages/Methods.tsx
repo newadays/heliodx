@@ -72,7 +72,7 @@ export function Methods({ data }: { data: PublicResults }) {
         </h2>
         <p className="prose">
           Every criterion is checked in code (<a href={`${REPO}/functions/src/eval/grade.ts`}>grade.ts</a>) against values fixed before the run. A task's score is the fraction of
-          its criteria passed. Where the app filters the model's text, the model's answer before the filters is graded, so a filter cannot hide a miss. TB sensitivity and
+          its criteria passed. Where the app filters the model's text, the model's answer before the filters is graded, so a filter cannot hide a miss. Screening-clinic sensitivity and
           specificity come with 95% Wilson intervals over the films that ran without error.
         </p>
       </section>
@@ -98,7 +98,7 @@ export function Methods({ data }: { data: PublicResults }) {
           ))}
           {data.tb ? (
             <>
-              <p className="label">TB screening set terms (verbatim)</p>
+              <p className="label">Shenzhen and Montgomery set terms (verbatim)</p>
               <blockquote className="quote">{data.tb.dataset.terms}</blockquote>
               <p className="muted">
                 No film, file name, clinical reading, age, sex or marked region from these sets is published here. Each task is listed by its library number and its film-level

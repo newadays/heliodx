@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { confidenceFor, margin, strengthOf } from "../src/lib/strength";
 import { assertsCondition, stripConditionSentences } from "../src/lib/vocabulary";
 import { traceCapture, type CapturedEvent } from "../src/lib/trace";
-import { HEART_REGION, runPrep } from "../src/stages/prep";
+import { HEART_REGION, prepDiagnosisHits, runPrep } from "../src/stages/prep";
 import type { Measurement } from "../src/tools/measure";
 import type { MaskRecord } from "../src/tools/segment";
 
@@ -63,7 +63,7 @@ const summary = (n: number) => ({
   highlights: Array.from({ length: n }, (_, i) => ({ findingIndex: i, quote: i === 0 ? "Heart size within normal limits" : "Lung fields symmetric" })),
 });
 
-async function prep(proposed: unknown[], considerations: string[] = []) {
+async function prep(proposed: unknown[]) {
   const image = await sharp(Buffer.alloc(W * W, 120), { raw: { width: W, height: W, channels: 1 } }).jpeg().toBuffer();
   const saveOverlay = vi.fn(async (_b: string, prefix: string, r: MaskRecord) => `${prefix}/overlays/${r.maskId}.png`);
   const out = await runPrep(
@@ -76,7 +76,7 @@ async function prep(proposed: unknown[], considerations: string[] = []) {
       generate: vi.fn(async () => ({
         // B25 fields default to a pertinent normal.
         proposed: proposed.map((p) => ({ abnormal: false, location: "none", pattern: "none", ...(p as object) })),
-        clinicianSummary: { ...summary(proposed.length), considerations },
+        clinicianSummary: summary(proposed.length),
       })) as never,
       saveOverlay,
     },
@@ -156,30 +156,58 @@ describe("runPrep", () => {
     expect(out.findings[0].overlayPath).toBe("o/left-lung.png");
   });
 
-  it("B26: tags an abnormal TB-suggestive observation, keeps a TB consideration, drops a TB title and other conditions", async () => {
-    const tb = "Pattern suggestive of pulmonary tuberculosis. Consider sputum GeneXpert or AFB.";
-    const { out } = await prep(
-      [
-        { title: "Patchy opacity in the right upper zone", description: "Right apex.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right upper zone", pattern: "tb_suggestive" },
-        { title: "Tuberculosis in the right apex", description: "Cavity.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right upper zone", pattern: "tb_suggestive" },
-        { title: "Heart size within normal limits", description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none", pattern: "tb_suggestive" },
-      ],
-      [tb, "Could also be pneumonia."],
-    );
+  it("B26: tags an abnormal pattern of concern and drops a title that names a disease", async () => {
+    const { out } = await prep([
+      { title: "Patchy opacity in the right upper zone", description: "Right apex.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right upper zone", pattern: "pattern_of_concern" },
+      { title: "Tuberculosis in the right apex", description: "Cavity.", evidence: ["right-lung"], region: "right-lung", abnormal: true, location: "right upper zone", pattern: "tb_suggestive" },
+      { title: "Heart size within normal limits", description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none", pattern: "pattern_of_concern" },
+    ]);
     expect(out.findings.map((f) => [f.title, f.pattern])).toEqual([
-      ["Patchy opacity in the right upper zone", "tb_suggestive"],
+      ["Patchy opacity in the right upper zone", "pattern_of_concern"],
       ["Heart size within normal limits", "none"], // a pattern counts only on an abnormal observation
     ]);
     expect(out.dropped.conditions).toBe(1);
-    expect(out.clinicianSummary.considerations).toEqual([tb]);
+    expect(out.clinicianSummary).not.toHaveProperty("considerations");
+    expect(JSON.stringify(out.clinicianSummary)).not.toMatch(/pneumonia|tuberculosis/i);
   });
 
-  it("B26: no tagged finding means no consideration", async () => {
-    const { out } = await prep(
-      [{ title: "Heart size within normal limits", description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none" }],
-      ["Pattern suggestive of pulmonary tuberculosis."],
-    );
-    expect(out.clinicianSummary.considerations).toEqual([]);
+  it("compliance: asks again once when the answer names a disease, and keeps the clean second answer", async () => {
+    const image = await sharp(Buffer.alloc(W * W, 120), { raw: { width: W, height: W, channels: 1 } }).jpeg().toBuffer();
+    const clean = { findings: "Heart size within normal limits.", impression: ["Normal cardiac size."], recommendation: "Clinical correlation.", highlights: [] };
+    const answer = (title: string) => ({
+      proposed: [{ title, description: "CTR 0.44.", evidence: ["cardiothoracic_ratio"], region: "none", abnormal: false, location: "none", pattern: "none" }],
+      clinicianSummary: clean,
+    });
+    const run = (second: string) => {
+      const generate = vi.fn().mockResolvedValueOnce(answer("Findings consistent with heart failure")).mockResolvedValueOnce(answer(second));
+      const events: CapturedEvent[] = [];
+      const done = traceCapture("prep", (e) => events.push(e), () =>
+        runPrep(
+          { image, studyType: "Chest X-ray (PA)", clinicalContext: "", masks, measurements, flags: [], heartBox: null, overlays: {}, bucket: "b", studyPrefix: "s", step: "detecting" },
+          { generate: generate as never, saveOverlay: vi.fn() as never },
+        ),
+      );
+      return { generate, events, done };
+    };
+    const fixed = run("Heart size within normal limits");
+    const out = await fixed.done;
+    const generate = fixed.generate;
+    expect(fixed.events.find((e) => e.name === "no_diagnosis")).toMatchObject({ ok: true, result: "passed after one re-ask" });
+    const failed = run("Cardiomegaly");
+    await failed.done.catch(() => null); // nothing survives the filter: the stage fails visibly
+    expect(failed.events.find((e) => e.name === "no_diagnosis")).toMatchObject({ ok: false });
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect((generate.mock.calls[1][0] as { prompt: string }).prompt).toContain("Your previous answer named a disease");
+    expect(out.findings.map((f) => f.title)).toEqual(["Heart size within normal limits"]);
+    expect(out.dropped.conditions).toBe(0);
+  });
+
+  it("compliance: lists every model text that breaks the rule", () => {
+    const hits = prepDiagnosisHits({
+      proposed: [{ title: "Opacity", description: "Likely infective." }],
+      clinicianSummary: { findings: "No pneumothorax.", impression: ["Pneumonia."], recommendation: "Not a diagnosis." },
+    });
+    expect(hits).toEqual(["description 1: likely infective", "impression 1: pneumonia"]);
   });
 
   it("fails visibly when nothing survives, rather than returning an empty draft", async () => {

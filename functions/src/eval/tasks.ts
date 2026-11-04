@@ -200,9 +200,9 @@ export function buildTbTasks(films: readonly TbFilm[]): EvalTask[] {
     const roi = film.label === "tb" ? film.roi : [];
     return {
       id: `tb-${i + 1}`,
-      title: `TB screening · film ${i + 1}`,
+      title: `Screening film ${i + 1}`,
       family: "tb",
-      tags: [film.label === "tb" ? "Expected TB-suggestive" : "Expected no TB pattern", DATASET_LABEL[film.dataset]],
+      tags: [film.label === "tb" ? "Expected pattern of concern" : "Expected no pattern of concern", DATASET_LABEL[film.dataset]],
       split: film.split,
       film: { id: film.id, source: film.source, dataset: film.dataset, label: film.label, roi },
       context: { age: film.age, sex: film.sex, indication: TB_INDICATION, synthetic: true },

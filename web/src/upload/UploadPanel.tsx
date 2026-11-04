@@ -518,7 +518,7 @@ export function UploadPanel({
                   Files that need attention are skipped unless you choose Analyze anyway.
                 </>
               ) : (
-                "Research Beta — upload synthetic or fully de-identified images only."
+                "Research prototype — upload synthetic or fully de-identified images only."
               )}
             </span>
             <div className="up__actions">

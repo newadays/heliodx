@@ -6,7 +6,7 @@
  * fall back to values derived here.
  */
 import { confidenceBand, evidenceLine } from "@/functions/src/lib/evidence";
-import { PATTERNS } from "@/functions/src/lib/patterns";
+import { PATTERNS, patternOf } from "@/functions/src/lib/patterns";
 import { readNeed, readRequirement, READ_REASON_TEXT } from "@/functions/src/radiology/gate";
 import type { Finding, FindingStatus, ShareChannel, Study, StudyStatus } from "@/types/study";
 import { caseId as derivedCaseId } from "@/utils/caseTimeline";
@@ -126,7 +126,7 @@ export interface FindingView {
   /** B25: the model called it abnormal; its zones in % of the image (ellipse boxes). */
   abnormal: boolean;
   outlines: { side: "left" | "right" | null; zone: "upper" | "middle" | "lower" | null; kind: "zone" | "lung" | "heart"; x: number; y: number; w: number; h: number }[];
-  /** B26: "TB-suggestive" when tagged, else null. */
+  /** B26: "Pattern of concern" when tagged, else null. */
   patternLabel: string | null;
 }
 
@@ -163,11 +163,11 @@ export function findingView(f: Finding, study: Pick<Study, "measurements" | "tri
       w: (o.box[2] - o.box[0]) * 100,
       h: (o.box[3] - o.box[1]) * 100,
     })),
-    patternLabel: f.abnormal === true && f.pattern === "tb_suggestive" ? PATTERNS.tb_suggestive.label : null,
+    patternLabel: f.abnormal === true && patternOf(f.pattern) === "pattern_of_concern" ? PATTERNS.pattern_of_concern.label : null,
   };
 }
 
-/** B26: true when a finding the clinician has not rejected carries the TB-suggestive tag. */
+/** B26: true when a finding the clinician has not rejected carries the pattern of concern. */
 export function hasPatternLabel(findings: Pick<FindingView, "patternLabel" | "decision">[]): boolean {
   return findings.some((f) => f.patternLabel && f.decision !== "rejected");
 }
@@ -328,7 +328,7 @@ export function statusDetail(study: Study, now: number): string {
   if (vs === "draft_ready" || vs === "in_review") {
     const findings = findingsOf(study);
     const v = verdict(findings);
-    return hasPatternLabel(findings) ? `${v.text} · ${PATTERNS.tb_suggestive.label}` : v.text;
+    return hasPatternLabel(findings) ? `${v.text} · ${PATTERNS.pattern_of_concern.label}` : v.text;
   }
   const share = lastShare(study);
   if (share) {

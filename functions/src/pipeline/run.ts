@@ -20,7 +20,8 @@ import { WrongStateError } from "../study/stateMachine";
 import { PipelineError, type PipelineStatus } from "./errors";
 import { isTransient, isWarmingWait } from "./retryPolicy";
 import { runIntake, type IntakeOutput } from "../stages/intake";
-import { runPrep } from "../stages/prep";
+import { runPrep, traceNoDiagnosis } from "../stages/prep";
+import { diagnosisHits, namesDiagnosis, stripDiagnosis } from "../lib/noDiagnosis";
 import { runTriage, type TriageOutput } from "../stages/triage";
 import { gpuHealth } from "../models/gpu";
 import { prepareImages } from "./image";
@@ -283,7 +284,8 @@ async function runPipelineTraced(
           priority: triage.priority,
           floor: triage.floor,
           evidence: triage.evidence,
-          rationale: triage.rationale,
+          // Compliance: the rationale is shown to the clinician; no diagnostic sentence survives.
+          rationale: stripDiagnosis(triage.rationale),
           confidence: triage.confidence,
           flags: triage.flags,
           heartBox: triage.heartBox,
@@ -370,12 +372,21 @@ async function runPipelineTraced(
         answerTokens: 6144,
         reasoningEffort: "medium",
       });
-      findings = toFindings(draft.findings);
+      // Compliance: the same no-diagnosis guard as prep (no re-ask on this rarer path).
+      const hits = diagnosisHits([
+        ...draft.findings.map((f, i) => ({ where: `finding ${i + 1}`, text: `${f.title} ${f.description}` })),
+        { where: "findings paragraph", text: draft.clinicianSummary.findings },
+        ...draft.clinicianSummary.impression.map((t, i) => ({ where: `impression ${i + 1}`, text: t })),
+        { where: "recommendation", text: draft.clinicianSummary.recommendation },
+      ]);
+      traceNoDiagnosis(hits);
+      findings = toFindings(draft.findings.filter((f) => !namesDiagnosis(`${f.title} ${f.description}`)));
+      const paragraph = stripDiagnosis(draft.clinicianSummary.findings.trim());
       clinicianSummary = {
-        findings: draft.clinicianSummary.findings.trim(),
-        impression: draft.clinicianSummary.impression.map((s) => s.trim()).filter(Boolean),
-        recommendation: draft.clinicianSummary.recommendation.trim(),
-        highlights: resolveHighlights(draft.clinicianSummary.findings.trim(), findings, draft.clinicianSummary.highlights),
+        findings: paragraph,
+        impression: draft.clinicianSummary.impression.map((s) => s.trim()).filter((s) => s && !namesDiagnosis(s)),
+        recommendation: stripDiagnosis(draft.clinicianSummary.recommendation.trim()),
+        highlights: resolveHighlights(paragraph, findings, draft.clinicianSummary.highlights),
         generatedFromReviewHash: null,
         editedByClinician: false,
       };
@@ -392,10 +403,10 @@ async function runPipelineTraced(
     const overlays = ctrOverlays(triage?.ctrLines ?? null, ctr, findings);
     // B22: findings land one by one as they are checked, so the Analyzing
     // step fills in as it goes; the clinician can open Review before ready.
-    // B26: a TB-suggestive pattern raises a routine study to urgent; never lowers.
+    // B26: a pattern of concern raises a routine study to urgent; never lowers.
     const lift = patternLift(findings, triage?.priority) !== null;
     if (lift) {
-      traceEvent({ kind: "check", name: "pattern_floor", args: { pattern: "tb_suggestive" }, ok: true, result: "TB-suggestive pattern raises priority to urgent" });
+      traceEvent({ kind: "check", name: "pattern_floor", args: { pattern: "pattern_of_concern" }, ok: true, result: "Pattern of concern raises priority to urgent" });
     }
     await writer.patch(
       { overlays, "analysis.expectedFindings": findings.length, ...(lift ? { priority: "urgent", "triage.priority": "urgent", "pipeline.priorityRaisedBy": "pattern" } : {}) },

@@ -32,8 +32,8 @@ const BRIEF: Record<EvalFamily, { task: string; deliverable: string; grader: str
     dataset: "Signed reports drafted on NIH ChestX-ray14 films",
   },
   tb: {
-    task: "Run intake, triage and prep on a TB screening film; on TB films the agents should surface the TB-suggestive pattern for the clinician, without naming TB as a finding.",
-    deliverable: "Observations with zone outlines and a pattern tag, clinician considerations, the lane after the pattern lift.",
+    task: "Run intake, triage and prep on a film from a public TB screening set; on films the set labels TB the agents should flag a pattern of concern so the film is read first, without naming any disease.",
+    deliverable: "Observations with zone outlines and a pattern-of-concern tag, and the lane after the pattern lift.",
     grader: "gradeTb",
     dataset: "Shenzhen or Montgomery County chest X-ray set (U.S. National Library of Medicine)",
   },

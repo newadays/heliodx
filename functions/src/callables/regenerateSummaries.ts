@@ -7,7 +7,7 @@ import { gpuHealth } from "../models/gpu";
 import { generateJson } from "../models/client";
 import type { DraftFinding, DraftSummaries, Modality } from "../models/fixtures";
 import { clinicianSummaryPrompt } from "../models/prompts";
-import { hasTbPattern, keepConsiderations, PATTERNS } from "../lib/patterns";
+import { diagnosisTerms, namesDiagnosis, stripDiagnosis } from "../lib/noDiagnosis";
 import { wrongState } from "../lib/callableErrors";
 import { reviewHash } from "../lib/reviewHash";
 import { traceScope } from "../lib/trace";
@@ -52,9 +52,9 @@ export interface StudyDoc {
 }
 
 /** The finding as the clinician left it: edited wording wins over the draft. */
-function reviewedText(f: DraftFinding & { editedText?: string }): { title: string; description: string; pattern?: string | null } {
+function reviewedText(f: DraftFinding & { editedText?: string }): { title: string; description: string } {
   const edited = (f.editedText ?? "").trim();
-  return { title: f.title, description: edited || f.description, pattern: f.abnormal ? (f.pattern ?? null) : null };
+  return { title: f.title, description: edited || f.description };
 }
 
 /**
@@ -69,8 +69,8 @@ export async function draftClinicianSummary(study: StudyDoc): Promise<{ hash: st
   const hash = reviewHash(findings);
   const studyType = study.studyType || "study";
   const clinicalContext = (study.clinicalContext ?? "").trim();
-  // B26: a consideration only while an accepted or edited finding carries the pattern.
-  const tagged = hasTbPattern(included);
+  // Compliance: the draft may repeat only condition words the clinician wrote in an edit.
+  const allowed = [...new Set(included.flatMap((f) => diagnosisTerms((f.editedText ?? "").trim())))];
   if (MODEL_MOCK) {
     const text = included.length ? included.map((f) => reviewedText(f).title).join(". ") + "." : "No findings were accepted for this study.";
     return {
@@ -82,7 +82,6 @@ export async function draftClinicianSummary(study: StudyDoc): Promise<{ hash: st
         highlights: resolveHighlights(text, included, included.map((f) => ({ findingIndex: f.index, quote: f.title }))),
         generatedFromReviewHash: hash,
         editedByClinician: false,
-        considerations: tagged ? [PATTERNS.tb_suggestive.clinician] : [],
       },
     };
   }
@@ -94,13 +93,14 @@ export async function draftClinicianSummary(study: StudyDoc): Promise<{ hash: st
     answerTokens: 3072,
     reasoningEffort: "medium",
   });
-  const text = draft.findings.trim();
+  const text = stripDiagnosis(draft.findings.trim(), allowed);
+  const impression = draft.impression.map((s) => s.trim()).filter((s) => s && !namesDiagnosis(s, allowed));
   return {
     hash,
     clinicianSummary: {
       findings: text,
-      impression: draft.impression.map((s) => s.trim()).filter(Boolean),
-      recommendation: draft.recommendation.trim(),
+      impression: impression.length ? impression : ["See the findings above."],
+      recommendation: stripDiagnosis(draft.recommendation.trim(), allowed),
       highlights: resolveHighlights(
         text,
         included,
@@ -108,7 +108,6 @@ export async function draftClinicianSummary(study: StudyDoc): Promise<{ hash: st
       ),
       generatedFromReviewHash: hash,
       editedByClinician: false,
-      considerations: keepConsiderations(draft.considerations, tagged),
     },
   };
 }

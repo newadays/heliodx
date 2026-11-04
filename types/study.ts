@@ -175,8 +175,8 @@ export interface Finding {
   location?: string | null;
   /** B25: where an abnormal observation sits, one per side (`lib/zone.ts`). */
   outlines?: FindingOutline[];
-  /** B26: "tb_suggestive" on an abnormal observation that fits the TB cues, else "none". */
-  pattern?: "tb_suggestive" | "none";
+  /** B26: "pattern_of_concern" on an abnormal observation that fits its features, else "none" ("tb_suggestive" in older studies). */
+  pattern?: "pattern_of_concern" | "tb_suggestive" | "none";
 }
 
 /**
@@ -216,9 +216,8 @@ export interface ClinicianSummary {
   /** `Study.reviewHash` the summary was generated from; stale when they differ. */
   generatedFromReviewHash: string | null;
   editedByClinician: boolean;
-  /** B26: AI-suggested lines for the clinician only (e.g. a TB-suggestive pattern); never in the report unless added. */
+  /** Legacy (B26, removed for compliance): never written now; older studies may hold them. */
   considerations?: string[];
-  /** B26: considerations the clinician added to the impression. */
   considerationsAdopted?: string[];
 }
 

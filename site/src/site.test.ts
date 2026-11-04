@@ -73,7 +73,7 @@ describe("task list", () => {
   it("counts families and filters by family, search and grading", () => {
     expect(familyCounts(tasks)).toEqual([
       { id: "triage", label: "Triage", count: 2 },
-      { id: "tb", label: "TB screening", count: 2 },
+      { id: "tb", label: "Screening clinic", count: 2 },
     ]);
     const f = (search: string) => filterTasks(tasks, readFilter(new URLSearchParams(search)), results.systems).map((t) => t.id);
     expect(f("family=tb")).toEqual(["tb-1", "tb-2"]);

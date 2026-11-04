@@ -53,13 +53,13 @@ function PublicShell({ children }: { children: React.ReactNode }) {
       </header>
       <main className="ev-main">{children}</main>
       <footer className="ev-footer muted">
-        <p>Research prototype, not for clinical use. Scores come from code checks on each task&apos;s own rubric; see eval/README.md in the repository for the method and its limits.</p>
+        <p>Research prototype · synthetic data · not for clinical use. Scores come from code checks on each task&apos;s own rubric; see eval/README.md in the repository for the method and its limits.</p>
         <p>
           Films: NIH Clinical Center ChestX-ray14 (Wang et al., CVPR 2017); indications are synthetic. MedGemma is used under the Health AI Developer
           Foundations terms of use and is not for clinical use.
         </p>
         <p>
-          TB screening films: the Shenzhen and Montgomery County chest X-ray sets (Jaeger et al., Quant Imaging Med Surg 2014; Candemir et al. and Jaeger et
+          Screening-clinic films: the Shenzhen and Montgomery County chest X-ray sets (Jaeger et al., Quant Imaging Med Surg 2014; Candemir et al. and Jaeger et
           al., IEEE TMI 2014), courtesy of the U.S. National Library of Medicine, Shenzhen No. 3 People&apos;s Hospital, and the Montgomery County Department of
           Health and Human Services. Images are not shown or redistributed here.
         </p>
@@ -144,8 +144,9 @@ function Library({ data }: { data: EvalData }) {
       </section>
       {family === "tb" ? (
         <p className="ev-tbnote muted">
-          Labels are film-level (TB yes/no). Zone matching is coarse (thirds of the chest). No lesion-level accuracy is claimed. Films from the public Shenzhen and
-          Montgomery County TB screening sets, not the clinic&apos;s own population.
+          Ground truth is the public sets&apos; film-level label (TB or normal); HelioDX itself only flags a pattern of concern for the clinician. Zone matching is
+          coarse (thirds of the chest). No lesion-level accuracy is claimed. Films from the public Shenzhen and Montgomery County TB screening sets, not the
+          clinic&apos;s own population.
         </p>
       ) : null}
 
@@ -167,7 +168,7 @@ function Library({ data }: { data: EvalData }) {
 
       {family === "tb" ? (
         <p className="muted">
-          Per-film TB results are not published: the NLM data terms ask that the Shenzhen and Montgomery sets not be shared outside the research
+          Per-film results for this family are not published: the NLM data terms ask that the Shenzhen and Montgomery sets not be shared outside the research
           group. Reproduce them with <span className="mono">data/fetch_tb_sets.py</span> and the eval runner (see eval/README.md).
         </p>
       ) : (
@@ -247,7 +248,7 @@ function TbSummaryCard({ run }: { run: EvalRun }) {
       <div className="ev-system__head">
         <h2>{run.label}</h2>
         <p className="muted">
-          TB screening · {tb?.n ?? 0} films · run {new Date(run.startedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · commit{" "}
+          Screening clinic · {tb?.n ?? 0} films · run {new Date(run.startedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · commit{" "}
           <span className="mono">{run.commit}</span>
         </p>
       </div>
@@ -264,12 +265,12 @@ function TbSummaryCard({ run }: { run: EvalRun }) {
             </div>
           </div>
           <p className="ev-system__triage muted">
-            TB films sent urgent or higher {rate(tb.floorRate)} · outline in the read zone {rate(tb.zoneMatchRate)} · TB never named outside the considerations{" "}
+            TB-labelled films sent urgent or higher {rate(tb.floorRate)} · outline in the read zone {rate(tb.zoneMatchRate)} · no disease named{" "}
             {rate(tb.noLeakRate)}
           </p>
         </>
       ) : (
-        <p className="muted">No TB screening numbers in this run.</p>
+        <p className="muted">No screening-clinic numbers in this run.</p>
       )}
     </div>
   );
@@ -505,7 +506,7 @@ function Output({ result }: { result: EvalResult }) {
                   <span className="ev-findmeta muted">
                     {x.abnormal ? "Abnormal" : "Pertinent normal"}
                     {x.location ? ` · ${x.location}` : ""}
-                    {x.pattern === "tb_suggestive" ? " · TB-suggestive" : ""}
+                    {x.pattern === "pattern_of_concern" || x.pattern === "tb_suggestive" ? " · pattern of concern" : ""}
                     {x.abnormal ? ` · ${list(x.outlines).length} outline${list(x.outlines).length === 1 ? "" : "s"}` : ""}
                   </span>
                 </li>
@@ -518,8 +519,6 @@ function Output({ result }: { result: EvalResult }) {
               {str(o.priority)}
               {lifted ? <span className="muted"> (triage {str(o.triagePriority)}, raised by the pattern)</span> : null}
             </dd>
-            <dt>Considerations</dt>
-            <dd>{list(o.considerations).join(" ") || "–"}</dd>
             <dt>Impression</dt>
             <dd>{(summary.impression ?? []).join(" ")}</dd>
             <dt>Recommendation</dt>

@@ -10,7 +10,7 @@ const f = (n: number, outlines: F["outlines"], over: Partial<F> = {}): F => ({ n
 
 describe("placeLabels", () => {
   it("puts the right lung's chip on the image's left, the left lung's on the right", () => {
-    const [r, l] = placeLabels([f(1, [zone("right", "upper", 15, 10), zone("left", "upper", 55, 10)], { patternLabel: "TB-suggestive" })]);
+    const [r, l] = placeLabels([f(1, [zone("right", "upper", 15, 10), zone("left", "upper", 55, 10)], { patternLabel: "Pattern of concern" })]);
     // Just above the zone (it starts at 10%), against the image's left edge.
     expect(r.chip).toEqual({ x: 3, y: 4, align: "left" });
     // From the ellipse's outer-top point (45°) to the chip.
@@ -19,8 +19,8 @@ describe("placeLabels", () => {
     expect([r.line.x2, r.line.y2]).toEqual([7, 4]);
     expect(l.chip.align).toBe("right");
     expect(l.line.x1).toBeCloseTo(70 + 15 * Math.SQRT1_2);
-    expect(r.text).toBe("TB-suggestive");
-    expect(r.aria).toBe("Finding 1, right lung upper zone, TB-suggestive");
+    expect(r.text).toBe("Pattern of concern");
+    expect(r.aria).toBe("Finding 1, right lung upper zone, Pattern of concern");
   });
   it("labels an untagged abnormal finding by its number", () => {
     const [x] = placeLabels([f(3, [zone("left", "lower", 55, 60)])]);

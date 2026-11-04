@@ -177,7 +177,6 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
         measurementIds: f.evidence.measurementIds,
       })),
       flagged,
-      considerations: prep.clinicianSummary.considerations ?? [],
       triagePriority: triage.priority,
       needsHuman: triage.needsHuman,
       text: {
@@ -192,7 +191,6 @@ async function runFamily(task: EvalTask, deps: RunDeps, events: CapturedEvent[])
       criteria: gradeTb(task, out),
       output: {
         findings: out.findings.map(({ measurementIds, ...f }) => ({ ...f, evidence: measurementIds })),
-        considerations: out.considerations,
         priority: patternLift(prep.findings, triage.priority) ?? triage.priority,
         triagePriority: triage.priority,
         flagged,
