@@ -13,7 +13,7 @@ export interface Crumb {
   to?: string;
 }
 
-export const ENV_CHIP = "Research prototype · synthetic data · not for clinical use";
+export const ENV_CHIP = "Research prototype · public de-identified films, synthetic patients · not for clinical use";
 
 export function AppShell({ crumbs = [], children }: { crumbs?: Crumb[]; children: ReactNode }) {
   const { profile, user, signOut } = useAuth();

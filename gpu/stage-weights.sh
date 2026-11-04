@@ -9,7 +9,7 @@
 # For SAM 3.1 and MedGemma, first accept the terms at
 # https://huggingface.co/facebook/sam3.1 and https://huggingface.co/google/medgemma-27b-it
 # with your Hugging Face account, create a read token, and store it:
-#   printf '%s' "<token>" | gcloud secrets create HF_TOKEN --data-file=- --project heliodx
+#   printf '%s' "<token>" | gcloud secrets create HF_TOKEN --data-file=- --project "$PROJECT"
 # The token is read from Secret Manager inside the build; it is never in the repo.
 set -euo pipefail
 cd "$(dirname "$0")"

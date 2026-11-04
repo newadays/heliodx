@@ -58,7 +58,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 <div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
 <header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
 <a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
-<span class="chip chip-env">Research prototype · synthetic data · not for clinical use</span>
+<span class="chip chip-env">Research prototype · public de-identified films, synthetic patients · not for clinical use</span>
 <div style="flex:1 1 auto"></div>
 <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><a href="worklist.html" style="text-decoration:none">Worklist</a><span aria-hidden="true">›</span><span style="color:#15181C;font-weight:600">Agent console</span></nav>
 <div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
@@ -78,11 +78,11 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 
 <section aria-label="Agents" style="display:flex;flex-direction:column;gap:8px">
 <div style="display:flex;align-items:center;justify-content:space-between"><span class="label">Agents · 5</span><span class="muted" style="font-size:12px">in run order</span></div>
-<div class="agent"><div class="hd"><strong>Coordinator</strong><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Plans the run, calls the agents in order and escalates to the clinician when a check fails.</p></div>
-<div class="agent"><div class="hd"><strong>Intake</strong><span class="tag model">Glimmer</span><span class="tag model">SAM 3.1</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Checks image quality, confirms the study type and view, segments the lungs and heart.</p></div>
-<div class="agent"><div class="hd"><strong>Triage</strong><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Takes the five measurements and sets routine or urgent priority from them and the indication.</p></div>
-<div class="agent"><div class="hd"><strong>Prep</strong><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Proposes observations with evidence, confidence and a region on the film, plus the overlays, for the clinician to review.</p></div>
-<div class="agent"><div class="hd"><strong>Summary</strong><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Writes the patient note from the signed report only and checks every sentence against it.</p></div>
+<div class="agent"><div class="hd"><strong>Coordinator</strong><span class="tag model">Muse Wonder</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Plans the run, calls the agents in order and escalates to the clinician when a check fails.</p></div>
+<div class="agent"><div class="hd"><strong>Intake</strong><span class="tag model">Muse Glimmer</span><span class="tag model">SAM 3.1</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Checks image quality, confirms the study type and view, segments the lungs and heart.</p></div>
+<div class="agent"><div class="hd"><strong>Triage</strong><span class="tag model">Muse Glimmer</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Takes the five measurements and proposes a review order for the clinician's worklist from them and the indication.</p></div>
+<div class="agent"><div class="hd"><strong>Prep</strong><span class="tag model">Muse Glimmer</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Proposes observations with evidence, confidence and a region on the film, plus the overlays, for the clinician to review.</p></div>
+<div class="agent"><div class="hd"><strong>Summary</strong><span class="tag model">Muse Glimmer</span><span style="flex:1 1 auto"></span><span class="dot" aria-hidden="true"></span></div><p>Writes the patient note from the signed report only and checks every sentence against it.</p></div>
 </section>
 
 <section aria-label="Tools available" style="display:flex;flex-direction:column;gap:4px">
@@ -91,7 +91,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 <div class="tool"><div><code>confirm_study<span>(image)</span></code><p>Modality, body part and view (PA or AP). Flags films that are not frontal chest.</p></div><span class="ct">×1</span></div>
 <div class="tool"><div><code>segment_regions<span>(image)</span></code><p>Lung and heart masks from SAM 3.1. Every measurement reads from these.</p></div><span class="ct">×1</span></div>
 <div class="tool"><div><code>measure<span>(regions, kind)</span></code><p>Cardiothoracic ratio, lung areas, left/right density ratio, costophrenic blunting.</p></div><span class="ct">×5</span></div>
-<div class="tool"><div><code>set_priority<span>(measurements, context)</span></code><p>Routine or urgent from the measurements and the clinical indication.</p></div><span class="ct">×1</span></div>
+<div class="tool"><div><code>propose_order<span>(measurements, context)</span></code><p>A review order for the worklist from the measurements and the clinical indication. The clinician decides.</p></div><span class="ct">×1</span></div>
 <div class="tool"><div><code>propose_observation<span>(measurement, limit)</span></code><p>One observation with evidence, confidence and region. Never a diagnosis.</p></div><span class="ct">×6</span></div>
 <div class="tool"><div><code>draw_overlay<span>(kind, regions)</span></code><p>Marker and measurement overlays for the viewer.</p></div><span class="ct">×2</span></div>
 <div class="tool"><div><code>draft_report<span>(decisions)</span></code><p>Findings, impression and recommendation from accepted observations only. Re-runs as decisions change.</p></div><span class="ct">×2</span></div>
@@ -146,7 +146,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 <div class="tr">
 <span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Intake</strong></span>
 <span class="mono muted">14:27:05</span>
-<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Intake</span><span class="tag model">Glimmer</span><span class="tag model">SAM 3.1</span></span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Intake</span><span class="tag model">Muse Glimmer</span><span class="tag model">SAM 3.1</span></span>
 <span class="mono">2.7 s</span>
 <span class="mono">1 726</span>
 <span style="color:#3D444D">Quality pass · sharpness 97 · brightness 102 · clipped 9% · 2/2 regions segmented · 3 tool calls</span>
@@ -156,7 +156,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 <div class="tr">
 <span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Triage</strong></span>
 <span class="mono muted">14:27:08</span>
-<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Triage</span><span class="tag model">Glimmer</span></span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Triage</span><span class="tag model">Muse Glimmer</span></span>
 <span class="mono">2.6 s</span>
 <span class="mono">386</span>
 <span style="color:#3D444D">Priority routine · CTR 0.45 · asymmetry 0.02 · density ratio 1.09 · blunting 0 / 0 — all within limits · 6 tool calls</span>
@@ -166,7 +166,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 <div class="tr open">
 <span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Prep</strong></span>
 <span class="mono muted">14:27:10</span>
-<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Prep</span><span class="tag model">Glimmer</span></span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Prep</span><span class="tag model">Muse Glimmer</span></span>
 <span class="mono">21.2 s</span>
 <span class="mono">2 807</span>
 <span style="color:#3D444D">Draft ready · 6 proposed observations · 5 measurements · 2 overlays · 8 tool calls</span>
@@ -205,7 +205,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 <div class="tr">
 <span style="display:flex;align-items:center;gap:10px"><span class="dot" aria-hidden="true"></span><strong>Patient note</strong></span>
 <span class="mono muted">14:34:02</span>
-<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Summary</span><span class="tag model">Glimmer</span></span>
+<span style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag">Summary</span><span class="tag model">Muse Glimmer</span></span>
 <span class="mono">4.6 s</span>
 <span class="mono">1 649</span>
 <span style="color:#3D444D">1 next step mapped to a signed sentence · 0 claims outside the signed text · grade 7 · 2 tool calls</span>

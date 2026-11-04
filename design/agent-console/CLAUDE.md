@@ -19,6 +19,8 @@ This folder is the design source of truth for two surfaces: the **console side p
 - **Real controls, inline SVG icons, 44 px targets** (36 px only inside the panel header and the dark viewer). Keyboard: `Esc` closes the panel; expanded trace rows are `<button aria-expanded>`.
 - **Spelling:** HelioDX. Case IDs carry their source prefix (`S-AI2Y7`, `U-7K2P`) everywhere.
 
+- **No disease names or disease probabilities in any UI string.** Finding cards show the observed feature, its evidence and a Needs attention / Normal chip; the clinician names the condition. Model names are Muse Wonder, Muse Glimmer and SAM 3.1 only. See `COMPLIANCE.md`.
+
 ## How to work
 
 - Build the page first (it holds every component), then the panel from the same components.

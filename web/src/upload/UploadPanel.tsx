@@ -2,7 +2,7 @@
  * §4.10 · Upload a study. Files are processed in the browser (decode, strip
  * identifiers, checks, burned-in text) and staged as de-identified PNGs;
  * "Start analysis" turns each ready file into a study. The person confirms
- * per file that it carries no identifiers and agrees to its use in the beta.
+ * per file that it carries no identifiers and agrees to its use in the research prototype.
  */
 import { deleteObject, ref, uploadBytesResumable, type UploadTask } from "firebase/storage";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";

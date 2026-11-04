@@ -14,7 +14,7 @@ functions/lib/
 *.key
 *.p12
 
-# local env files (EXPO_PUBLIC_* values for the web build; never server secrets)
+# local env files (VITE_* values for the web build; never server secrets)
 .env
 .env*.local
 .env.dev

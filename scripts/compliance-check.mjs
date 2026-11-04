@@ -24,7 +24,7 @@ const banned = patterns("compliance/banned-terms.txt");
 const allowed = patterns("compliance/allowed-phrases.txt");
 
 /** UI sources: every non-test .ts/.tsx/.html under these folders. */
-const SOURCE_DIRS = ["web/src", "site/src"];
+const SOURCE_DIRS = ["web/src", "site/src", "types", "functions/src/schemas"];
 /** Model-facing and published text. */
 const FILES = [
   "README.md",
@@ -35,7 +35,8 @@ const FILES = [
   "functions/src/lib/consoleManifest.ts",
   "functions/src/lib/sharePdf.ts",
   "functions/src/coordinator/plan.ts",
-  "functions/src/schemas/study.ts",
+  "functions/src/models/fixtures.ts",
+  "functions/scripts/seed.ts",
 ];
 /** Tests hold banned words on purpose (they check the guard). */
 const SKIP = [/\.test\.tsx?$/];

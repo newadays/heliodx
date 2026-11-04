@@ -7,12 +7,12 @@ import { defineConfig } from "vite";
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
 // The web client (cards W1–W11). It reads the repo's `.env.<mode>` files
-// (EXPO_PUBLIC_* keys, a prefix kept so existing env files keep working) and
+// (VITE_* keys) and
 // imports shared modules from the repo root (`@/types`, `@/utils`, functions libs).
 export default defineConfig({
   plugins: [react()],
   envDir: repoRoot,
-  envPrefix: "EXPO_PUBLIC_",
+  envPrefix: "VITE_",
   resolve: {
     alias: {
       "@": repoRoot.replace(/\/$/, ""),

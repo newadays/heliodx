@@ -53,7 +53,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
       </header>
       <main className="ev-main">{children}</main>
       <footer className="ev-footer muted">
-        <p>Research prototype · synthetic data · not for clinical use. Scores come from code checks on each task&apos;s own rubric; see eval/README.md in the repository for the method and its limits.</p>
+        <p>Research prototype · public de-identified films, synthetic patients · not for clinical use. Scores come from code checks on each task&apos;s own rubric; see eval/README.md in the repository for the method and its limits.</p>
         <p>
           Films: NIH Clinical Center ChestX-ray14 (Wang et al., CVPR 2017); indications are synthetic. MedGemma is used under the Health AI Developer
           Foundations terms of use and is not for clinical use.

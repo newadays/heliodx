@@ -43,7 +43,7 @@ export interface TraceStep {
   status: StepStatus;
   startedAt: string;      // ISO
   agents: string[];       // ["Intake"]; Received carries ["Sample"] or ["Upload"]
-  models: string[];       // ["Glimmer", "SAM 3.1"]
+  models: string[];       // ["Muse Glimmer", "SAM 3.1"] — Coordinator: ["Muse Wonder"]
   durationMs?: number;    // absent for clinician steps; elapsed while running
   tokens?: number;
   summary: string;        // one line; model steps end with "· N tool calls"

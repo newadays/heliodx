@@ -6,7 +6,7 @@ Conventions: real elements (`<button>`, `<a href>`, `<select>` + `<label>`); hit
 
 ## Shell (shared with the app)
 
-Header 56 px, white, bottom border `#E1E5EA`: logo lockup (`assets/heliodx-lockup.png`, 34 px high) · environment chip `.hx-chip--env` ("Research prototype · synthetic data · not for clinical use") · spacer · breadcrumb (13 px, muted; current item ink 600) · 34 px black avatar disc.
+Header 56 px, white, bottom border `#E1E5EA`: logo lockup (`assets/heliodx-lockup.png`, 34 px high) · environment chip `.hx-chip--env` ("Research prototype · public de-identified films, synthetic patients · not for clinical use") · spacer · breadcrumb (13 px, muted; current item ink 600) · 34 px black avatar disc.
 
 ## Chips and tags
 

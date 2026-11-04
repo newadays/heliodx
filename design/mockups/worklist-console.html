@@ -55,7 +55,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 <div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F6F8">
 <header style="min-height:56px;background:#FFFFFF;border-bottom:1px solid #E1E5EA;display:flex;align-items:center;gap:14px;padding:8px 20px;flex-wrap:wrap">
 <a href="worklist.html" aria-label="HelioDX home" style="display:flex;align-items:center;text-decoration:none"><img src="../assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;width:auto;border-radius:7px;display:block"></a>
-<span class="chip chip-env">Research Beta · Not ready for clinical use</span>
+<span class="chip chip-env">Research prototype · public de-identified films, synthetic patients · not for clinical use</span>
 <div style="flex:1 1 auto"></div>
 <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5F6873"><span style="color:#15181C;font-weight:600">Worklist</span></nav>
 <div style="width:34px;height:34px;border-radius:50%;background:#15181C;color:#FFFFFF;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center" title="Dr. Demo Clinician">DC</div>
@@ -140,36 +140,36 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 
 <a href="analyzing.html" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #BFE3CB;background:#F0FAF3;border-radius:8px;text-decoration:none;color:#15181C;font-size:13px"><span class="pulse" aria-hidden="true"></span><span><strong>Running now:</strong> Sample Patient 3 · Prep · 12 s</span><span style="flex:1 1 auto"></span><span style="color:#15181C;font-weight:600">Follow</span></a>
 
-<label style="display:flex;flex-direction:column;gap:6px"><span class="label">Case</span><select><option>Sample Patient 1 · AI2Y7 · signed and shared</option><option>Sample Patient 2 · draft ready</option><option>Sample Patient 3 · analyzing</option><option>Sample Patient 4 · signed and shared</option></select></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span class="label">Case</span><select><option>Sample Patient 1 · S-AI2Y7 · shared</option><option>Sample Patient 2 · draft ready</option><option>Sample Patient 3 · analyzing</option><option>Sample Patient 4 · signed and shared</option></select></label>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(96px,100%),1fr));gap:8px">
+<div class="stat"><span class="v">21</span><span class="k">Tool calls</span></div>
+<div class="stat"><span class="v">6 568</span><span class="k">Agent tokens</span></div>
 <div class="stat"><span class="v">31.9 s</span><span class="k">Agent time</span></div>
-<div class="stat"><span class="v">6 568</span><span class="k">Tokens</span></div>
-<div class="stat"><span class="v">4</span><span class="k">Model steps</span></div>
-<div class="stat"><span class="v">2</span><span class="k">Clinician steps</span></div>
+<div class="stat"><span class="v" style="color:#137A3A">0</span><span class="k">Checks failed · 7 passed</span></div>
 </div>
 
 <ol style="list-style:none;padding:0;display:flex;flex-direction:column">
 
 <li class="ev"><span class="d"><span></span><i></i></span><div class="b">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Received</strong><span class="mono muted" style="font-size:12px">14:27:04</span><span class="tag">Upload</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">831 ms</span></div>
-<p style="font-size:13px;color:#3D444D">Chest X-ray · PA · 34 M · indication: cough for two weeks · from sample</p>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Received</strong><span class="mono muted" style="font-size:12px">14:27:04</span><span class="tag">Sample</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">831 ms</span></div>
+<p style="font-size:13px;color:#3D444D">Chest X-ray · PA · 34 M · cough for two weeks · from sample <span class="mono">S-AI2Y7</span></p>
 </div></li>
 
 <li class="ev"><span class="d"><span></span><i></i></span><div class="b">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Intake</strong><span class="mono muted" style="font-size:12px">14:27:05</span><span class="tag">Intake</span><span class="tag model">Glimmer</span><span class="tag model">SAM 3.1</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">2.7 s · 1 726 tok</span></div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Intake</strong><span class="mono muted" style="font-size:12px">14:27:05</span><span class="tag">Intake</span><span class="tag model">Muse Glimmer</span><span class="tag model">SAM 3.1</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">2.7 s · 1 726 tok</span></div>
 <p style="font-size:13px;color:#3D444D">Quality pass · sharpness 97 · brightness 102 · clipped 9% · 1024×1024 · 2/2 regions segmented</p>
 <a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
 </div></li>
 
 <li class="ev"><span class="d"><span></span><i></i></span><div class="b">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Triage</strong><span class="mono muted" style="font-size:12px">14:27:08</span><span class="tag">Triage</span><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">2.6 s · 386 tok</span></div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Triage</strong><span class="mono muted" style="font-size:12px">14:27:08</span><span class="tag">Triage</span><span class="tag model">Muse Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">2.6 s · 386 tok</span></div>
 <p style="font-size:13px;color:#3D444D">Priority routine. CTR 0.45, lung-area asymmetry 0.02, L/R density ratio 1.09, costophrenic blunting 0 / 0 — all within limits</p>
 <a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
 </div></li>
 
 <li class="ev"><span class="d"><span></span><i></i></span><div class="b">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Prep</strong><span class="mono muted" style="font-size:12px">14:27:10</span><span class="tag">Prep</span><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">21.2 s · 2 807 tok</span></div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Prep</strong><span class="mono muted" style="font-size:12px">14:27:10</span><span class="tag">Prep</span><span class="tag model">Muse Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">21.2 s · 2 807 tok</span></div>
 <p style="font-size:13px;color:#3D444D">Draft ready: 6 proposed observations, 5 measurements, 2 overlays</p>
 <a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
 </div></li>
@@ -180,7 +180,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 </div></li>
 
 <li class="ev"><span class="d"><span></span><i></i></span><div class="b">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Patient note</strong><span class="mono muted" style="font-size:12px">14:34:02</span><span class="tag">Summary</span><span class="tag model">Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">4.6 s · 1 649 tok</span></div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>Patient note</strong><span class="mono muted" style="font-size:12px">14:34:02</span><span class="tag">Summary</span><span class="tag model">Muse Glimmer</span><span style="flex:1 1 auto"></span><span class="mono muted" style="font-size:12px">4.6 s · 1 649 tok</span></div>
 <p style="font-size:13px;color:#3D444D">1 next step mapped to a signed sentence · 0 claims outside the signed text · reading level grade 7</p>
 <a href="console.html" style="font-size:12.5px;font-weight:600">Open trace</a>
 </div></li>
@@ -194,7 +194,7 @@ select{min-height:40px;border:1px solid #C9CFD6;border-radius:8px;background:#FF
 </div>
 
 <div style="padding:12px 20px;border-top:1px solid #E1E5EA;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-<span class="muted" style="font-size:12.5px">Model steps run on Glimmer; segmentation on SAM 3.1.</span>
+<span class="muted" style="font-size:12.5px">Muse Wonder coordinates; model steps run on Muse Glimmer; segmentation on SAM 3.1.</span>
 <button type="button" class="btn btn-ghost" style="min-height:36px;font-size:13px"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.5 7l3.5 3.5L11.5 7M3 13.5h10"></path></svg>Export trace</button>
 </div>
 </aside>

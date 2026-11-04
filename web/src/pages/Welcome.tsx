@@ -24,7 +24,7 @@ const STEPS = [
 
 const PRINCIPLES = [
   ["You stay in charge", "Every finding is accepted, edited or rejected by you. The report is yours and it locks when you sign."],
-  ["Private and compliant", "Clinical workflows run in a private, compliant manner at scale. Patients receive the plain-language note only."],
+  ["Private by design", "Images and reports stay on the clinic's own GPU and in its own project. Patients receive the plain-language note only."],
   ["Fully traceable", "Each agent step is logged with its model, duration and tokens in the console, beside the clinician's actions."],
 ];
 
@@ -167,7 +167,7 @@ export default function WelcomePage() {
             <Link to="/console">Agent console</Link>
           </div>
           <p className="lx-muted" style={{ fontSize: 12.5 }}>
-            Research prototype · synthetic data · not for clinical use
+            Research prototype · public de-identified films, synthetic patients · not for clinical use
           </p>
         </div>
       </footer>

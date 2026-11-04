@@ -13,7 +13,7 @@ export const UPLOAD_MAX_BYTES = 20 * 1024 * 1024;
 export const UPLOAD_ID = /^[A-Za-z0-9_-]{8,64}$/;
 
 export const CONTRIBUTION_TEXT =
-  "This image contains no patient identifiers — on the film or in its metadata. By uploading, you agree to use the images in the beta project.";
+  "This image contains no patient identifiers — on the film or in its metadata. By uploading, you agree to use the images in the research prototype.";
 
 export interface UploadDetails {
   label: string;

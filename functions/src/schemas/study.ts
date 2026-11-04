@@ -5,7 +5,8 @@
  */
 import { z } from "zod";
 
-export const ModalitySchema = z.enum(["xray", "ct_mri", "ultrasound", "lab", "skin"]);
+/** What intake says the image is; anything but a plain X-ray is stopped (stages/intake.ts). */
+export const ModalitySchema = z.enum(["xray", "other"]);
 
 /** B11 intake: accept or ask for a retake, and what the image shows. */
 export const IntakeSchema = z.object({
@@ -17,8 +18,8 @@ export const IntakeSchema = z.object({
     issues: z.array(z.string().max(160)).max(6).describe("One short sentence each, e.g. 'motion blur', 'lung apices cropped'. Empty when ok."),
   }),
   looksMedical: z.boolean().describe("True when the image is a medical image or report of any kind."),
-  modality: ModalitySchema.describe("The modality the image actually shows."),
-  studyType: z.string().min(1).max(60).describe("Specific study name, e.g. 'Chest X-ray', 'Knee X-ray', 'Skin lesion photo'."),
+  modality: ModalitySchema.describe("'xray' for a plain radiograph; 'other' for anything else."),
+  studyType: z.string().min(1).max(60).describe("Specific study name, e.g. 'Chest X-ray (PA)'."),
   view: z.enum(["PA", "AP", "lateral", "other", "unknown"]).describe("Projection for radiographs; 'other' or 'unknown' otherwise."),
 });
 export type IntakeDraft = z.infer<typeof IntakeSchema>;

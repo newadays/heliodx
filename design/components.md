@@ -9,7 +9,7 @@ Conventions: real elements (`<button>`, `<a href>`, `<input>` + `<label>`); min 
 ```html
 <header class="hx-header">           <!-- min-height 56px; white; border-bottom 1px --hx-line; padding 8px 20px; flex; gap 14px; wrap -->
   <a href="/worklist" aria-label="HelioDX home"><img src="assets/heliodx-lockup.png" alt="HelioDX" style="height:34px;border-radius:7px"></a>
-  <span class="hx-chip hx-chip--warn">Research Beta · Not ready for clinical use</span>
+  <span class="hx-chip hx-chip--warn">Research prototype · public de-identified films, synthetic patients · not for clinical use</span>
   <div style="flex:1 1 auto"></div>
   <nav aria-label="Breadcrumb">…Worklist › <strong>Sample Patient 1</strong></nav>   <!-- 13px, muted; current item ink 600 -->
   <div class="hx-avatar" title="Dr. Demo Clinician">DC</div>                          <!-- 34px circle; bg ink #15181C; white text; 700 13px -->
@@ -259,3 +259,44 @@ Worklist section header:
 Source filter: segmented control `.hx-seg` (36 px, 13 px, bordered pill group; current segment black with white text) inside `<nav aria-label="Filter by source">`.
 
 Row overflow menu: 36 px icon button (three dots), `aria-haspopup="menu"`; items per source — uploads: Delete study (inline confirm row, never a modal), Download de-identified file, Open in console; samples: Reset sample, Open in console.
+
+## Agents & tools panel (console page)
+
+`<aside aria-label="Agents and tools">`, `flex: 0 1 320px`, white, right border. Header: h2 + neutral chip "5 · 11" + a 44 px collapse button (`aria-expanded`). Collapsed form: a 48 px rail with one 44 px expand button.
+
+Agent card:
+
+```css
+.hx-agent{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid #E1E5EA;border-radius:10px;background:#fff}
+.hx-agent__hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}      /* name · .hx-tag--model… · spacer · status dot */
+.hx-agent p{font-size:12.5px;color:#3D444D}
+.hx-dot{width:8px;height:8px;border-radius:50%;background:#137A3A}          /* ran */
+.hx-dot--idle{background:transparent;border:1.5px solid #C9CFD6}           /* did not run */
+.hx-dot--running{background:#16A34A;animation:pulse 1.2s ease-in-out infinite}
+```
+
+Tool row:
+
+```html
+<div class="hx-tool"><div><code>measure<span>(regions, kind)</span></code><p>Cardiothoracic ratio, lung areas…</p></div><span class="hx-tool__ct">×5</span></div>
+```
+```css
+.hx-tool{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid #E1E5EA} .hx-tool:first-child{border-top:0}
+.hx-tool code{font-family:mono;font-size:12.5px;font-weight:600;color:#15181C;word-break:break-word} .hx-tool code span{font-weight:500;color:#5F6873}
+.hx-tool p{font-size:12px;color:#5F6873;margin-top:3px}
+.hx-tool__ct{font-family:mono;font-size:12px;color:#3D444D;background:#EDF0F3;border-radius:5px;padding:2px 6px} .hx-tool__ct.is-zero{color:#9AA0A6;background:transparent}
+```
+Clicking a row filters the trace to that tool; the row then shows a black "filtering" chip with a clear ×.
+
+## Run statistics tile
+
+```css
+.hx-stat{display:flex;flex-direction:column;gap:3px;padding:12px 14px;background:#fff;border:1px solid #E1E5EA;border-radius:10px}
+.hx-stat__v{font-family:mono;font-size:20px;font-weight:600;line-height:1.1}
+.hx-stat__k{font-size:12px;color:#5F6873}
+.hx-stat--bad .hx-stat__v{color:#B42318}     /* checks failed > 0, escalations > 0 */
+.hx-stat--good .hx-stat__v{color:#137A3A}    /* checks failed = 0 */
+```
+Grid `repeat(auto-fit, minmax(min(128px, 100%), 1fr))`, gap 10 px. The number carries the meaning; colour only reinforces it.
+
+Run selector: label "Run" + `<select>` (min-width 360 px, 40 px) of `run-<stamp>-<caseId> · <label> · <status>` + status chip (`Running` neutral with pulse · `Awaiting review` neutral · `Signed` / `Shared` ink · `Failed` / `Escalated` red).

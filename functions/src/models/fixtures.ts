@@ -5,7 +5,8 @@
  */
 import { findingColor } from "../lib/colors";
 
-export type Modality = "xray" | "ct_mri" | "ultrasound" | "lab" | "skin";
+/** HelioDX reads plain X-rays only. */
+export type Modality = "xray";
 export type FindingStatus = "pending" | "accepted" | "edited" | "rejected";
 
 export interface DraftFinding {
@@ -106,54 +107,6 @@ export function mockDraft(modality: Modality, reviewedBy: string): MockDraft {
             findings: text,
             impression: ["Right upper zone opacity.", "Blunted right costophrenic angle."],
             recommendation: "Interpret alongside the clinical picture and any prior imaging.",
-            highlights: highlightsFor(text, findings),
-            generatedFromReviewHash: null,
-            editedByClinician: false,
-          },
-        },
-      };
-    }
-    case "skin": {
-      const findings = [
-        finding(0, "Asymmetric pigmented lesion", "Irregular pigmentation with two distinct colour zones.", 72, {
-          shape: "ellipse", x: 0.45, y: 0.45, w: 0.22, h: 0.2,
-        }),
-        finding(1, "Irregular border", "Notched, poorly defined margin on the inferior edge.", 69, {
-          shape: "ellipse", x: 0.5, y: 0.6, w: 0.16, h: 0.08,
-        }),
-      ];
-      const text = `${findings[0].title} with ${findings[1].title}.`;
-      return {
-        quality: { ok: true, score: 88, issues: [] },
-        studyType: "Skin lesion photo",
-        findings,
-        summaries: {
-          clinicianSummary: {
-            findings: text,
-            impression: ["Pigmented lesion with atypical features."],
-            recommendation: "Dermatology review; consider dermoscopy or excision biopsy.",
-            highlights: highlightsFor(text, findings),
-            generatedFromReviewHash: null,
-            editedByClinician: false,
-          },
-        },
-      };
-    }
-    default: {
-      const label = modality === "ct_mri" ? "CT / MRI slice" : modality === "ultrasound" ? "Ultrasound still" : "Lab report";
-      const findings = [
-        finding(0, "No acute abnormality identified", "Reviewed region appears within normal limits on this image.", 81, null),
-      ];
-      const text = `${findings[0].title}.`;
-      return {
-        quality: { ok: true, score: 85, issues: [] },
-        studyType: label,
-        findings,
-        summaries: {
-          clinicianSummary: {
-            findings: text,
-            impression: ["Unremarkable on the submitted image."],
-            recommendation: "Interpret alongside the full study and clinical picture.",
             highlights: highlightsFor(text, findings),
             generatedFromReviewHash: null,
             editedByClinician: false,

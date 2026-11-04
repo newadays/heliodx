@@ -5,17 +5,21 @@ today, and what remains open.
 
 ## AI drafting
 
-- **Model refusals or safety blocks.** Safety is `BLOCK_ONLY_HIGH`; the
-  system instruction frames output as draft observations for a licensed
-  clinician. A refusal becomes `failed/model_refused`; the clinician can retry
-  or start over. Open: no appeal path other than retry.
+- **Model refusals.** Clinical calls go to our own vLLM server, which has no
+  separate safety filter; the system instruction frames output as draft
+  observations for a licensed clinician and restates the no-diagnosis rule.
+  A refusal from the model becomes `failed/model_refused`; an answer that does
+  not match the schema is re-asked once, then fails as `schema_invalid`. The
+  clinician can retry or start over. Open: no appeal path other than retry.
 - **Confident errors.** Every finding is `pending` until the clinician
   accepts, edits or rejects it; summaries cannot be shared until each finding
   has a decision; every screen carries the "AI-drafted, not a diagnosis"
   disclaimer. Open: no second-reader workflow.
-- **Approximate regions.** Boxes come from the model on a 0–1000 grid and are
-  drawn as soft ellipses; a region can be absent. Clinicians review the image,
-  not the box.
+- **Approximate regions.** On chest films, regions come from SAM 3.1 lung and
+  heart masks and the measurements made on them. Only the fallback path (no
+  masks) uses the model's own box, given on a 0–1000 scale and stored as
+  0–1 fractions. Regions are drawn as soft ellipses and can be absent.
+  Clinicians review the image, not the box.
 - **Normal studies.** The prompt asks for pertinent normals so a normal film
   still yields reviewable, shareable findings; an empty list is allowed when
   the image cannot be read.
@@ -24,8 +28,10 @@ today, and what remains open.
   hosted API. If the GPU is down or cold, studies fail with
   `model_unavailable`. It must stay warm (min instances 1) during clinic
   hours; a cold start takes 1 to 4 minutes.
-- **Draft quality.** Glimmer's findings quality is not yet measured against
-  labelled films (the eval cards).
+- **Draft quality.** Measured on public labelled films (NIH ChestX-ray14,
+  Shenzhen) against a MedGemma 27B baseline; the method, results and limits
+  are in `eval/README.md` and on https://evals.heliodx.com. The sets are small,
+  so the intervals are wide.
 - **Hosted model ids and format.** Verified 2026-10-27 against the Meta Model
   API: `muse-wonder-1.0` and `muse-voice-transcribe-1.0` exist, and
   `json_schema` output works. Reasoning tokens count against `max_tokens`,
