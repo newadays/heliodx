@@ -18,8 +18,10 @@ This folder is the design source of truth for the HelioDX web app and landing pa
 - **No blocking spinners between steps.** Analysis streams findings as they are detected; the report and patient note draft in the background; every wait shows what is happening, elapsed time and the expected time.
 - **Real controls.** `<button>`, `<a href>`, `<input>` + `<label>`; no `onClick` on a `div`. Hit targets ≥ 44 px. Text contrast ≥ 4.5:1 (3:1 at ≥ 24 px). Keyboard shortcuts in `SPEC.md` §5.3 must work.
 - **Colour is black and white, plus two signals.** Green (`--hx-green`) only for success — accepted, done, ready, signed, live. Red (`--hx-red`) only for failure or attention — needs attention, reject, errors, flagged regions. Primary actions, selection and progress are black. No other hue anywhere in the app (`SPEC.md` §2.3). The environment chip is an outline, not a colour.
-- **Name and brand.** The product is spelled **HelioDX**. The logo is `assets/heliodx-lockup.png` (dark tile, "helio." wordmark) at 34 px high in the app header; the environment chip "Research Beta · Not ready for clinical use" stays in the header on every signed-in screen.
+- **Name and brand.** The product is spelled **HelioDX**. The logo is `assets/heliodx-lockup.png` (dark tile, "helio." wordmark) at 34 px high in the app header; the environment chip "Research prototype · public de-identified films, synthetic patients · not for clinical use" stays in the header on every signed-in screen.
 - **One container width.** Signed-in pages use a two-pane layout (viewer 620 px + panel) or a `max-width: 1240px` centred column. Nothing runs edge to edge at 1500 px.
+
+- **No disease names or disease probabilities in any UI string.** Finding cards show the observed feature, its evidence and a Needs attention / Normal chip; the clinician names the condition. Model names are Muse Wonder, Muse Glimmer and SAM 3.1 only. See `COMPLIANCE.md`.
 
 ## How to work
 

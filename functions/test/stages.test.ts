@@ -18,8 +18,8 @@ const intakeDraft = (over: Record<string, unknown> = {}) => ({
   decision: "accept",
   quality: { ok: true, issues: [] },
   looksMedical: true,
-  modality: "skin",
-  studyType: "Skin lesion photo",
+  modality: "other",
+  studyType: "Photograph",
   view: "other",
   ...over,
 });
@@ -39,12 +39,12 @@ describe("priority rules", () => {
 });
 
 describe("runIntake", () => {
-  it("accepts a readable non-X-ray image without calling SAM", async () => {
+  it("stops a medical image that is not a plain X-ray, without calling SAM", async () => {
     const segment = vi.fn();
     const out = await runIntake({ ...base, image: await film() }, { generate: vi.fn(async () => intakeDraft()) as never, segment });
-    expect(out.retake).toBe(false);
+    expect(out.retake).toBe(true);
+    expect(out.quality.issues).toEqual(["HelioDX reads plain X-rays only."]);
     expect(segment).not.toHaveBeenCalled();
-    expect(out.studyType).toBe("Skin lesion photo");
     expect(out.metrics.width).toBe(1000);
   });
 
@@ -52,7 +52,12 @@ describe("runIntake", () => {
     const img = await film();
     const out = await runIntake(
       { ...base, image: img },
-      { generate: vi.fn(async () => intakeDraft({ decision: "retake", quality: { ok: false, issues: ["Image is a photograph of a chest radiograph with glare"] } })) as never },
+      {
+        generate: vi.fn(async () => intakeDraft({ modality: "xray", decision: "retake", quality: { ok: false, issues: ["Image is a photograph of a chest radiograph with glare"] } })) as never,
+        segment: vi.fn(async () => {
+          throw new Error("SAM down");
+        }),
+      },
     );
     expect(out.retake).toBe(false);
     expect(out.quality.ok).toBe(true);

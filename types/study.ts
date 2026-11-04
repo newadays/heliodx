@@ -15,8 +15,8 @@
  * `utils/millis.ts`.
  */
 
-/** Capture chips on the camera screen, in display order (design 02). */
-export type Modality = "xray" | "ct_mri" | "ultrasound" | "lab" | "skin";
+/** HelioDX reads plain X-rays only. */
+export type Modality = "xray";
 
 /** How the image reached the app (Home screen actions, design 01). */
 /** `sample`: a demo study created by the server from a curated NIH image (card F11). */

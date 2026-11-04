@@ -48,7 +48,7 @@ The study workspace is one page with a persistent viewer (left) and a step panel
 
 ### 2.2 Navigation chrome (every signed-in screen)
 
-- Header, 56 px, white, bottom border: logo lockup (34 px high, links to `/worklist`) · environment chip "Research Beta · Not ready for clinical use" (outline chip, `chip-env`) · spacer · breadcrumb (`Worklist › Sample Patient 1`) · avatar "DC" (black disc, white initials; title: clinician name).
+- Header, 56 px, white, bottom border: logo lockup (34 px high, links to `/worklist`) · environment chip "Research prototype · public de-identified films, synthetic patients · not for clinical use" (outline chip, `chip-env`) · spacer · breadcrumb (`Worklist › Sample Patient 1`) · avatar "DC" (black disc, white initials; title: clinician name).
 - Study screens add the **step rail** under the header of the panel: `1 Analyze — 2 Review — 3 Sign — 4 Patient note — 5 Share`. Done steps show a check in a green dot; the current step is a black dot; future steps are outlined. The rail is a `<nav aria-label="Progress">`; steps already completed are links back.
 
 ### 2.3 Colour
@@ -103,11 +103,11 @@ Trace (times transposed to the 14:27 timeline):
 | step | kind | at | agents / models | duration · tokens | summary |
 | --- | --- | --- | --- | --- | --- |
 | Received | system | 14:27:04 | Upload | 831 ms | Chest X-ray · PA · 34 M · from sample |
-| Intake | model | 14:27:05 | Intake · Glimmer · SAM 3.1 | 2.7 s · 1 726 | Quality pass · sharpness 97 · brightness 102 · clipped 9% · 1024×1024 · 2/2 regions segmented |
-| Triage | model | 14:27:08 | Triage · Glimmer | 2.6 s · 386 | Priority routine · CTR 0.45 · asymmetry 0.02 · density ratio 1.09 · blunting 0 / 0 — all within limits |
-| Prep | model | 14:27:10 | Prep · Glimmer | 21.2 s · 2 807 | Draft ready · 6 proposed observations · 5 measurements · 2 overlays |
+| Intake | model | 14:27:05 | Intake · Muse Glimmer · SAM 3.1 | 2.7 s · 1 726 | Quality pass · sharpness 97 · brightness 102 · clipped 9% · 1024×1024 · 2/2 regions segmented |
+| Triage | model | 14:27:08 | Triage · Muse Glimmer | 2.6 s · 386 | Priority routine · CTR 0.45 · asymmetry 0.02 · density ratio 1.09 · blunting 0 / 0 — all within limits |
+| Prep | model | 14:27:10 | Prep · Muse Glimmer | 21.2 s · 2 807 | Draft ready · 6 proposed observations · 5 measurements · 2 overlays |
 | Signed | clinician | 14:33:26 | Clinician | — | 6 accepted · 1 edited · 0 rejected · signed by Dr. Demo Clinician |
-| Patient note | model | 14:34:02 | Summary · Glimmer | 4.6 s · 1 649 | 1 next step mapped to a signed sentence · 0 claims outside the signed text · grade 7 |
+| Patient note | model | 14:34:02 | Summary · Muse Glimmer | 4.6 s · 1 649 | 1 next step mapped to a signed sentence · 0 claims outside the signed text · grade 7 |
 | Shared | clinician | 14:36:10 | Clinician | — | 1 share · PDF · consent recorded |
 
 Totals shown in the console: agent time 31.9 s · tokens 6 568 · model steps 4 · clinician steps 2 · arrival to shared 9:06.
@@ -132,11 +132,11 @@ Viewer toggles (buttons, `aria-pressed`): **Markers**, **Measurements** (review 
 Mockup: `welcome.html`. Dark theme (`[data-theme="landing"]` tokens).
 
 - Header 64 px: logo lockup (36 px), spacer, nav "What to expect" (anchor), "Log in" (→ `/worklist`), "Contact us" (dark pill).
-- Hero, min-height 680 px: left column max-width 560 px — eyebrow `CLINICIAN-REVIEWED IMAGING FINDINGS` (accent, uppercase, 12 px, 0.08 em tracking); h1 "The platform for" + accent line "Clinical AI Workflow" (clamp 38–62 px, weight 600, line-height 1.06); paragraph "HelioDX: Meta Muse Wonder coordinating a team of Muse Glimmer agents that run the radiology workflow privately, on the clinic's own GPU."; pills "Log in" (light) and "Contact us" (dark); small line "A study, start to finish, in about two minutes · Nothing reaches a patient until you sign".
+- Hero, min-height 680 px: left column max-width 560 px — eyebrow `CLINICIAN-REVIEWED IMAGING FINDINGS` (accent, uppercase, 12 px, 0.08 em tracking); h1 "The platform for" + accent line "Clinical AI Workflow" (clamp 38–62 px, weight 600, line-height 1.06); paragraph "HelioDX: Meta Muse Wonder coordinates a team of Muse Glimmer agents that take a chest X-ray from intake to a signed report, on the clinic's own GPU. A clinician reviews, edits and signs every finding."; pills "Log in" (light) and "Contact us" (dark); small line "A study, start to finish, in about two minutes · Nothing reaches a patient until you sign".
 - Hero art: `assets/cxr-hero.jpg` absolutely positioned on the right (`width: min(100%, 760px)`, `object-fit: cover`, `object-position: center top`, opacity 0.85) with three gradient layers fading its left, top/bottom and right edges into the page colour, and a faint accent radial glow over the heart. Over it: accent markers 1–6 at the positions in the mockup, two measurement lines, and three chips ("Cardiac silhouette · within limits · CTR 0.43", "Costophrenic angles · sharp", "6 findings drafted in 27 s"). The whole art block is `role="img"` with a descriptive label; its children are `aria-hidden`.
 - "What to expect": eyebrow, h2 "Five steps. You decide at every one.", side paragraph, then five cards (01 Analyze … 05 Share) in a grid `repeat(auto-fit, minmax(min(210px, 100%), 1fr))`. Copy as in the mockup; card 05 reads "A one-page PDF to print or hand over, with the patient's consent recorded."
-- Principles: three cards — "You stay in charge", "Private and compliant", "Fully traceable".
-- Footer: Meta logo in a white 12 px-radius badge (40 px high), "Powered by Meta AI" (28 px, 600), "Muse Wonder · Muse Glimmer · SAM 3.1 · Muse Voice Transcribe", links Log in · Contact us · Agent console, and the research-prototype line.
+- Principles: three cards — "You stay in charge", "Private by design" (body: "Images and reports stay on the clinic's own GPU and in its own project. Patients receive the plain-language note only."), "Fully traceable". No "compliant", "validated" or "at scale" anywhere on the page (`COMPLIANCE.md`).
+- Footer: Meta logo in a white 12 px-radius badge (40 px high), "Powered by Meta AI" (28 px, 600), "Muse Wonder · Muse Glimmer · SAM 3.1", links Log in · Contact us · Agent console, and the research-prototype line.
 
 Acceptance: text contrast on the dark ground ≥ 4.5:1 (body `#B5BDB7`, muted `#8A939A`); the hero reads at 390 px wide with the film as a dimmed backdrop; "Log in" reaches the worklist.
 
@@ -247,9 +247,9 @@ Mockup: `worklist-console.html`.
 - Panel header: h2 "Agent console", ok chip "Live" with pulse, spacer, secondary 36 px "Open full console" (→ `/console/<selected case>`), 36 px close button.
 - "Running now" strip (green tint, link): pulse + "**Running now:** Sample Patient 3 · Prep · 12 s" + "Follow" → that study's analyzing step. Hidden when nothing is running.
 - Case `<select>`: follows the row selected in the worklist (clicking a row selects it; the row gets the `sel` tint).
-- Four stat tiles: Agent time · Tokens · Model steps · Clinician steps.
+- Four stat tiles, the first four of the page's row (§4.9) so the two surfaces agree: Tool calls · Agent tokens · Agent time · Checks failed (· K passed; green at 0, red above).
 - Trace timeline: for each `TraceStep` — rail dot (green ring for model/system, filled ink for clinician) · title · time (mono 12 px) · tags (agent neutral, models black) · duration · tokens right-aligned · one-line summary · "Open trace" link (model steps only) → full console with that step expanded.
-- Footer: muted "Model steps run on Glimmer; segmentation on SAM 3.1." · ghost "Export trace".
+- Footer: muted "Muse Wonder coordinates; model steps run on Muse Glimmer; segmentation on SAM 3.1." · ghost "Export trace".
 - Live: steps append in real time for running cases; the stat tiles update when a step completes.
 
 Acceptance: opening the panel does not reflow the table columns; `Esc` closes it; panel state survives navigation to a study and back.
@@ -258,13 +258,19 @@ Acceptance: opening the panel does not reflow the table columns; `Esc` closes it
 
 Mockup: `console.html`.
 
-- Left `<aside aria-label="Cases">` 320 px: h2 "Cases" + chip "N running"; search (patient, case ID or step); filter chips All · Running · Ready · Signed; case list (name, case ID or arrival time in mono, status line with pulse for running); selected case tinted. Footer note about what is logged.
-- Main: h1 patient name + mono case ID + status chip; meta line; buttons secondary "Export JSON", primary "Open in app" (→ `/study/:caseId`).
-- Stat tiles: Agent time · Tokens · Model steps · Clinician steps · Arrival to shared.
-- Trace table (card, `min-width: 980px` in an `overflow-x: auto` box). Columns: Step · Started · Agent · Duration · Tokens · Summary · expand. Rows expand in place (`aria-expanded`); the expanded row shows tabs Summary · Prompt · Raw output · Timing, a three-column detail (Inputs · Output · Measurements and overlays), and actions "Copy trace link" and "Replay this step" (replay never mutates a signed case).
+*Revised 29 Oct: the left column is now a collapsible **Agents & tools** panel; cases moved into a run selector in the header; a run-statistics row sits above the trace.*
+
+- **Layout.** Flex row that wraps: `<aside aria-label="Agents and tools">` (`flex: 0 1 320px`, white, right border) + `<main>` (`flex: 1 1 560px`). Below 1180 px the aside stacks above the main.
+- **Agents & tools panel.** Header: h2 "Agents & tools", neutral chip "<agents> · <tools>", a 44 px collapse button (`aria-expanded`, chevron-left with a bar). Collapsed: the aside becomes a 48 px rail holding one 44 px expand button with the same icon and `aria-label="Show agents and tools"`; the main grows. The collapsed/expanded state persists per user (`localStorage`); default expanded on screens ≥ 1280 px, collapsed below.
+  - **Agents · N** ("in run order"): one card per agent from the run manifest — name, model tags (black `tag--model`: Muse Wonder on the Coordinator, Muse Glimmer on the others, SAM 3.1 on Intake), a one-sentence role, and a status dot at the right: green when the agent ran in the selected run, grey outline when it did not, pulsing green while it is running. Order: Coordinator, Intake, Triage, Prep, Summary. Roles are copy from the manifest, not hard-coded (the mockup's sentences are placeholders in the manifest's voice).
+  - **Tools available · N** ("calls in this run"): one row per tool: `name(params)` in mono (params in muted weight), a one- or two-line description, and a right-aligned call count `×N` (grey pill; `×0` rendered quiet). Clicking a tool filters the trace to steps that called it (the row gets a black left-aligned "filtering" chip and a clear ×). Tools come from the manifest's tool registry; the eleven in the mockup (`check_quality`, `confirm_study`, `segment_regions`, `measure`, `propose_order`, `propose_observation`, `draw_overlay`, `draft_report`, `write_patient_note`, `check_note`, `escalate`) are the expected shape, not a contract — render whatever the manifest lists.
+  - Footer note: "Read from the run manifest. These are the only tools the agents can call; a step that needs anything else escalates."
+- **Run header.** Label "Run"; a `<select>` of runs for this workspace, newest first, each option `run-<ISO stamp>-<caseId> · <patient label> · <status>`; beside it the run status chip (`Running` neutral with pulse, `Awaiting review` neutral, `Signed`/`Shared` ink, `Failed` red, `Escalated` red); then a live link "N running · <patient> · <step> · <elapsed>" when any run is in progress. Second line: patient label + source tag + case ID + study meta + arrival + clinician. Right: secondary "Export JSON", primary "Open in app" (→ `/study/:caseId`). Deep link `/console/:caseId` selects that case's latest run; `?run=<id>` selects a specific run.
+- **Statistics row** (`grid: repeat(auto-fit, minmax(min(128px, 100%), 1fr))`, white tiles, mono 20 px value, 12 px label), computed from the run's trace — seven tiles, one row at 1440: **Tool calls** · **Agent tokens** · **Agent time** · **Observations** · **Checks failed** (label "· K passed"; value green when 0, red when > 0) · **Clinician steps** · **Arrival to shared** (or "Arrival to now" while open). Tiles update live for a running run. Agent turns, Measurements and Escalations were cut on 29 Oct as noise: turns and measurements live in the expanded step rows; an escalation is shown by the run status chip (`Escalated`, red) and the Received/escalating step, not by a counter.
+- **Trace table** (card, `min-width: 980px` in an `overflow-x: auto` box). Columns: Step · Started · Agent · Duration · Tokens · Summary · expand. The Summary cell ends with "· N tool calls" for model steps. Rows expand in place (`aria-expanded`); the expanded row shows tabs **Summary · Tool calls · N · Prompt · Raw output · Timing**, a three-column detail (Inputs · Output · Tool calls with per-tool counts and the step's checks passed/failed), and actions "Copy trace link" and "Replay this step" (replay never mutates a signed case). The Tool calls tab lists each call in order: tool, arguments (truncated, expandable), duration, result status.
 - Deep link `/console/:caseId?step=<traceId>` opens with that step expanded and scrolled into view.
 
-Acceptance: the list and the selected case update live; expanding a row does not shift other rows' columns; Export JSON downloads `HelioDX-<caseId>-trace.json` (no new tab).
+Acceptance: the stats row equals what the trace contains (turns, calls, tokens, checks) — verify by export; collapsing the panel keeps the trace columns in place and the state survives reload; the panel's agents and tools come from the manifest, so adding a tool server-side appears without a UI change; clicking a tool filters the trace and the filter is clearable; expanding a row does not shift other rows' columns; Export JSON downloads `HelioDX-<caseId>-trace.json` (no new tab); every tile and chip is readable without colour (the red/green on Checks failed and Escalations is reinforced by the number itself).
 
 ### 4.10 Upload a study (`/worklist?upload=1`)
 
@@ -277,7 +283,7 @@ Entry points: the **Upload study** button in the worklist title row (pressed sta
 - Drop zone (dashed, 36 px padding, light ground): upload icon in a grey disc, "Drop chest X-rays here", "or", secondary **Choose files** (a `<label>` wrapping `<input type="file" multiple accept=".dcm,.dicom,image/jpeg,image/png">`), hint "JPEG, PNG or DICOM (.dcm) · up to 50 MB per file · several files at once". Drag-over state: black border, grey ground.
 - "Before anything leaves your machine" — three rows with icons: DICOM patient tags are removed in your browser; burned-in text is checked; analysis starts as soon as a file is ready.
 - "or" divider → ghost link "Add a sample from the NIH ChestX-ray14 set" (opens the existing sample panel).
-- Footer: muted "Research Beta — upload synthetic or fully de-identified images only." · ghost Cancel · primary **Start analysis** disabled with `aria-describedby` hint "Add at least one file to start".
+- Footer: muted "Research prototype — upload synthetic or fully de-identified images only." · ghost Cancel · primary **Start analysis** disabled with `aria-describedby` hint "Add at least one file to start".
 
 **State 2 — queue and details (`upload-queue.html`)**
 - Header adds a neutral chip "N files". A compact dashed strip "Add more files — or drop them here" sits above the queue (another file input).
@@ -286,7 +292,7 @@ Entry points: the **Upload study** button in the worklist title row (pressed sta
   - `ready`: ok chip **Ready** + "Chest X-ray · PA detected · quality OK · no text on film".
   - `attention`: red card border, warn chip **Needs attention** + the reason in one sentence, then ghost actions **Replace file** (file input) and **Analyze anyway**; the × removes. Reasons: not a frontal chest X-ray, lung bases/apices not in view (cropped), image too small (< 1024 px short side), unreadable file, duplicate of an existing study (same pixel hash — link to it), burned-in text detected (→ state 3).
   - `failed`: red chip **Failed** + reason (unsupported format, over 50 MB, decode error) + Replace / Remove.
-- Details card for the selected file (light ground): label "Details · <file name>" + "Applies to this file only"; **Patient label** text (default "Upload N · <date>", hint "A pseudonym for the worklist. Never a real name or ID."); **Age** number · **Sex** select (F / M / Not recorded) · **View** select (detected value first, e.g. "PA · detected", then AP); **Indication** textarea; checkbox "This image contains no patient identifiers — on the film or in its metadata. By uploading, you agree to use the images in the beta project." (required per file; recorded with the study — decided 28 Oct).
+- Details card for the selected file (light ground): label "Details · <file name>" + "Applies to this file only"; **Patient label** text (default "Upload N · <date>", hint "A pseudonym for the worklist. Never a real name or ID."); **Age** number · **Sex** select (F / M / Not recorded) · **View** select (detected value first, e.g. "PA · detected", then AP); **Indication** textarea; checkbox "This image contains no patient identifiers — on the film or in its metadata." (required per file).
 - Footer: "**R of N ready.** Files that need attention are skipped unless you choose Analyze anyway." · ghost Cancel · primary **Start analysis · R** (disabled with the hint "Tick the identifier confirmation for each ready file" until every ready file's checkbox is ticked).
 - Start analysis closes the panel, inserts one worklist row per started file at the top with status `analyzing` (progress live), shows a toast "R studies uploaded · analysis started", and keeps the panel's unfinished files (uploading / attention) available if reopened.
 
@@ -339,7 +345,6 @@ Mockup: `worklist.html` (two sections, source tags, source filter); `review.html
 - Report title keeps the case ID: `Chest X-ray · PA · Upload 1 · 28 Oct · U-7K2P`.
 - Signed PDF footer: upload → `Case U-7K2P · uploaded by Dr. Demo Clinician · de-identified in browser · HelioDX research prototype`; sample → `Case S-AI2Y7 · sample study, synthetic patient · HelioDX research prototype`.
 - Patient note approved-by line: sample → "Reviewed and approved by Dr. Demo Clinician (simulated) · HelioDX Demo"; upload → "Reviewed and approved by Dr. Demo Clinician · HelioDX research prototype" (drop "(simulated)", keep the prototype wording). The share panel for a sample adds the muted line "This is a sample study — nothing is sent; the share is recorded for the demo." and sends nowhere.
-  - *As built (29 Oct):* the demo organization is named "HelioDX" (was "HelioDX Demo" / "HelioDX demo clinic (synthetic)"), so the PDF header reads "HelioDX". The approved-by line is just "Reviewed and approved by Dr. Demo Clinician" (plus "(simulated)" for samples); the case line under the disclaimer carries the source and "HelioDX research prototype" once, so the prototype wording no longer repeats.
 
 **Console (amends §4.8, §4.9).**
 - Case list rows and the case `<select>` show the source tag after the name; the case ID shows its prefix.
@@ -356,11 +361,6 @@ Mockup: `worklist.html` (two sections, source tags, source filter); `review.html
 - The details form rejects a label starting with "Sample Patient".
 - The guided demo opens a sample even when an upload is the newest study.
 - `?source=uploads` reloads with only the uploads section and the filter pressed.
-
-**As built (HelioDX, 28 Oct).**
-- Samples belong to the workspace: one shared set for the demo organization (owner id `samples`, files under `studies/{orgId}/samples/`), seeded with `demo-user seed-samples`; every demo account reviews, signs, shares and resets the same set. Uploads stay private to the uploader (`studies/{orgId}/{uid}/…`).
-- Case ids are reserved on creation (`caseIds/{orgId}_{id}`), so a deleted upload's id is never drawn again.
-- Files still in the upload panel show in "Your uploads" as "Not started" rows with what they're waiting for and a "Finish upload" action; nothing exists on the server until Start analysis (§4.10).
 
 ## 5. Cross-cutting behaviour
 
@@ -421,9 +421,9 @@ Order of operations for each file, all in the browser before any network call:
 1. **Sniff and decode.** Accept by content, not extension: DICOM (preamble `DICM`), JPEG, PNG. Reject others as `failed`. Decode to pixels (DICOM via a WASM/JS decoder; apply rescale slope/intercept and `MONOCHROME1` inversion so the preview matches a viewer).
 2. **De-identify DICOM.** Strip the PS3.15 basic-profile tags plus private tags; shift dates by a per-upload random offset (same offset for every date in the file); keep modality, body part, view position, image geometry, photometric interpretation. Record the removed-tag count for the status line and the trace.
 3. **Burned-in text check.** Run OCR on the image corners and edges (where annotations live). Any hit with a confidence above the threshold → `attention` with the bounding box; the user redacts (fills the box with black in the pixel data) or keeps.
-4. **Study-type and view check.** Classify frontal chest vs other, PA vs AP, and field of view (apices and costophrenic angles present). Failures → `attention` with the reason; the user may "Analyze anyway" (recorded in the trace). As built: the browser checks size, greyscale and aspect; the frontal-chest / PA-AP / field-of-view classification runs in Intake on our own GPU once analysis starts (a non-chest film stops there with the reason), because no model runs in the browser.
+4. **Study-type and view check.** Classify frontal chest vs other, PA vs AP, and field of view (apices and costophrenic angles present). Failures → `attention` with the reason; the user may "Analyze anyway" (recorded in the trace).
 5. **Duplicate check.** Hash the decoded pixels; if it matches an existing study, `attention` with a link to it.
-6. **Upload** the de-identified, possibly redacted object with the user's details. As built: the browser uploads the decoded pixels only, as a lossless PNG, so no DICOM tag or photo metadata can leave the machine at all; files go to a private staging area first and become a study only on **Start analysis**. The server re-validates (tag scan, size) and starts analysis (§5.1). The "Received" trace step records: source `upload`, format, removed-tag count, redactions, overrides.
+6. **Upload** the de-identified, possibly redacted object with the user's details. The server re-validates (tag scan, size) and starts analysis (§5.1). The "Received" trace step records: source `upload`, format, removed-tag count, redactions, overrides.
 
 Sizes: ≤ 50 MB per file; ≥ 1024 px short side recommended (smaller files are flagged, not blocked). Keep decoded pixel buffers out of memory once uploaded.
 

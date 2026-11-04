@@ -67,6 +67,23 @@ Code enforces this, not just the prompts:
 | Muse Wonder coordination | Completed |
 | Accuracy eval on public chest X-rays | Published 4 November 2026: 160 tasks (70 on NIH ChestX-ray14, 90 screening-clinic films from the Shenzhen TB screening set), HelioDX vs MedGemma 27B on the same GPU. Results below and at [evals.heliodx.com](https://evals.heliodx.com) ([`eval/README.md`](eval/README.md)) |
 
+## Built during the event
+
+HelioDX was built for the hackathon between 26 October and 4 November 2026.
+The repository history starts on 29 October with a 249-file "first version"
+commit (about 36,800 lines: 120 files of Cloud Functions, 58 of the web
+client, 28 of design handoff, 13 shared utils and 11 for the GPU service),
+which holds the work done from 26 to 29 October before the repository was
+created. Every later change is in the
+[commit log](https://github.com/newadays/heliodx/commits/develop).
+
+All of the code was written during the event; nothing was carried over from
+earlier projects.
+
+Earlier commits had `EXPO_PUBLIC_*` environment names, a five-modality enum
+and a Gemini safety setting in the docs, from early design choices during the
+event. They were removed on 4 November; HelioDX reads plain chest X-rays only.
+
 ## Which model does what
 
 | Model | Role | Runs on | Sees |
@@ -199,7 +216,7 @@ host your own GPU on premises or cloud provider such as [modal](https://modal.co
 ### 2. Run locally on the emulators, with mock AI
 
 The pipeline returns fixtures instead of calling a model, so this costs
-nothing and needs no model key. Set `EXPO_PUBLIC_USE_EMULATORS=1` in
+nothing and needs no model key. Set `VITE_USE_EMULATORS=1` in
 `.env.development` first.
 
 ```sh
@@ -258,7 +275,7 @@ one already signed and shared, all through the real pipeline. `demo-user
 remove --email …` deletes the account and its cases.
 
 Locally, run the emulators, upload the samples without `SEED_TARGET`, put
-`EXPO_PUBLIC_USE_EMULATORS=1` in `.env.development.local` and start the web
+`VITE_USE_EMULATORS=1` in `.env.development.local` and start the web
 app with `npm --prefix web run dev`.
 
 ### Tests
@@ -291,7 +308,7 @@ cd functions && npm run test:rules                 # security rules, inside the 
 
 ## Limitations
 
-- HelioDX is a beta project, not a medical device. It is not cleared for
+- HelioDX is a research prototype, not a medical device. It is not cleared for
   clinical use.
 - Highlighted regions are approximate. Clinicians review the image, not the
   box.

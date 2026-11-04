@@ -19,7 +19,7 @@ import { StudyWriter } from "../study/writer";
 import { WrongStateError } from "../study/stateMachine";
 import { PipelineError, type PipelineStatus } from "./errors";
 import { isTransient, isWarmingWait } from "./retryPolicy";
-import { runIntake, type IntakeOutput } from "../stages/intake";
+import { NOT_XRAY, runIntake, type IntakeOutput } from "../stages/intake";
 import { runPrep, traceNoDiagnosis } from "../stages/prep";
 import { diagnosisHits, namesDiagnosis, stripDiagnosis } from "../lib/noDiagnosis";
 import { runTriage, type TriageOutput } from "../stages/triage";
@@ -211,7 +211,7 @@ async function runPipelineTraced(
       stage1 = {
         quality: intake.quality,
         studyType: intake.studyType,
-        modality: intake.modality,
+        modality: "xray",
         image: { ...image.original, thumbPath: image.thumbPath },
       };
       traceEvent({
@@ -248,6 +248,8 @@ async function runPipelineTraced(
       { allowedIn: ["quality_check"] },
     );
 
+    // HelioDX reads plain X-rays only: no override past this one.
+    if (intake && intake.modality !== "xray") throw new PipelineError("quality_rejected", NOT_XRAY, at);
     if (!stage1.quality.ok && study.pipeline?.qualityOverride) {
       traceEvent({ kind: "check", name: "quality_override", ok: true, args: {}, result: `clinician chose to analyze anyway · ${stage1.quality.issues.join("; ").slice(0, 160)}` });
     } else if (!stage1.quality.ok) {

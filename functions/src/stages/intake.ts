@@ -42,7 +42,8 @@ export interface IntakeOutput {
   /** `issues` stop the study; `warnings` are shown to the clinician and analysis continues. */
   quality: { ok: boolean; score: number; issues: string[]; warnings: string[] };
   metrics: QualityMetrics;
-  modality: Modality;
+  /** "other" always comes with a retake (NOT_XRAY); the pipeline stops it even on "Analyze anyway". */
+  modality: Modality | "other";
   studyType: string;
   view: "PA" | "AP" | "lateral" | "other" | "unknown";
   /** Lungs found on the radiological sides. */
@@ -55,6 +56,7 @@ export interface IntakeOutput {
 const LOW_RES = "Image resolution is too low.";
 const BLURRED = "Image looks blurred.";
 const NOT_MEDICAL = "This does not look like a medical image.";
+export const NOT_XRAY = "HelioDX reads plain X-rays only.";
 
 export async function runIntake(input: IntakeInput, deps: IntakeDeps = {}): Promise<IntakeOutput> {
   const generate = deps.generate ?? generateJson;
@@ -71,7 +73,7 @@ export async function runIntake(input: IntakeInput, deps: IntakeDeps = {}): Prom
   });
 
   // A non-medical image is the reason that matters most, so it always leads.
-  const blocking = [...(draft.looksMedical ? [] : [NOT_MEDICAL]), ...codeIssues.filter((i) => i === LOW_RES || i === BLURRED)];
+  const blocking = [...(draft.looksMedical ? (draft.modality === "xray" ? [] : [NOT_XRAY]) : [NOT_MEDICAL]), ...codeIssues.filter((i) => i === LOW_RES || i === BLURRED)];
   const issues = draft.looksMedical ? blocking : [...new Set([...blocking, ...draft.quality.issues])].slice(0, 6);
   const warnings = [...new Set([...codeIssues.filter((i) => !blocking.includes(i)), ...(draft.looksMedical ? draft.quality.issues : [])])].slice(0, 6);
   const retake = blocking.length > 0;

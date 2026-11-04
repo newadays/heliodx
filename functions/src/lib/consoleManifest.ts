@@ -99,7 +99,7 @@ export const CONSOLE_TOOLS: ConsoleTool[] = [
   { name: "pattern_floor", params: ["pattern"], description: "A pattern of concern raises a routine study to urgent; never lowers.", kind: "check", owner: "prep" },
   { name: "locate_zone", params: ["location"], description: "Draws an abnormal observation on the lung zone the model names (side and upper, middle or lower third).", kind: "check", owner: "prep" },
   { name: "propose_observations", params: ["measurements"], description: "Observations with evidence and a region; drops any that name a condition or cite no evidence. Never a diagnosis.", kind: "check", owner: "prep" },
-  { name: "no_diagnosis", params: ["reasked"], description: "Fails when the model named a disease, gave a likelihood of one or used diagnostic wording and code had to remove it after one re-ask.", kind: "check", owner: "prep" },
+  { name: "no_diagnosis", params: ["reasked"], description: "Fails when code had to remove disease names, disease odds or diagnostic wording from the model's text after one re-ask.", kind: "check", owner: "prep" },
   { name: "freeze_report", params: ["decisions"], description: "Freezes the signed report and records its hash.", kind: "check", owner: "clinician" },
   { name: "check_patient_summary", params: ["note", "signed_report"], description: "Fails when a sentence adds an instruction, test, urgency or condition the signed report lacks, or reads above grade 8.", kind: "check", owner: "summary" },
   { name: "map_next_steps", params: ["note", "signed_report"], description: "Maps each next step to the signed Recommendation sentence it rewrites.", kind: "check", owner: "summary" },

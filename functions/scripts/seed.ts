@@ -237,22 +237,14 @@ function sampleStudies(orgId: string, clinicianUid: string, clinicianName: strin
       findings: [
         finding("f1", 0, "Right lower lobe opacity", 91, "#F5B400"),
         finding("f2", 1, "Blunted costophrenic angle", 78, "#4A90E2"),
-        finding("f3", 2, "Cardiomegaly", 84, "#34C759"),
+        finding("f3", 2, "Enlarged cardiac silhouette", 84, "#34C759"),
       ],
       shares: [{ id: "sh1", channel: "whatsapp", target: "+2348030000000", sentAt: at(now - 60 * 60_000) }],
     },
     {
-      ...base("seed-john", "John Doe", "xray", "Knee X-ray", "gallery", now - day),
-      findings: [finding("f1", 0, "Joint space narrowing", 88, "#F5B400")],
+      ...base("seed-john", "John Doe", "xray", "Chest X-ray (PA)", "gallery", now - day),
+      findings: [finding("f1", 0, "Left upper zone opacity", 88, "#F5B400")],
       shares: [],
-    },
-    {
-      ...base("seed-fred", "Fred Smith", "skin", "Skin photo", "camera", now - 4 * day),
-      findings: [
-        finding("f1", 0, "Asymmetric pigmented lesion", 72, "#F5B400"),
-        finding("f2", 1, "Irregular border", 69, "#4A90E2"),
-      ],
-      shares: [{ id: "sh1", channel: "pdf", target: "", sentAt: at(now - 4 * day + 60_000) }],
     },
   ];
 }

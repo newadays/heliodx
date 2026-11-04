@@ -24,7 +24,7 @@ describe("shouldStart", () => {
 });
 
 describe("mockDraft", () => {
-  for (const modality of ["xray", "ct_mri", "ultrasound", "lab", "skin"] as const) {
+  for (const modality of ["xray"] as const) {
     it(`produces a complete draft for ${modality}`, () => {
       const d = mockDraft(modality, "Dr. A. Smith");
       expect(d.quality.ok).toBe(true);

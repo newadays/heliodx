@@ -36,7 +36,7 @@ Claude Code will pick up `design/CLAUDE.md` automatically whenever it works insi
 | `share.html` | Patient note preview and PDF save (sample study) | Download PDF → `done.html` |
 | `done.html` | Shared confirmation and audit trail | Back to worklist → `worklist.html`; Open in agent console → `console.html` |
 | `worklist-console.html` | Worklist with the agent console side panel open | Open full console → `console.html` |
-| `console.html` | Dedicated agent console page | Open in app → `done.html` |
+| `console.html` | Dedicated agent console page — collapsible Agents & tools panel, run selector, statistics row, trace | Open in app → `done.html` |
 | `upload.html` | Worklist with the upload panel open (empty, drop zone) | Choose files → `upload-queue.html` |
 | `upload-queue.html` | Upload panel with three files queued and the details form | Start analysis → `worklist.html` |
 | `upload-deid.html` | De-identification check for a DICOM with burned-in text | Redact and continue → `upload-queue.html` |

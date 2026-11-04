@@ -29,3 +29,15 @@ suggestive of
 (likelihood|probability|chance) of
 diagnos(e|es|ed|is|tic)\b
 detect the disease
+# Not an X-ray tool: other modalities and skin
+dermat\w*
+skin lesion
+dermoscopy
+biopsy
+melanoma
+pigmented lesion
+# Claims the prototype cannot make
+\bcompliant\b
+at scale
+\bvalidated\b
+clinically proven

@@ -142,7 +142,7 @@ export interface TraceStep {
   kind: TraceKind;
   startedAt: string;     // ISO
   agents: string[];      // ["Intake"]
-  models: string[];      // ["Glimmer", "SAM 3.1"]
+  models: string[];      // ["Muse Glimmer", "SAM 3.1"] — Coordinator: ["Muse Wonder"]
   durationMs?: number;
   tokens?: number;
   summary: string;
@@ -284,11 +284,68 @@ export interface Worklist {
   sourceFilter: 'all' | 'uploads' | 'samples';
 }
 
-/** Console totals for a case. */
+/** Console totals for a case (legacy; superseded by RunStats). */
 export interface TraceTotals {
   agentTimeMs: number;
   tokens: number;
   modelSteps: number;
   clinicianSteps: number;
   arrivalToSharedMs?: number;
+}
+
+/** Agent console — run manifest and statistics (SPEC.md §4.9). */
+export interface AgentDef {
+  id: string;                 // "coordinator" | "intake" | "triage" | "prep" | "summary" | …
+  name: string;               // "Intake"
+  models: string[];           // ["Muse Glimmer", "SAM 3.1"] — Coordinator: ["Muse Wonder"]
+  role: string;               // one sentence, from the manifest
+  order: number;              // run order
+  status?: 'ran' | 'running' | 'idle';   // for the selected run
+}
+
+export interface ToolDef {
+  name: string;               // "measure"
+  params: string[];           // ["regions", "kind"]
+  description: string;        // one or two lines
+  ownerAgentId?: string;
+  callsInRun?: number;        // for the selected run
+}
+
+export interface RunManifest {
+  runId: string;              // "run-20261028T142704Z-s-ai2y7"
+  caseId: CaseId;
+  agents: AgentDef[];
+  tools: ToolDef[];
+}
+
+export type RunStatus = 'running' | 'awaiting_review' | 'signed' | 'shared' | 'failed' | 'escalated';
+
+export interface RunStats {
+  runId: string;
+  status: RunStatus;
+  agentTurns: number;
+  toolCalls: number;
+  agentTokens: number;
+  agentTimeMs: number;
+  observations: number;
+  measurements: number;
+  checksPassed: number;
+  checksFailed: number;       // red when > 0
+  escalations: number;        // red when > 0
+  clinicianSteps: number;
+  arrivalToSharedMs?: number; // or arrivalToNowMs while open
+}
+
+export interface ToolCall {
+  tool: string;
+  args: Record<string, unknown>;
+  startedAt: string;
+  durationMs: number;
+  result: 'ok' | 'failed' | 'escalated';
+  checks?: { name: string; passed: boolean }[];
+}
+
+/** TraceStep.detail may carry the step's calls. */
+export interface TraceStepCalls {
+  calls: ToolCall[];
 }
