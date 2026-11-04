@@ -199,6 +199,27 @@ Figures measured on the live service, 29 to 31 October 2026.
 | Warm, upload to draft | Median 29 s (23 to 86 s over 9 studies) |
 | Scaling | Scales to zero when idle. One instance is kept warm for judging week (4 to 9 November) with `gpu/warm.sh on`, and turned off after |
 
+### Streaming latency, warm GPU
+
+Muse Glimmer alone (no SAM), measured on 4 November 2026 with
+`gpu/bench_latency.py`. Each request streams exactly 256 output tokens; the
+X-ray requests send one public NIH film with about 1,470 prompt tokens. Every
+prompt is unique, so none reuses vLLM's prefix cache. Two warm-up requests
+were not counted. Times are measured from a laptop, so time to first token
+includes a network round trip of about 150 ms.
+
+| Test | Requests | Time to first token, P50 / P90 | Inter-token latency, P50 / P90 | Throughput, all users |
+|---|---|---|---|---|
+| Text only (230 prompt tokens), 1 user | 10 | 219 / 308 ms | 22.6 / 25.5 ms/token | 42 tokens/s |
+| X-ray + prompt, 1 user | 10 | 603 / 667 ms | 23.4 / 25.9 ms/token | 39 tokens/s |
+| X-ray + prompt, 4 users at once | 16 | 1,060 / 1,133 ms | 23.3 / 26.9 ms/token | 145 tokens/s |
+| X-ray + prompt, 8 users at once | 24 | 1,380 / 1,599 ms | 24.8 / 28.6 ms/token | 258 tokens/s |
+
+vLLM runs up to 8 requests at once. At 8 users each stream is about 10% slower
+than one user alone, while total throughput is about 6.5 times higher. The P99
+inter-token gap is about 110 ms in every test, while the mean stays near the
+median: tokens arrive in bunches through Cloud Run and the proxy.
+
 ## Run it yourself
 
 You need Node 22 and Java 21 or newer for the Firebase emulators. No keys
